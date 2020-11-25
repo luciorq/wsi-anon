@@ -30,9 +30,31 @@ struct tiff_directory {
 };
 
 struct tiff_file {
-    uint16_t count;
+    uint64_t used;
+    uint64_t size;
     struct tiff_directory *directories;
 };
+
+void init_tiff_file(struct tiff_file *file, size_t init_size) {
+    file->directories = malloc(init_size * sizeof(struct tiff_directory));
+    file->used = 0;
+    file-> size = init_size;
+}
+
+void insert_dir_into_tiff_file(struct tiff_file *file, struct tiff_directory dir) {
+    // reallocate directories array dynamically
+    if(file->used == file->size) {
+        file->size *= 2;
+        file->directories = realloc(file->directories, file->size * sizeof(struct tiff_directory));
+    }
+    file->directories[file->used++] = dir;
+}
+
+void free_tiff_file(struct tiff_file *file) {
+    free(file->directories);
+    file->directories = NULL;
+    file->used = file->size = 0;
+}
 
 char** str_split(char* a_str, const char a_delim)
 {
@@ -307,7 +329,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
 
     tiff_dir->entries = *entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
-    next_dir = next_dir_offset;
+    next_dir = &next_dir_offset;
 
     printf("next offset: %lu\n", next_dir_offset);
 
@@ -357,11 +379,20 @@ int handle_hamamatsu(const char *filename, const char *new_label_name) {
         int64_t diroff = read_uint(fp, 8, big_endian);
         printf("Offset dir ponter: %ld\n", diroff);
         int64_t next_dir_offset = diroff;
-        struct tiff_directory dir = *read_tiff_directory(fp, &diroff, NULL, big_tiff, true, big_endian, &next_dir_offset);
+        struct tiff_directory *dir = read_tiff_directory(fp, &diroff, NULL, big_tiff, true, big_endian, &next_dir_offset);
 
+        struct tiff_file file;
+        init_tiff_file(&file, 1);
+        insert_dir_into_tiff_file(&file, *dir);
         while(next_dir_offset != 0) {
-
+            // TODO: calculation of value size
+            //struct tiff_directory *dir = read_tiff_directory(fp, &diroff, NULL, big_tiff, true, big_endian, &next_dir_offset);
+            //insert_dir_into_tiff_file(&file, *dir);
         }
+
+        printf("directories %lu\n", (&file)->used);
+
+        free_tiff_file(&file);
     }
     
     fclose(fp);
