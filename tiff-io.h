@@ -4,9 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define NDPI_FORMAT_FLAG    65420
-#define NDPI_SOURCELENS     65421
-
 #define TIFF_BIGENDIAN      0x4d4d
 #define TIFF_LITTLEENDIAN   0x4949
 

@@ -35,7 +35,7 @@ const char* anonymize_wsi(const char *filename, const char *new_label_name) {
 }
 
 int main() {
-    char *filename = "//home//mfranz//Documents//other//test_wsi-anonymizer//hama.ndpi";
+    char *filename = "//home//mfranz//Documents//other//test_wsi-anonymizer//test.ndpi";
 
     const char *new_filename = anonymize_wsi(filename, "new_test_label");
 }

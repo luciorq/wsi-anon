@@ -8,6 +8,16 @@
 #include <assert.h>
 #include <byteswap.h>
 
+#define NDPI_FORMAT_FLAG    65420
+#define NDPI_SOURCELENS     65421
+
+#define ASCII 2
+#define SHORT 3
+#define LONG 4
+#define FLOAT 11
+#define DOUBLE 12
+#define LONG8 16
+
 #define min(a,b) \
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
@@ -127,11 +137,11 @@ bool str_starts_with(const char *pre, const char *str)
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
-char *get_empty_char_buffer(char *x, uint64 times) {
-    char *result = (char *)malloc(times * sizeof(char));
-    if(times > 0) {
+char *get_empty_char_buffer(char *x, uint64 length) {
+    char *result = (char *)malloc(length * sizeof(char));
+    if(length > 0) {
         // fill buffer with char *x
-        for(int i = 0; i < times; i++) {
+        for(int i = 0; i < length; i++) {
             result[i] = *x;
         }
     } else {
@@ -259,8 +269,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
         struct tiff_directory *first_directory, 
         bool big_tiff, 
         bool ndpi, 
-        bool big_endian,
-        uint64_t *next_dir) {
+        bool big_endian) {
     int64_t offset = *dir_offset;
     *dir_offset = 0;
     
@@ -276,7 +285,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
     tiff_dir->count = entry_count;
     tiff_dir->in_pointer_offset = offset;
 
-    struct tiff_entry *entries[entry_count];
+    struct tiff_entry *entries = malloc(entry_count * sizeof(struct tiff_entry));
     for (uint64_t i = 0; i < entry_count; i++) {
         struct tiff_entry *entry = malloc(sizeof(struct tiff_entry));
 
@@ -284,11 +293,16 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
             printf("ERROR: could not allocate memory for entry\n");
         }
 
-        entry->tag = read_uint(fp, 2, big_endian);
-        entry->type = read_uint(fp, 2, big_endian);
-        entry->count = read_uint(fp, big_tiff ? 8 : 4, big_endian);
+        entry->start = ftell(fp);
 
-        // calculate the size of the entry vaqlue
+        uint16_t tag = read_uint(fp, 2, big_endian);
+        uint16_t type = read_uint(fp, 2, big_endian);
+        uint64_t count = read_uint(fp, big_tiff ? 8 : 4, big_endian);
+        entry->tag = tag;
+        entry->type = type;
+        entry->count = count;
+
+        // calculate the size of the entry value
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
 
         if(!value_size) {
@@ -302,7 +316,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
         }
 
         if(value_size * entry->count <= sizeof(value)) {
-            // todo
+            fix_byte_order(value, value_size, count, big_endian);
         } else {
             if(big_tiff) {
                 memcpy(&entry->offset, value, 8);
@@ -315,23 +329,30 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
             }
 
             if(ndpi) {
+                struct tiff_entry *_old_entry = NULL;
                 if(first_directory) {
-                    // todo
-                } else {
-                    // todo
+                    for (int j = 0; j < first_directory->count; j++) {
+                        if(&first_directory->entries && first_directory->entries[j].tag == tag) {
+                            _old_entry = &first_directory->entries[j];
+                            break;
+                        }
+                    }
+                } 
+                
+                if(!_old_entry || _old_entry->offset != entry->offset) {
+                    entry->offset = fix_ndpi_offset(offset, entry->offset);
                 }
             }
         }
-        entries[i] = entry;
+
+        entries[i] = *entry;
     }
 
     int64_t next_dir_offset = read_uint(fp, (big_tiff || ndpi) ? 8: 4, big_endian);
 
-    tiff_dir->entries = *entries;
+    tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
-    next_dir = &next_dir_offset;
-
-    printf("next offset: %lu\n", next_dir_offset);
+    *dir_offset =  next_dir_offset;
 
     return tiff_dir;
 }
@@ -364,6 +385,126 @@ int check_hamamatsu_header(FILE *fp, bool *big_endian, bool *big_tiff) {
             result = 1;
         }
     }
+    return result;
+}
+
+struct tiff_file *read_tiff_file(FILE *fp, bool big_tiff, bool ndpi, bool big_endian) {
+    // get directory offset; file stream pointer must be located just before the directory offset
+    int64_t diroff = read_uint(fp, 8, big_endian);
+    // reading the initial directory
+    struct tiff_directory *dir = read_tiff_directory(fp, &diroff, NULL, big_tiff, ndpi, big_endian);
+
+    // allocate memory for the tiff_file struct
+    struct tiff_file *file = malloc(sizeof(struct tiff_file));
+    // initialize tiff file with size 1
+    init_tiff_file(file, 1);
+    // insert the first directory
+    insert_dir_into_tiff_file(file, *dir);
+    // set the current directory as previous directory
+    struct tiff_directory *prev_dir = dir;
+
+    // when the directory offset is 0 we reached the end of the tiff file
+    while(diroff != 0) {
+        // read next directory
+        struct tiff_directory *current_dir = read_tiff_directory(fp, &diroff, prev_dir, 
+                                                    big_tiff, true, big_endian);
+        // add directory to directory array and resize if necessary
+        insert_dir_into_tiff_file(file, *current_dir);
+        prev_dir = current_dir;
+    }
+
+    return file;
+}
+
+
+int get_label_dir(struct tiff_file *file, FILE *fp, bool big_endian) {
+    for (int i = 0; i < file->used; i++) {
+        struct tiff_directory temp_dir = file->directories[i];
+        //printf("directory entry count: %lu\n", temp_dir.count);
+            
+        for(int j = 0; j < temp_dir.count; j++) {
+            struct tiff_entry temp_entry = temp_dir.entries[j];
+            //printf("entry tag: %u\n", temp_entry.tag);
+
+            if(temp_entry.tag == NDPI_SOURCELENS) {
+                int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
+
+                if(entry_size) {
+
+                    if(temp_entry.type == FLOAT) {
+                        // move to function
+                        float *v_buffer = malloc(entry_size * temp_entry.count);
+
+                        // TODO make 8 byte generic!
+                        uint64_t new_start = temp_entry.start + 8; 
+                        if(fseek(fp, new_start, SEEK_SET)) {
+                            printf("Failed to seek to offset %lu.\n", temp_entry.start);
+                            return -1;
+                        }
+                        if(fread(v_buffer, entry_size, temp_entry.count, fp) != 1) {
+                            printf("Failed to read entry value.\n");
+                            return -1;
+                        }
+
+                        fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
+
+                        printf("Buffer: %f\n", *v_buffer);
+                            
+                        if(*v_buffer == -1) {
+                            printf("delete label\n");  
+                            return i;                       
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+uint64_t *read_pointer_by_tag(FILE *fp, struct tiff_directory *dir, int tag, bool big_endian) {
+    int value;
+    for(int i  = 0; i < dir->count; i++) {
+        struct tiff_entry entry = dir->entries[i];
+        if(entry.tag == tag) {
+            int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+            printf("entry size: %i\n", entry_size);
+
+            if(entry_size) {
+                uint64_t *v_buffer = malloc(entry_size * entry.count);
+
+                uint64_t new_start = entry.start + 8;
+                printf("new start %lu\n", new_start);
+                if(fseek(fp, new_start, SEEK_SET)) {
+                    printf("Failed to seek to offset %lu.\n", entry.start);
+                }
+                if(fread(v_buffer, entry_size, entry.count, fp) != 1) {
+                    printf("Failed to read entry value.\n");
+                }
+
+                fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
+
+                return *v_buffer;
+            }
+        }
+    }
+}
+
+int delete_label(FILE *fp, struct tiff_directory *dir, bool big_endian) {
+    // todo
+    uint64_t *strip_offset = read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, big_endian);
+    uint64_t *strip_length = read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, big_endian);
+
+    //printf("Strip offset: %i\n", strip_offset);
+    //printf("Strip length: %i\n", strip_length);
+
+    fseek(fp, strip_offset, SEEK_SET);
+
+    //char *buf =  malloc(6);
+    //fread(buf, 6, 1, fp);
+
+    char *strip = get_empty_char_buffer("\0", strip_length);
+    fwrite(strip, 1, strip_length, fp);
 }
 
 int handle_hamamatsu(const char *filename, const char *new_label_name) {
@@ -376,23 +517,27 @@ int handle_hamamatsu(const char *filename, const char *new_label_name) {
     int result = check_hamamatsu_header(fp, &big_endian, &big_tiff);
 
     if(result) {
-        int64_t diroff = read_uint(fp, 8, big_endian);
-        printf("Offset dir ponter: %ld\n", diroff);
-        int64_t next_dir_offset = diroff;
-        struct tiff_directory *dir = read_tiff_directory(fp, &diroff, NULL, big_tiff, true, big_endian, &next_dir_offset);
+        struct tiff_file *file;
+        file = read_tiff_file(fp, big_tiff, true, big_endian);
 
-        struct tiff_file file;
-        init_tiff_file(&file, 1);
-        insert_dir_into_tiff_file(&file, *dir);
-        while(next_dir_offset != 0) {
-            // TODO: calculation of value size
-            //struct tiff_directory *dir = read_tiff_directory(fp, &diroff, NULL, big_tiff, true, big_endian, &next_dir_offset);
-            //insert_dir_into_tiff_file(&file, *dir);
+        int dir_count = get_label_dir(file, fp, big_endian);
+
+        if(dir_count == -1) {
+            printf("Error: No label directory.");
         }
 
-        printf("directories %lu\n", (&file)->used);
+        struct tiff_directory dir = file->directories[dir_count];
 
-        free_tiff_file(&file);
+        printf("Delete: %lu\n", dir.out_pointer_offset);
+
+        // wipe label data from directory
+        delete_label(fp, &dir, big_endian);
+
+        // unlink directory and link predecessor to last dir
+        uint64_t out_pointer = dir.out_pointer_offset;
+
+
+        free_tiff_file(file);
     }
     
     fclose(fp);
