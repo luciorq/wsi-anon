@@ -1,3 +1,4 @@
+// libtiff
 #include "tiffio.h"
 
 #include <stdlib.h>
@@ -6,22 +7,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include <byteswap.h>
 
-#define NDPI_FORMAT_FLAG    65420
-#define NDPI_SOURCELENS     65421
-
-#define ASCII 2
-#define SHORT 3
-#define LONG 4
-#define FLOAT 11
-#define DOUBLE 12
-#define LONG8 16
-
-#define min(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
+#include "tiff-based-io.h"
 
 struct tiff_entry {
     uint16_t tag;
@@ -45,12 +32,14 @@ struct tiff_file {
     struct tiff_directory *directories;
 };
 
+// initialize directory array for a given tiff file
 void init_tiff_file(struct tiff_file *file, size_t init_size) {
     file->directories = malloc(init_size * sizeof(struct tiff_directory));
     file->used = 0;
     file-> size = init_size;
 }
 
+// add directory to a given tiff file and resize array if necessary
 void insert_dir_into_tiff_file(struct tiff_file *file, struct tiff_directory dir) {
     // reallocate directories array dynamically
     if(file->used == file->size) {
@@ -60,12 +49,14 @@ void insert_dir_into_tiff_file(struct tiff_file *file, struct tiff_directory dir
     file->directories[file->used++] = dir;
 }
 
+// destroy tiff file with associated directories
 void free_tiff_file(struct tiff_file *file) {
     free(file->directories);
     file->directories = NULL;
     file->used = file->size = 0;
 }
 
+// split a sgtring by a given delimeter
 char** str_split(char* a_str, const char a_delim)
 {
     char** result    = 0;
@@ -76,7 +67,7 @@ char** str_split(char* a_str, const char a_delim)
     delim[0] = a_delim;
     delim[1] = 0;
 
-    // count number of elements we need to extract
+    // count the number of elements we need to extract
     while (*tmp)
     {
         if (a_delim == *tmp)
@@ -115,6 +106,7 @@ char** str_split(char* a_str, const char a_delim)
     return result;
 }
 
+// get the filename extension for a given filename
 const char *get_filename_ext(const char *filename) {
     const char *dot = strrchr(filename, '.');
     if(!dot || dot == filename) return "";
@@ -132,11 +124,13 @@ int file_exists(const char *filename)
     return 0;
 }
 
+// check if a string starts with a given substring
 bool str_starts_with(const char *pre, const char *str)
 {
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
+// return a char buffer filled with char x
 char *get_empty_char_buffer(char *x, uint64 length) {
     char *result = (char *)malloc(length * sizeof(char));
     if(length > 0) {
@@ -150,6 +144,9 @@ char *get_empty_char_buffer(char *x, uint64 length) {
     return result;
 }
 
+// blaken the aperio label and unlink the directory
+// currently the libtiff library is used here 
+// todo: remove libtiff
 int blacken_label(TIFF *tiff, int unlink_dir) {
     uint32 width;
     uint32 height;
@@ -176,34 +173,72 @@ int blacken_label(TIFF *tiff, int unlink_dir) {
     return 1;
 }
 
-void fix_byte_order(void *data, int32_t size, int64_t count, bool big_endian) {
-    switch(size) {
-        case 1: break;
-        case 2: {
-            uint16_t *arr = data;
-            for (int64_t i = 0; i < count; i++) {
-                __bswap_16(arr[i]);
-            }
-            break;
-        }
-        case 4: {
-            uint32_t *arr = data;
-            for (int64_t i = 0; i < count; i++) {
-                __bswap_32(arr[i]);
-            }
-            break;
-        }
-        case 8: {
-            uint64_t *arr = data;
-            for (int64_t i = 0; i < count; i++) {
-                __bswap_64(arr[i]);
-            }
-            break;
-        }
-        default: break;
-    }
+// determine wether the operating system is big or little endian
+bool is_system_big_endian() {
+  int n = 1;
+  if(*(char *)&n == 1) {
+    return true;
+  }
+  return false;
 }
 
+// swap bytes of unsigned interger 16 bytes
+uint16_t _swap_uint16(uint16_t value) 
+{
+    return (value << 8) | (value >> 8 );
+}
+
+// swap bytes of unsigned interger 32 bytes
+uint32_t _swap_uint32(uint32_t value)
+{
+    value = ((value << 8) & 0xFF00FF00 ) | ((value >> 8) & 0xFF00FF ); 
+    return (value << 16) | (value >> 16);
+}
+
+// swap bytes of unsigned interger 32 bytes
+int64_t _swap_int64(int64_t value)
+{
+    value = ((value << 8) & 0xFF00FF00FF00FF00ULL ) | ((value >> 8) & 0x00FF00FF00FF00FFULL );
+    value = ((value << 16) & 0xFFFF0000FFFF0000ULL ) | ((value >> 16) & 0x0000FFFF0000FFFFULL );
+    return (value << 32) | ((value >> 32) & 0xFFFFFFFFULL);
+}
+
+// fix the byte order for data array depending on the endianess of the
+// operating system and the tiff file
+void fix_byte_order(void *data, int32_t size, int64_t count, bool big_endian) {
+    // we only need to swap data, if system endianness 
+    // and tiff endianness are unequal
+    if(is_system_big_endian() != big_endian) {
+        switch(size) {
+            case 1: break;
+            case 2: {
+                uint16_t *arr = data;
+                for (int64_t i = 0; i < count; i++) {
+                    _swap_uint16(arr[i]);
+                }
+                break;
+            }
+            case 4: {
+                uint32_t *arr = data;
+                for (int64_t i = 0; i < count; i++) {
+                    _swap_uint32(arr[i]);
+                }
+                break;
+            }
+            case 8: {
+                uint64_t *arr = data;
+                for (int64_t i = 0; i < count; i++) {
+                    _swap_int64(arr[i]);
+                }
+                break;
+            }
+            default: break;
+        }
+    }
+    
+}
+
+// read an unsigned integer from a filestream at current position
 uint64_t read_uint(FILE *fp, int32_t size, bool big_endian) {
     uint8_t buffer[size];
     if (fread(buffer, size, 1, fp) != 1) {
@@ -239,6 +274,7 @@ uint64_t read_uint(FILE *fp, int32_t size, bool big_endian) {
     }
 }
 
+// get the type size needed to readout the value
 uint32_t get_size_of_value(uint16_t type, uint64_t *count) {
     if(type == TIFF_BYTE || type == TIFF_ASCII || type == TIFF_SBYTE || type == TIFF_UNDEFINED) {
         return 1;
@@ -257,6 +293,7 @@ uint32_t get_size_of_value(uint16_t type, uint64_t *count) {
 }
 
 uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
+    // we need to fix the ndpi offset to prevent the pointer from overflowing
     uint64_t new_offset = (directory_offset & ~(uint64_t) UINT64_MAX) | (offset & UINT32_MAX);
     if(new_offset >= directory_offset) {
         new_offset = min(new_offset - UINT32_MAX - 1, new_offset);
@@ -264,6 +301,8 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
     return new_offset;
 }
 
+// read a tiff directory at a certain offset
+// todo: add error handling
 struct tiff_directory *read_tiff_directory(FILE *fp, 
         int64_t *dir_offset,
         struct tiff_directory *first_directory, 
@@ -291,6 +330,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
 
         if(entry == NULL) {
             printf("ERROR: could not allocate memory for entry\n");
+            // todo: return err
         }
 
         entry->start = ftell(fp);
@@ -307,21 +347,25 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
 
         if(!value_size) {
             printf("ERROR: calculating value size failed\n");
+            // todo: return err; do we need to stop here?
         }
 
         // read entry value to array
         uint8_t value[big_tiff ? 8 : 4];
         if (fread(value, sizeof(value), 1, fp) != 1) {
             printf("ERROR: reading value to array failed\n");
+            // todo: return err; do we need to stop here?
         }
 
         if(value_size * entry->count <= sizeof(value)) {
             fix_byte_order(value, value_size, count, big_endian);
         } else {
             if(big_tiff) {
+                // big tiff offset pointer reserves 8 bytes
                 memcpy(&entry->offset, value, 8);
                 fix_byte_order(&entry->offset, sizeof(entry->offset), 1, big_endian);
             } else {
+                // non big tiff offset only reserves 4 bytes
                 int32_t offset32;
                 memcpy(&offset32, value, 4);
                 fix_byte_order(&offset32, sizeof(offset32), 1, big_endian);
@@ -329,17 +373,19 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
             }
 
             if(ndpi) {
-                struct tiff_entry *_old_entry = NULL;
+                struct tiff_entry *first_entry_of_dir = NULL;
                 if(first_directory) {
+                    // retrieve the first entry of the first directory
                     for (int j = 0; j < first_directory->count; j++) {
                         if(&first_directory->entries && first_directory->entries[j].tag == tag) {
-                            _old_entry = &first_directory->entries[j];
+                            first_entry_of_dir = &first_directory->entries[j];
                             break;
                         }
                     }
                 } 
                 
-                if(!_old_entry || _old_entry->offset != entry->offset) {
+                // fix the ndpi offset if we are in the first directory or the offsets diverge
+                if(!first_entry_of_dir || first_entry_of_dir->offset != entry->offset) {
                     entry->offset = fix_ndpi_offset(offset, entry->offset);
                 }
             }
@@ -348,15 +394,18 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
         entries[i] = *entry;
     }
 
-    int64_t next_dir_offset = read_uint(fp, (big_tiff || ndpi) ? 8: 4, big_endian);
+    // get the directory offset of the predecessor
+    int64_t next_dir_offset = ftell(fp);//read_uint(fp, (big_tiff || ndpi) ? 8: 4, big_endian);
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
-    *dir_offset =  next_dir_offset;
+    *dir_offset =  read_uint(fp, (big_tiff || ndpi) ? 8: 4, big_endian);
 
     return tiff_dir;
 }
 
+// check if a file is a hamamatsu ndpi file
+// todo: support for vmf/vms?
 int check_hamamatsu_header(FILE *fp, bool *big_endian, bool *big_tiff) {
     int result = 0;
     uint16_t magic;
@@ -367,7 +416,7 @@ int check_hamamatsu_header(FILE *fp, bool *big_endian, bool *big_tiff) {
     }
             
     if(magic == TIFF_BIGENDIAN || magic == TIFF_LITTLEENDIAN) {
-        // check ndpi version in header
+        // set endianness and check ndpi version in header
         *big_endian = (magic == TIFF_BIGENDIAN);
         uint16_t version = read_uint(fp, 2, *big_endian);
 
@@ -388,27 +437,24 @@ int check_hamamatsu_header(FILE *fp, bool *big_endian, bool *big_tiff) {
     return result;
 }
 
+// read the tiff file structure with offsets from the file stream
 struct tiff_file *read_tiff_file(FILE *fp, bool big_tiff, bool ndpi, bool big_endian) {
     // get directory offset; file stream pointer must be located just before the directory offset
     int64_t diroff = read_uint(fp, 8, big_endian);
     // reading the initial directory
     struct tiff_directory *dir = read_tiff_directory(fp, &diroff, NULL, big_tiff, ndpi, big_endian);
 
-    // allocate memory for the tiff_file struct
     struct tiff_file *file = malloc(sizeof(struct tiff_file));
-    // initialize tiff file with size 1
+    // initialize tiff file and add first directory
     init_tiff_file(file, 1);
-    // insert the first directory
     insert_dir_into_tiff_file(file, *dir);
     // set the current directory as previous directory
     struct tiff_directory *prev_dir = dir;
 
     // when the directory offset is 0 we reached the end of the tiff file
     while(diroff != 0) {
-        // read next directory
         struct tiff_directory *current_dir = read_tiff_directory(fp, &diroff, prev_dir, 
                                                     big_tiff, true, big_endian);
-        // add directory to directory array and resize if necessary
         insert_dir_into_tiff_file(file, *current_dir);
         prev_dir = current_dir;
     }
@@ -417,10 +463,11 @@ struct tiff_file *read_tiff_file(FILE *fp, bool big_tiff, bool ndpi, bool big_en
 }
 
 
+// retrieve the label directory from the tiff file structure
+// todo: refactor function
 int get_label_dir(struct tiff_file *file, FILE *fp, bool big_endian) {
     for (int i = 0; i < file->used; i++) {
         struct tiff_directory temp_dir = file->directories[i];
-        //printf("directory entry count: %lu\n", temp_dir.count);
             
         for(int j = 0; j < temp_dir.count; j++) {
             struct tiff_entry temp_entry = temp_dir.entries[j];
@@ -432,7 +479,6 @@ int get_label_dir(struct tiff_file *file, FILE *fp, bool big_endian) {
                 if(entry_size) {
 
                     if(temp_entry.type == FLOAT) {
-                        // move to function
                         float *v_buffer = malloc(entry_size * temp_entry.count);
 
                         // TODO make 8 byte generic!
@@ -445,13 +491,12 @@ int get_label_dir(struct tiff_file *file, FILE *fp, bool big_endian) {
                             printf("Failed to read entry value.\n");
                             return -1;
                         }
-
                         fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
 
-                        printf("Buffer: %f\n", *v_buffer);
+                        //printf("Buffer: %f\n", *v_buffer);
                             
                         if(*v_buffer == -1) {
-                            printf("delete label\n");  
+                            // we found the label directory; break and return the dir count
                             return i;                       
                         }
                     }
@@ -462,84 +507,121 @@ int get_label_dir(struct tiff_file *file, FILE *fp, bool big_endian) {
     return -1;
 }
 
+// read a pointer from the directory entries by tiff tag
 uint64_t *read_pointer_by_tag(FILE *fp, struct tiff_directory *dir, int tag, bool big_endian) {
-    int value;
     for(int i  = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
         if(entry.tag == tag) {
             int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-            printf("entry size: %i\n", entry_size);
 
             if(entry_size) {
                 uint64_t *v_buffer = malloc(entry_size * entry.count);
-
                 uint64_t new_start = entry.start + 8;
-                printf("new start %lu\n", new_start);
+
                 if(fseek(fp, new_start, SEEK_SET)) {
                     printf("Failed to seek to offset %lu.\n", entry.start);
+                    continue;
                 }
                 if(fread(v_buffer, entry_size, entry.count, fp) != 1) {
                     printf("Failed to read entry value.\n");
+                    continue;
                 }
 
                 fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
 
-                return *v_buffer;
+                return v_buffer;
             }
         }
     }
+
+    return NULL;
 }
 
-int delete_label(FILE *fp, struct tiff_directory *dir, bool big_endian) {
-    // todo
+int wipe_label(FILE *fp, struct tiff_directory *dir, bool big_endian, const char *prefix) {
+    int result = 0;
     uint64_t *strip_offset = read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, big_endian);
     uint64_t *strip_length = read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, big_endian);
-
     //printf("Strip offset: %i\n", strip_offset);
     //printf("Strip length: %i\n", strip_length);
 
-    fseek(fp, strip_offset, SEEK_SET);
+    if(strip_offset != NULL && strip_length != NULL)  {
+        //for(int i = 0; i < )
+        fseek(fp, strip_offset[0], SEEK_SET);
 
-    //char *buf =  malloc(6);
-    //fread(buf, 6, 1, fp);
+        if(prefix != NULL) {
+            // we check the head of the directory offset for a given prefix
+            // if the head is not equal to the given prefix we do not wipe the label data
+            char *buf =  malloc(sizeof(prefix));
+            fread(buf, sizeof(prefix), 1, fp);
 
-    char *strip = get_empty_char_buffer("\0", strip_length);
-    fwrite(strip, 1, strip_length, fp);
+            if(*prefix != *buf) {
+                printf("Prefix in data strip not found.\n");
+                result = -1;
+            } else {
+                // return to offset
+                fseek(fp, strip_offset[0], SEEK_SET);
+            }
+        }
+
+        if(result == 0) {
+            char *strip = get_empty_char_buffer("\0", strip_length[0]);
+            fwrite(strip, 1, strip_length[0], fp);
+        }
+    }
+
+    return result;
 }
 
 int handle_hamamatsu(const char *filename, const char *new_label_name) {
     FILE *fp;
     fp = fopen(filename, "r+w");
 
-    // go to directory offset
     bool big_tiff = false;
     bool big_endian = false;
+    // we check the header again, to place the pointer at the expected position
     int result = check_hamamatsu_header(fp, &big_endian, &big_tiff);
 
     if(result) {
+        // read the file structure
         struct tiff_file *file;
         file = read_tiff_file(fp, big_tiff, true, big_endian);
 
+        // find the lebel directory
         int dir_count = get_label_dir(file, fp, big_endian);
 
         if(dir_count == -1) {
-            printf("Error: No label directory.");
+            printf("Error: No label directory.\n");
+            goto FAILURE;
         }
 
         struct tiff_directory dir = file->directories[dir_count];
 
-        printf("Delete: %lu\n", dir.out_pointer_offset);
-
         // wipe label data from directory
-        delete_label(fp, &dir, big_endian);
+        //wipe_label(fp, &dir, big_endian, "\xff\xd8\0");
 
         // unlink directory and link predecessor to last dir
-        uint64_t out_pointer = dir.out_pointer_offset;
+        struct tiff_directory predecessor = file->directories[dir_count-1];
+        struct tiff_directory successor = file->directories[dir_count+1];
+        uint64_t out_pointer = successor.in_pointer_offset;
 
+        //printf("Writing outpointer [%ld] to in pointer [%ld].\n", out_pointer, predecessor.out_pointer_offset);
+        if(fseek(fp, predecessor.out_pointer_offset, SEEK_SET)) {
+            printf("Failed to seek to offset");
+            goto FAILURE;
+        }
+        if(fwrite(&out_pointer, sizeof(uint64_t), 1, fp) != 1) {
+            printf("Failed to write directory out pointer to predecessor in pointer position.\n");
+            goto FAILURE;
+        }
 
         free_tiff_file(file);
     }
     
+    FAILURE: {
+        fclose(fp);
+        return -1;
+    }
+
     fclose(fp);
     return 0;
 }
@@ -550,6 +632,7 @@ int handle_aperio(const char *filename, const char *new_label_name) {
     if(tiff) {
         int hasLabel = 0;
         int dircount = 0;
+        // scroll through tiff directories
         do {
             char *description;
             TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &description);
@@ -574,14 +657,14 @@ int handle_aperio(const char *filename, const char *new_label_name) {
             // set directory to label dir and blacken label
             TIFFSetDirectory(tiff, dircount);
             if(blacken_label(tiff, -1) == 1) {
-                goto success;
+                goto SUCCESS;
             }
         } else {
-            printf("No label found.");
+            printf("No label found.\n");
         }
     }
 
-    success: {
+    SUCCESS: {
         TIFFClose(tiff);
         return 1;
     }
@@ -591,6 +674,7 @@ int handle_aperio(const char *filename, const char *new_label_name) {
 }
 
 int handle_mirax(const char *filename, const char *new_label_name) {
+    printf("Mirax not yet implemented...\n");
     // TODO
     return 0;
 }
@@ -604,12 +688,13 @@ int is_hamamatsu(const char *filename) {
         return result;
     }
 
+    // check if ndpi tiff tags are present
     FILE *fp = fopen(filename, "r");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_hamamatsu_header(fp, &big_endian, &big_tiff);
-
     fclose(fp);
+
     return result;
 }
 
