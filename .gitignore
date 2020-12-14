@@ -15,3 +15,5 @@ Makefile.in
 
 .vscode/
 .vs/
+bin/
+obj/

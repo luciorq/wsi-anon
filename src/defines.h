@@ -25,8 +25,7 @@
 #define	TIFFTAG_STRIPOFFSETS        273
 #define TIFFTAG_STRIPBYTECOUNTS     279
 
-// use when libtiff is removed
-/*typedef enum {
+typedef enum {
 	TIFF_NOTYPE = 0, 
 	TIFF_BYTE = 1, 
 	TIFF_ASCII = 2,
@@ -44,12 +43,7 @@
 	TIFF_LONG8 = 16,
 	TIFF_SLONG8 = 17,
 	TIFF_IFD8 = 18
-} TIFFDataType;*/
-
-
-// hamamatsu
-#define NDPI_FORMAT_FLAG    65420
-#define NDPI_SOURCELENS     65421
+} TIFFDataType;
 
 #define ASCII 2
 #define SHORT 3
@@ -59,6 +53,11 @@
 #define LONG8 16
 
 #define JPEG_SOI "\xff\xd8\0"
+#define LZW_CLEARCODE "\x80\0"
+
+// hamamatsu
+#define NDPI_FORMAT_FLAG    65420
+#define NDPI_SOURCELENS     65421
 
 typedef enum file_format {
     aperio_svs,
