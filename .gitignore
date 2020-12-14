@@ -1,6 +1,7 @@
 *.lo
 *.loT
 *.o
+*.so
 *.exe
 *.manifest
 *.rc
