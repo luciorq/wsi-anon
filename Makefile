@@ -1,27 +1,68 @@
-CC		= gcc
-CLANG	= clang
+
+CONSOLE_TARGET   = wsi-anonymizer.out
+CONSOLE_DBG_TARGET = wsi-anonymizer-dbg.out
+STATIC_LIBRARY_TARGET = libwsianon.a
+SHARED_LIBRARY_TARGET = libwsianon.so
+
+CC       = gcc
+CFLAGS   = -Wall -I. -O2
 CFLAGS_DEBUG = -g -ggdb -O0 -Wall
-CFLAGS	= -Wall
-LDFLAGS = -ltiff
-DEPS 	= wsi-anonymizer.h tiff-based-io.h mirax-io.h ini-parser.h utils.h
-OBJ 	= src/wsi-anonymizer.c src/tiff-based-io.c src/mirax-io.c src/ini-parser.c src/utils.c
-CONSOLE = src/console-app.c src/wsi-anonymizer.c src/tiff-based-io.c src/mirax-io.c src/ini-parser.c src/utils.c
 
-default: wsi-anonymizer-debug.out
+LINKER   = gcc
+LFLAGS   = -Wall -I.
 
-debug: wsi-anonymizer-debug.out
+SRCDIR   = src
+OBJDIR   = obj
+BINDIR   = bin
 
-console-wsi-anonymizer.a: $(CONSOLE)
-	$(CC) $(CFLAGS_DEBUG) -o $@ $^ $(LDFLAGS)
+SOURCES  := $(wildcard $(SRCDIR)/*.c)
+INCLUDES := $(wildcard $(SRCDIR)/*.h)
+OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+OBJECTS_SHARED := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/shared/%.o)
 
-%.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) $@ $< $(LDFLAGS)
+default: static-lib shared-lib console-app
 
-wsi-anonymizer-debug.out: $(OBJ)
-	$(CC) $(CFLAGS_DEBUG) -o $@ $^ $(LDFLAGS)
+shared-lib: makedirs $(BINDIR)/$(SHARED_LIBRARY_TARGET)
 
-wsi-anonymizer.out: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(BINDIR)/$(SHARED_LIBRARY_TARGET): $(OBJECTS_SHARED)
+	@$(CC) -shared -o $@ $^
 
+$(OBJECTS_SHARED): $(OBJDIR)/shared/%.o : $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS) -c -fPIC $< >$@
+
+static-lib: makedirs $(BINDIR)/$(STATIC_LIBRARY_TARGET)
+
+$(BINDIR)/$(STATIC_LIBRARY_TARGET): $(OBJECTS) 
+	@ar rcs $@ $^
+	@echo "Building lib complete!"
+
+console-app: $(BINDIR)/$(CONSOLE_TARGET)
+
+$(BINDIR)/$(CONSOLE_TARGET): makedirs $(OBJECTS)
+	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking complete!"
+
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
+
+console-app-debug: $(BINDIR)/$(CONSOLE_DBG_TARGET)
+
+$(BINDIR)/$(CONSOLE_DBG_TARGET): makedirs $(OBJECTS_DBG)
+	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking complete!"
+
+$(OBJECTS_DBG): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS_DEBUG) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
+
+makedirs: 
+	mkdir -p $(OBJDIR)
+	mkdir -p $(OBJDIR)/shared
+	mkdir -p $(BINDIR)
+
+.PHONY: clean
 clean:
-	rm -f *.o *.out *.exe *.a
+	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out
+	@rm -r $(OBJDIR) $(BINDIR)
+	@echo "Cleanup complete!"

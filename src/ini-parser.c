@@ -1,18 +1,15 @@
 #include "ini-parser.h"
 
-// retrive an entry value from the ini file by given group and entry key
+// retrive an entry value from the ini file by 
+// given group and entry key
 char *get_value_from_ini_file(struct ini_file *ini_file, 
         const char *group, 
         const char *entry_key) {
     for(int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group ini_group = ini_file->groups[i];
-        //printf("-group: %s [actual: %s]\n", ini_group.group_identifier, group);
-
         if(strcmp(ini_group.group_identifier, group) == 0) {
             for(int32_t j = 0; j < ini_group.entry_count; j++) {
                 struct ini_entry ini_entry = ini_group.entries[j];
-                //printf("--entry: key [%s] - value[%s]\n", ini_entry.key, ini_entry.value);
-
                 if(strcmp(ini_entry.key, entry_key) == 0) {
                     return ini_entry.value;
                 }
@@ -25,7 +22,8 @@ char *get_value_from_ini_file(struct ini_file *ini_file,
 // get the amount of ini groups in the ini
 int32_t get_groups_count(FILE *fp) {
     int32_t count_groups = 0;
-    // we only need the first two chars to determine if line is a group tag
+    // we only need the first two chars to determine 
+    // if line is a group tag
     char *buffer = (char *)malloc(2);
     while(fgets(buffer, 2, fp) != NULL) {
         if(strstr(buffer, "[") != NULL) {
@@ -35,14 +33,15 @@ int32_t get_groups_count(FILE *fp) {
     return count_groups;
 }
 
-struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filename) {
+struct ini_file *read_slidedat_ini_file(const char *path, 
+        const char *ini_filename) {
     // concat slidedat filename
     char *slidedat_filname = concat_path_filename(path, ini_filename);
 
     FILE *fp = fopen(slidedat_filname, "r");
 
     if(fp == NULL) {
-        printf("Could not read ini file.\n");
+        fprintf(stderr, "Error: Could not read ini file.\n");
         return NULL;
     }
 
@@ -56,13 +55,18 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
     char *buffer = (char *)malloc(MAX_CHAR_IN_LINE);
 
     // initialize ini groups
-    struct ini_group *groups = (struct ini_group *)malloc(count_groups * sizeof(struct ini_group));
+    struct ini_group *groups = (struct ini_group *)malloc(
+        count_groups * sizeof(struct ini_group));
     int32_t line = 0, group_count = 0;
+
     while(fgets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
-        if(strstr(buffer, "[") != NULL && strstr(buffer, "]") != NULL) {
+        if(strstr(buffer, "[") != NULL 
+            && strstr(buffer, "]") != NULL) {
             // create new group and populate
-            struct ini_group *temp_group = (struct ini_group *)malloc(sizeof(struct ini_group));
-            char* group_id = get_string_between_delimiters(buffer, "[", "]");
+            struct ini_group *temp_group = (struct ini_group *)malloc(
+                sizeof(struct ini_group));
+            char* group_id = get_string_between_delimiters(
+                buffer, "[", "]");
             temp_group->group_identifier = group_id;
             temp_group->start_line = line;
             // add group to array
@@ -81,7 +85,8 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         struct ini_group next_group = groups[i+1];
 
         int32_t entry_size = next_group.start_line - current_group.start_line;
-        struct ini_entry *entries = (struct ini_entry *)malloc(entry_size * sizeof(struct ini_entry));
+        struct ini_entry *entries = (struct ini_entry *)malloc(
+            entry_size * sizeof(struct ini_entry));
 
         // each iteration we return to the file start
         fseek(fp, 0, SEEK_SET);
@@ -93,12 +98,14 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
             // skip useless lines
             if(line_count <= current_group.start_line + 1) {
                 continue;
-            } else if (count_groups != i+1 && line_count > next_group.start_line) {
+            } else if (count_groups != i+1 
+                        && line_count > next_group.start_line) {
                 break;
             }
 
             // parse entry
-            struct ini_entry *temp_entry = (struct ini_entry *)malloc(sizeof(struct ini_entry));
+            struct ini_entry *temp_entry = (struct ini_entry *)malloc(
+                sizeof(struct ini_entry));
             char** splitted_entry = str_split(buffer, '=');
             // remove whitspace
             char* key = splitted_entry[0];
@@ -125,10 +132,12 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
     return ini_file;
 }
 
-struct ini_group *remove_ini_group_from_array(struct ini_group *groups, int32_t size_of_array, int32_t index_to_remove)
-{
+struct ini_group *remove_ini_group_from_array(struct ini_group *groups, 
+        int32_t size_of_array, 
+        int32_t index_to_remove) {
     // new array with size one less than old array
-    struct ini_group *temp = (struct ini_group *)malloc((size_of_array - 1) * sizeof(struct ini_group));
+    struct ini_group *temp = (struct ini_group *)malloc(
+        (size_of_array - 1) * sizeof(struct ini_group));
 
     // copy all elements before the index
     if (index_to_remove != 0) {
@@ -137,13 +146,15 @@ struct ini_group *remove_ini_group_from_array(struct ini_group *groups, int32_t 
     
     // copy all elements after the index
     if (index_to_remove != (size_of_array - 1))
-        memcpy(temp+index_to_remove, groups+index_to_remove+1, (size_of_array - index_to_remove - 1) * sizeof(struct ini_group));
+        memcpy(temp+index_to_remove, groups+index_to_remove+1, 
+            (size_of_array - index_to_remove - 1) * sizeof(struct ini_group));
           
     free (groups);
     return temp;
 }
 
-int32_t delete_group_form_ini_file(struct ini_file *ini_file, char *group_name) {
+int32_t delete_group_form_ini_file(struct ini_file *ini_file, 
+        char *group_name) {
     // get the group index
     int32_t group_index = -1;
     for(int32_t i = 0; i < ini_file->group_count; i++) {
@@ -159,7 +170,8 @@ int32_t delete_group_form_ini_file(struct ini_file *ini_file, char *group_name) 
     }
 
     // remove group from array and assign new group pointer to group
-    struct ini_group *new_groups = remove_ini_group_from_array(ini_file->groups, ini_file->group_count, group_index);
+    struct ini_group *new_groups = remove_ini_group_from_array(
+        ini_file->groups, ini_file->group_count, group_index);
     ini_file->groups = new_groups;
     ini_file->group_count--;
 
@@ -192,14 +204,17 @@ void rename_section_name_for_level_in_section(struct ini_file *ini_file,
     }
 }
 
-void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, char *key, char *value) {
+void set_value_for_group_and_key(struct ini_file *ini_file, 
+        const char *group_name, 
+        const char *key, 
+        const char *value) {
     for(int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if(strcmp(group->group_identifier, group_name) == 0) {
             for(int j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if(strcmp(entry->key, key) == 0) {
-                    (*entry).value = value;
+                    (*entry).value = strdup(value);
                     break;
                 }
             }
@@ -207,10 +222,12 @@ void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_na
     }
 }
 
-struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, int32_t size_of_array, int32_t index_to_remove)
-{
+struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, 
+        int32_t size_of_array, 
+        int32_t index_to_remove) {
     // new array with size one less than old array
-    struct ini_entry *temp = (struct ini_entry *)malloc((size_of_array - 1) * sizeof(struct ini_entry));
+    struct ini_entry *temp = (struct ini_entry *)malloc(
+        (size_of_array - 1) * sizeof(struct ini_entry));
 
     // copy all elements before the index
     if (index_to_remove != 0) {
@@ -219,13 +236,16 @@ struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, int32_t
     
     // copy all elements after the index
     if (index_to_remove != (size_of_array - 1))
-        memcpy(temp+index_to_remove, entries+index_to_remove+1, (size_of_array - index_to_remove - 1) * sizeof(struct ini_entry));
+        memcpy(temp+index_to_remove, entries+index_to_remove+1, 
+            (size_of_array - index_to_remove - 1) * sizeof(struct ini_entry));
           
     free (entries);
     return temp;
 }
 
-void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key) {
+void remove_entry_for_group_and_key(struct ini_file *ini_file, 
+        const char *group_name, 
+        const char *key) {
     int32_t c_group = -1, c_entry = -1;
     for(int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
@@ -246,13 +266,16 @@ void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group
     }
 
     struct ini_group *group = &ini_file->groups[c_group];
-    struct ini_entry *entries = remove_ini_entry_from_array(group->entries, group->entry_count, c_entry);
+    struct ini_entry *entries = remove_ini_entry_from_array(
+        group->entries, group->entry_count, c_entry);
     group->entries = entries;
     group->entry_count--;
 }
 
 // decrement a count value as entry value by a given group and entry key
-void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key) {
+void decrement_value_for_group_and_key(struct ini_file *ini_file, 
+        const char *group_name, 
+        const char *key) {
     for(int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if(strcmp(group->group_identifier, group_name) == 0) {
@@ -271,13 +294,14 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *gr
     }
 }
 
-int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *filename) {
+int32_t write_ini_file(struct ini_file *ini_file, 
+        const char *path, 
+        const char *filename) {
     char *slidedat_filname = concat_path_filename(path, filename);
-    printf("file: %s\n", slidedat_filname);
     FILE *fp = fopen(slidedat_filname, "w+");
 
     if(fp == NULL) {
-        printf("Error: Failed writing index file.\n");
+        fprintf(stderr, "Error: Failed writing index file.\n");
         return -1;
     }
 

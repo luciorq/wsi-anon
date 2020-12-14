@@ -2,10 +2,10 @@
 
 // split a string by a given delimiter
 char** str_split(char* a_str, const char a_delim) {
-    char** result    = 0;
+    char **result    = 0;
     size_t count     = 0;
-    char* tmp        = a_str;
-    char* last_comma = 0;
+    char *tmp        = a_str;
+    char *last_comma = 0;
     char delim[2];
     delim[0] = a_delim;
     delim[1] = 0;
@@ -26,7 +26,7 @@ char** str_split(char* a_str, const char a_delim) {
     // knows where the list of returned strings ends
     count++;
 
-    result = (char **)malloc(sizeof(char*) * count);
+    result = (char **)malloc(sizeof(char *) *count);
 
     if(result) {
         // fill result array
@@ -62,24 +62,45 @@ int32_t file_exists(const char *filename) {
 }
 
 // return a char buffer filled with char x
-char *get_empty_char_buffer(const char *x, uint64_t length) {
-    char *result = (char *)malloc(length * sizeof(char));
-    if(length > 0) {
-        // fill buffer with char *x
-        for(uint64_t i = 0; i < length; i++) {
-            result[i] = *x;
-        }
-    } else {
-        result[0] = *x;
+char *get_empty_char_buffer(const char *x, 
+        uint64_t length, 
+        const char *prefix) {
+    // assure length is a postive integer and not zero
+    if(length < 1) {
+        fprintf(stderr, "Error: Length smaller 1.\n");
+        return NULL;
     }
+
+    // allocate buffer
+    char *result = (char *)malloc(length * sizeof(char));
+
+    int32_t start = 0;
+    if(prefix != NULL) {
+        int32_t str_length = strlen(prefix);
+        // add prefix before empty buffer (e.g. JPEG SOI)
+        if(length > str_length) {
+            for(; start < str_length; start++) {
+                result[start] = prefix[start];
+            }
+        }
+    }
+
+    // fill rest of buffer with x
+    for(int32_t i = start; i < length; i++) {
+            result[i] = *x;
+    }
+
     return result;
 }
 
 bool starts_with(char *str, const char *pre) {
-    return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
+    return strlen(str) < strlen(pre) ? false : 
+        memcmp(pre, str, strlen(pre)) == 0;
 }
 
-char *get_string_between_delimiters(char *buffer, const char *delimiter1, const char *delimiter2) {
+char *get_string_between_delimiters(char *buffer, 
+        const char *delimiter1, 
+        const char *delimiter2) {
     const char *substring1 = strstr(buffer, delimiter1);
     if(substring1) {
         const size_t s_del1 = strlen(delimiter1);
@@ -108,8 +129,10 @@ void remove_leading_spaces(char *str) {
     memmove(str, p, l + 1);
 }
 
-char *concat_path_filename(const char *path, const char *filename) {
-    char *new_string = (char *)malloc(strlen(path) + strlen(filename) + 3);
+char *concat_path_filename(const char *path, 
+        const char *filename) {
+    char *new_string = (char *)malloc(strlen(path) 
+                            + strlen(filename) + 3);
     strcpy(new_string, path);
     strcat(new_string, "//");
     strcat(new_string, filename);
@@ -131,8 +154,10 @@ int32_t number_of_digits(int32_t integer) {
     return result;
 }
 
+// put a given string in square brackets
 char *add_square_brackets(char *str) {
-    int32_t length = sizeof(str) + sizeof("[") + sizeof("]") + sizeof("\0") + 1;
+    int32_t length = sizeof(str) + sizeof("[") 
+                        + sizeof("]") + sizeof("\0") + 1;
     char *result = (char *)malloc(length);
     strcpy(result, "[");
     strcat(result, str);
@@ -142,8 +167,10 @@ char *add_square_brackets(char *str) {
     return result;
 }
 
+// add an equal sign with whitespaces between to strings
 char *add_equals_sign(char *str1, char *str2) {
-    int32_t length = sizeof(str1) + sizeof(str2) + sizeof(" = ") + sizeof("\0") + 1;
+    int32_t length = sizeof(str1) + sizeof(str2) 
+                        + sizeof(" = ") + sizeof("\0") + 1;
     char *result = (char *)malloc(length);
     strcpy(result, str1);
     strcat(result, " = ");
@@ -154,7 +181,28 @@ char *add_equals_sign(char *str1, char *str2) {
     return result;
 }
 
-// determine wether the operating system is big or little endian
+// function to check if str1 contains str2
+bool contains(const char *str1, const char *str2) {
+    int i = 0, j = 0;
+
+    while(str1[i] != '\0') {
+        if(str1[i] == str2[j]) {
+            while(str1[i] == str2[j] && str2[j] != '\0') {
+                j++;
+                i++;
+            }
+            if(str2[j] == '\0') {
+                return true;
+            }
+            j = 0;
+        }
+        i++;
+    }
+    return false;
+}
+
+// determine wether the operating system 
+// is big or little endian
 bool is_system_big_endian() {
   int n = 1;
   if(*(char *)&n == 1) {
@@ -176,7 +224,9 @@ uint32_t _swap_uint32(uint32_t value) {
 
 // swap bytes of unsigned interger 32 bytes
 uint64_t _swap_uint64(uint64_t value) {
-    value = ((value << 8) & 0xFF00FF00FF00FF00ULL ) | ((value >> 8) & 0x00FF00FF00FF00FFULL );
-    value = ((value << 16) & 0xFFFF0000FFFF0000ULL ) | ((value >> 16) & 0x0000FFFF0000FFFFULL );
+    value = ((value << 8) & 0xFF00FF00FF00FF00ULL ) 
+                | ((value >> 8) & 0x00FF00FF00FF00FFULL );
+    value = ((value << 16) & 0xFFFF0000FFFF0000ULL ) 
+                | ((value >> 16) & 0x0000FFFF0000FFFFULL );
     return (value << 32) | (value >> 32);
 }

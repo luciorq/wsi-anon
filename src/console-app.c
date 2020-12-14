@@ -10,7 +10,6 @@ int main(int argc, char *argv[]) {
     bool unlink_directory = false;
     char *filename = NULL;
     char *new_label_name = NULL;
-    printf("args %i\n", argc);
 
     size_t optind;
     for (optind = 1; optind < argc; optind++) {
@@ -26,7 +25,6 @@ int main(int argc, char *argv[]) {
                     break;
                 } 
                 case 'n': {
-                    printf("test");
                     new_label_name = argv[optind+1];
                     break;
                 }
