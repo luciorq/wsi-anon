@@ -1,5 +1,11 @@
 #include "tiff-based-io.h"
 
+static const char DOT_SVS[] = ".svs";
+static const char SVS[] = "svs";
+static const char TIF[] = "tif";
+static const char DOT_NDPI[] = ".ndpi";
+static const char NDPI[] = "ndpi";
+
 // initialize directory array for a given tiff file
 void init_tiff_file(struct tiff_file *file, size_t init_size) {
     file->directories = (struct tiff_directory *)malloc(
@@ -489,9 +495,54 @@ int32_t unlink_label_directory(FILE *fp,
     return 0;
 }
 
-int32_t handle_hamamatsu(const char *filename, 
+char *duplicate_file(const char *filename, 
+        const char *new_label_name,
+        const char *file_extension) {
+    // make file name temporary non const
+    char *temp_f = (char *)filename;
+    // retrive filename from whole file path
+    char *_filename = (char *)malloc(sizeof(char *));
+    _filename = get_filename_from_path(temp_f);
+
+    if(_filename == NULL) {
+        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
+        return NULL;
+    }
+
+    // get the directory path
+    int32_t l_filename = strlen(filename);
+    int32_t diff = l_filename - strlen(_filename);
+    char path[diff + 1];
+    memcpy(path, &filename[0], diff);
+    path[diff] = '\0';
+
+    char *new_filename;
+    // now we can concat the new filename
+    if(new_label_name == NULL) {
+        // if no label is given, we give the file a generic name
+        char *dummy_filename = "anonymized-wsi";
+        new_filename = concat_path_filename_ext(path, dummy_filename, file_extension);
+    } else {
+        new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
+    }
+
+    // we copy the file in our current directory
+    // create a subfolder /output/?
+    if(new_filename != NULL && copy_file_v2(filename, new_filename) == 0) {
+        return new_filename;
+    } else {
+        return NULL;
+    }
+}
+
+int32_t handle_hamamatsu(char *filename, 
         const char *new_label_name, 
-        bool unlink_directory) {
+        bool disable_unlinking,
+        bool disable_inplace) {
+    if(disable_inplace) {
+        filename = duplicate_file(filename, new_label_name, DOT_NDPI);
+    }
+
     FILE *fp;
     fp = fopen(filename, "r+");
 
@@ -532,7 +583,7 @@ int32_t handle_hamamatsu(const char *filename,
         return -1;
     }
 
-    if(unlink_directory) {
+    if(!disable_unlinking) {
         // unlink the empty label directory from file structure
         result = unlink_label_directory(fp, file, dir_count);
     }
@@ -573,9 +624,15 @@ int32_t get_aperio_label_dir(FILE *fp,
     return -1;
 }
 
-int32_t handle_aperio(const char *filename, 
+int32_t handle_aperio(char *filename, 
         const char *new_label_name, 
-        bool unlink_directory) {
+        bool disable_unlinking,
+        bool disable_inplace) {
+    if(disable_inplace) {
+        // check if filename is svs or tif here
+        filename = duplicate_file(filename, new_label_name, DOT_SVS);        
+    }
+
     FILE *fp;
     fp = fopen(filename, "r+");
 
@@ -617,7 +674,7 @@ int32_t handle_aperio(const char *filename,
         return -1;
     }
 
-    if(unlink_directory) {
+    if(!disable_unlinking) {
         result = unlink_label_directory(fp, file, label_dir);
     }
 
@@ -631,7 +688,7 @@ int32_t is_hamamatsu(const char *filename) {
     const char *ext = get_filename_ext(filename);
 
     // check for valid file extension
-    if(strcmp(ext, "ndpi") != 0) {
+    if(strcmp(ext, NDPI) != 0) {
         return result;
     }
 
@@ -650,7 +707,7 @@ int32_t is_aperio(const char *filename) {
     const char *ext = get_filename_ext(filename);
 
     // check for valid file extension
-    if(strcmp(ext, "svs") != 0 && strcmp(ext, "tif") != 0) {
+    if(strcmp(ext, SVS) != 0 && strcmp(ext, TIF) != 0) {
         return result;
     }
 

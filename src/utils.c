@@ -139,6 +139,34 @@ char *concat_path_filename(const char *path,
     return new_string;
 }
 
+char *concat_path_filename_ext(const char *path, 
+        const char *filename,
+        const char *ext) {
+    char *new_string = (char *)malloc(strlen(path) 
+                            + strlen(filename) + strlen(ext) + 2);
+    strcpy(new_string, path);
+    // we assume that path is already ending with a dash
+    strcat(new_string, filename);
+    //strcat(new_string, ".");
+    strcat(new_string, ext);
+    return new_string;
+}
+
+char *get_filename_from_path(char *path)
+{
+    if(path == NULL )
+        return NULL;
+
+    char *temp_path = path;
+    for(char *p_cur = path; *p_cur != '\0'; p_cur++)
+    {
+        if(*p_cur == '/' || *p_cur == '\\')
+            temp_path = p_cur+1;
+    }
+    
+    return temp_path;
+}
+
 char *int32_to_str(int32_t integer) {
     int length = snprintf( NULL, 0, "%d", integer);
     char* str = (char *)malloc(length + 1);
@@ -199,6 +227,67 @@ bool contains(const char *str1, const char *str2) {
         i++;
     }
     return false;
+}
+
+int32_t copy_file_v2(const char *src, const char *dest) {
+    char command[strlen(src) + strlen(dest) + 15];    
+#ifdef __linux__ 
+    // we create the copy command for linux
+    snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
+#elif _WIN32
+    // we create the copy command for win
+    snprintf(command, sizeof command, "xcopy \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
+#else
+    // todo: implement for mac
+    return -1;
+#endif
+}
+
+int32_t copy_file(const char *src, const char *dest) {
+    FILE *source, *target;
+ 
+    source = fopen(src, "r");
+ 
+    if(source == NULL) {
+        fprintf(stderr, "Could not open source file.\n");
+        return -1;
+    }
+ 
+    target = fopen(dest, "w");
+ 
+    if(target == NULL) {
+       fclose(source);
+       fprintf(stderr, "Could not open destination file.\n");
+       return -1;
+    }
+
+    char ch;
+    while((ch = fgetc(source)) != EOF) {
+        fputc(ch, target);
+    }
+
+    fclose(source);
+    fclose(target);
+ 
+    return 0;
+}
+
+int32_t copy_directory(const char *src , const char *dest) {
+    char command[strlen(src) + strlen(dest) + 15];    
+#ifdef __linux__ 
+    // we create the copy command for linux
+    snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
+#elif _WIN32
+    // we create the copy command for win
+    snprintf(command, sizeof command, "xcopy \"%s\" \"%s\" /s /e%c", src, dest, '\0');
+    return system(command);
+#else
+    // todo: implement for mac
+    return -1;
+#endif
 }
 
 // determine wether the operating system 

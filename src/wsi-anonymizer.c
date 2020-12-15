@@ -1,5 +1,9 @@
 #include "wsi-anonymizer.h"
 
+void test_function() {
+    printf("test12300");
+}
+
 file_format check_file_format(const char *filename) {
     if(file_exists(filename) == 1) {
         if(is_aperio(filename)) {
@@ -18,18 +22,21 @@ file_format check_file_format(const char *filename) {
 
 const char* anonymize_wsi(const char *filename, 
         const char *new_label_name,
-        bool unlink_directory) {
-    switch(check_file_format(filename)){
+        bool disbale_unlinking,
+        bool disable_inplace) {
+    char *_filename = (char *)filename;
+
+    switch(check_file_format(_filename)){
         case aperio_svs: {
-            handle_aperio(filename, new_label_name, unlink_directory); 
+            handle_aperio(_filename, new_label_name, disbale_unlinking, disable_inplace); 
             break;
         }
         case hamamatsu_ndpi: {
-            handle_hamamatsu(filename, new_label_name, unlink_directory); 
+            handle_hamamatsu(_filename, new_label_name, disbale_unlinking, disable_inplace); 
             break;
         }
         case histech_mirax: {
-            handle_mirax(filename, new_label_name, unlink_directory); 
+            handle_mirax(_filename, new_label_name, disbale_unlinking, disable_inplace); 
             break;
         }
         case unknown_format: { 
@@ -40,6 +47,5 @@ const char* anonymize_wsi(const char *filename,
             fprintf(stderr, "Error: File does not exist or is invalid.");
         }
     }
-    // todo: return full filename and path
-    return new_label_name;
+    return _filename;
 }

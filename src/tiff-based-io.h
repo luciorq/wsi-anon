@@ -9,15 +9,22 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 
-int32_t handle_hamamatsu(const char *filename, 
-  const char *new_label_name, 
-  bool unlink_directory);
+char *duplicate_file(const char *filename, 
+        const char *new_label_name,
+        const char *file_extension);
 
-int32_t handle_aperio(const char *filename, 
+int32_t handle_hamamatsu(char *filename, 
   const char *new_label_name, 
-  bool unlink_directory);
+  bool disable_unlinking,
+  bool disable_inplace);
+
+int32_t handle_aperio(char *filename, 
+  const char *new_label_name, 
+  bool disable_unlinking,
+  bool disable_inplace);
 
 int32_t is_hamamatsu(const char *filename);
+
 int32_t is_aperio(const char *filename);
 
 #endif

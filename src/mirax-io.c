@@ -376,10 +376,87 @@ struct mirax_level *get_next_level(struct mirax_layer **layers,
     return NULL;
 }
 
-int32_t handle_mirax(const char *filename, 
+// TODO: CHECK IF THIS WORKS UNDER WINDOWS!!
+// duplicate and rename the mirax file file.mrxs and
+// the associated folder with the image data
+// return new path name of image data folder
+// filename will be modified to new filename
+char *duplicate_mirax_filedata(char *filename, 
         const char *new_label_name, 
-        bool unlink_directory) {
+        const char *file_extension) {
+    // retrive filename from whole file path
+    char *_filename = (char *)malloc(sizeof(char *));
+    _filename = get_filename_from_path(filename);
+
+    if(_filename == NULL) {
+        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
+        return NULL;
+    }
+
+    // get the directory path
+    int32_t diff = strlen(filename) - strlen(_filename);
+    char path[diff + 1];
+    memcpy(path, &filename[0], diff);
+    path[diff] = '\0';
+
+    int32_t diff2 = strlen(_filename) - strlen(file_extension);
+    char old_filename_wo_ext[diff2 + 1];
+    memcpy(old_filename_wo_ext, &_filename[0], diff2);
+    old_filename_wo_ext[diff2] = '\0';
+
+    // now we can concat the new filename
+    if(new_label_name == NULL) {
+        // if no label is given, we give the file a generic name
+        char dummy_prefix[] = "ANONYMIZED_";
+        char *temp_label_name = (char *)malloc(
+            strlen(dummy_prefix) + strlen(old_filename_wo_ext) + 1);
+        strcpy(temp_label_name, dummy_prefix);
+        strcat(temp_label_name, old_filename_wo_ext);
+        // concat string
+        new_label_name = temp_label_name;
+    }
+    char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
+
+    int32_t copy_result = copy_file_v2(filename, new_filename);
+    // we copy the file in our current directory
+    if(copy_result != 0) {
+        return NULL;
+    }
+    
+    filename = new_filename;
+
+    // copy mirax directory
+    char *new_path = (char *)malloc(strlen(path) + strlen(new_label_name) + 1);
+    strcpy(new_path, path);
+    strcat(new_path, new_label_name);
+
+    char *old_path = (char *)malloc(strlen(path) + strlen(old_filename_wo_ext) + 1);
+    strcpy(old_path, path);
+    strcat(old_path, old_filename_wo_ext);
+
+    int32_t result = copy_directory(old_path, new_path);
+    free(old_path);
+
+    if(result != -1) {
+        return new_path;
+    } else {
+        return NULL;
+    }
+}
+
+int32_t handle_mirax(char *filename, 
+        const char *new_label_name, 
+        bool disable_unlinking,
+        bool disable_inplace) {
     char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
+
+    if(disable_inplace) {
+        path = duplicate_mirax_filedata(filename, new_label_name, DOT_MRXS_EXT);
+
+        if(path == NULL || filename == NULL) {
+            fprintf(stderr, "Error: Failed to copy mirax files.\n");
+        }
+    }
 
     struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
 
@@ -425,7 +502,7 @@ int32_t handle_mirax(const char *filename,
     }
 
     // unlink directory
-    if(unlink_directory) {
+    if(!disable_unlinking) {
         struct mirax_level *level_to_delete = get_level_by_name(
             mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
 

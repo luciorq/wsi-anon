@@ -1,6 +1,5 @@
-
-CONSOLE_TARGET   = wsi-anonymizer.out
-CONSOLE_DBG_TARGET = wsi-anonymizer-dbg.out
+CONSOLE_TARGET   = wsi-anon.out
+CONSOLE_DBG_TARGET = wsi-anon-dbg.out
 STATIC_LIBRARY_TARGET = libwsianon.a
 SHARED_LIBRARY_TARGET = libwsianon.so
 
@@ -16,9 +15,11 @@ OBJDIR   = obj
 BINDIR   = bin
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
+SOURCES_LIB = $(filter-out $(SRCDIR)/console-app.c, $(wildcard $(SRCDIR)/*.c))
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-OBJECTS_SHARED := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/shared/%.o)
+OBJECTS_DBG  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/debug/%.o)
+OBJECTS_SHARED := $(SOURCES_LIB:$(SRCDIR)/%.c=$(OBJDIR)/shared/%.o)
 
 default: static-lib shared-lib console-app
 
@@ -26,17 +27,20 @@ shared-lib: makedirs $(BINDIR)/$(SHARED_LIBRARY_TARGET)
 
 $(BINDIR)/$(SHARED_LIBRARY_TARGET): $(OBJECTS_SHARED)
 	@$(CC) -shared -o $@ $^
+	@echo "Linking shared lib "$@" complete!"
 
-$(OBJECTS_SHARED): $(OBJDIR)/shared/%.o : $(SRCDIR)/%.c
+$(OBJECTS_SHARED): $(OBJDIR)/shared/%.o : $(SOURCES_LIB)
 	@$(CC) $(CFLAGS) -c -fPIC $< >$@
+	@echo "Compiling "$@"..."
 
 static-lib: makedirs $(BINDIR)/$(STATIC_LIBRARY_TARGET)
 
 $(BINDIR)/$(STATIC_LIBRARY_TARGET): $(OBJECTS) 
 	@ar rcs $@ $^
-	@echo "Building lib complete!"
+	@echo "Building static lib "$@" complete!"
 
 console-app: $(BINDIR)/$(CONSOLE_TARGET)
+	@echo "Building console app "$<
 
 $(BINDIR)/$(CONSOLE_TARGET): makedirs $(OBJECTS)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
@@ -44,22 +48,23 @@ $(BINDIR)/$(CONSOLE_TARGET): makedirs $(OBJECTS)
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+	@echo "Compiling "$<"..."
 
-console-app-debug: $(BINDIR)/$(CONSOLE_DBG_TARGET)
+console-app-debug: makedirs $(BINDIR)/$(CONSOLE_DBG_TARGET)
 
 $(BINDIR)/$(CONSOLE_DBG_TARGET): makedirs $(OBJECTS_DBG)
-	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@$(LINKER) $(OBJECTS_DBG) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
-$(OBJECTS_DBG): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+$(OBJECTS_DBG): $(OBJDIR)/debug/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS_DEBUG) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+	@echo "Compiling "$<"..."
 
 makedirs: 
-	mkdir -p $(OBJDIR)
-	mkdir -p $(OBJDIR)/shared
-	mkdir -p $(BINDIR)
+	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)/shared
+	@mkdir -p $(OBJDIR)/debug
+	@mkdir -p $(BINDIR)
 
 .PHONY: clean
 clean:

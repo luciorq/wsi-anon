@@ -1,32 +1,56 @@
 # wsi-anon
 
-C library to remove the label from WSIs.
+C library to anonymize WSIs by remove the label image.
+
+Currently supported formats:
+
+* Aperio (`.svs` / `.tif`)
+* Hamamatsu (`.ndpi`)
+* Mirax (`.mrxs`)
 
 ## Prerequisites
 
-* install libtiff-dev (ubuntu): will be removed shortly
-* install cmake
+* install build-essential
 
 ## Build
 
 To build the console application simply run
 
 ```bash
-make console-wsi-anonymizer.a
+make
 ```
+
+This will build the object files and subsequently a static and a shared library. 
+Also the console application will be build as .out file. These files are stored in `/bin/`.
+
+To build the console application in debug mode type
+
+```bash
+make console-app-debug
+```
+
+and run with `gdb -args wsi-anon-dbg.out` afterwards.
+
+## Tests
+
+// to come
 
 ## Run
 
 Check for slide vendor:
 
 ```bash
-./console-wsi-anonymizer.a -c //path//to//wsi.tif
+./wsi-anon.out "/path/to/wsi.tif" -c
 ```
 
 Anonyimize slide:
 
 ```bash
-./console-wsi-anonymizer.a -i //path//to//wsi.tif -n "new label name" -u
+./wsi-anon.out "/path/to/wsi.tif" [-OPTIONS]
 ```
 
-The -u flag specifies if a directory should be unlinked from the WSI.
+Add `-h` for help. Further flags are:
+
+* `-n "label-name"`: File will be renamed to given label name.
+* `-u` : Disables the unlinking of tiff directories (default: dir will be unlinked)
+* `-i` : Enable in-place anonymization. (default: copy of file will be created)

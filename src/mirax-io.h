@@ -6,7 +6,10 @@
 #include "ini-parser.h"
 #include "utils.h"
 
-int handle_mirax(const char *filename, const char *new_label_name, bool unlink_directory);
+int handle_mirax(char *filename, 
+    const char *new_label_name, 
+    bool disbale_unlinking,
+    bool disable_inplace);
 
 int is_mirax(const char *filename);
 
