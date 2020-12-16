@@ -1,7 +1,7 @@
 #include "wsi-anonymizer.h"
 
-void test_function() {
-    printf("test12300");
+char *test_function() {
+    return strdup("test12300");
 }
 
 file_format check_file_format(const char *filename) {

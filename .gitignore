@@ -18,3 +18,4 @@ Makefile.in
 .vs/
 bin/
 obj/
+__pycache__

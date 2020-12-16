@@ -20,8 +20,6 @@ char *get_string_between_delimiters(char *buffer,
     const char *delimiter1, 
     const char *delimiter2);
 
-char *string_remove_char_from_charset(char *string, char *spanset);
-
 void remove_leading_spaces(char *str);
 
 char *concat_path_filename(const char *path, const char *filename);

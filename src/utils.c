@@ -72,7 +72,7 @@ char *get_empty_char_buffer(const char *x,
     }
 
     // allocate buffer
-    char *result = (char *)malloc(length * sizeof(char));
+    char *result = (char *)malloc((length * sizeof(char)) + 1);
 
     int32_t start = 0;
     if(prefix != NULL) {
@@ -86,7 +86,7 @@ char *get_empty_char_buffer(const char *x,
     }
 
     // fill rest of buffer with x
-    for(int32_t i = start; i < length; i++) {
+    for(int32_t i = start; i <= length; i++) {
             result[i] = *x;
     }
 
@@ -134,7 +134,7 @@ char *concat_path_filename(const char *path,
     char *new_string = (char *)malloc(strlen(path) 
                             + strlen(filename) + 3);
     strcpy(new_string, path);
-    strcat(new_string, "//");
+    strcat(new_string, "\\");
     strcat(new_string, filename);
     return new_string;
 }
@@ -175,7 +175,7 @@ char *int32_to_str(int32_t integer) {
 }
 
 int32_t number_of_digits(int32_t integer) {
-    int32_t result = (integer < 0) ? 1 : 0;
+    int32_t result = (integer < 0) ? 2 : 1;
     while((integer /= 10) != 0) {
         result++;
     }

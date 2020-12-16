@@ -33,7 +33,14 @@ and run with `gdb -args wsi-anon-dbg.out` afterwards.
 
 ## Tests
 
-// to come
+To run unit tests build project with 
+
+```bash
+make tests
+./bin/utests
+```
+
+// to come: integration tests
 
 ## Run
 

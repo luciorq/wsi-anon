@@ -460,6 +460,7 @@ int32_t wipe_label(FILE *fp,
         char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix);
         if(!fwrite(strip, 1, strip_lengths[i], fp)) {
             fprintf(stderr, "Error: Wiping image data failed.\n");
+            free(strip);
             return -1;
         }
         free(strip);
