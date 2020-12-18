@@ -2,6 +2,7 @@ CONSOLE_TARGET   = wsi-anon.out
 CONSOLE_DBG_TARGET = wsi-anon-dbg.out
 STATIC_LIBRARY_TARGET = libwsianon.a
 SHARED_LIBRARY_TARGET = libwsianon.so
+SO_NAME = libwsianon
 TEST_TARGET = utests
 
 CC       = gcc
@@ -32,13 +33,8 @@ default: static-lib shared-lib console-app
 
 shared-lib: makedirs $(BINDIR)/$(SHARED_LIBRARY_TARGET)
 
-$(BINDIR)/$(SHARED_LIBRARY_TARGET): $(OBJECTS_SHARED)
-	@$(CC) -shared -o $@ $^
-	@echo "Linking shared lib "$@" complete!"
-
-$(OBJECTS_SHARED): $(OBJDIR)/shared/%.o : $(SOURCES_LIB)
-	@$(CC) $(CFLAGS) -fPIC -pie -c $< >$@
-	@echo "Compiling "$@"..."
+$(BINDIR)/$(SHARED_LIBRARY_TARGET): 
+	@$(CC) -shared -Wl,-soname,$(SO_NAME) -o $(BINDIR)/$(SHARED_LIBRARY_TARGET) -fPIC $(SOURCES_LIB)
 
 static-lib: makedirs $(BINDIR)/$(STATIC_LIBRARY_TARGET)
 
@@ -72,7 +68,6 @@ $(OBJECTS_DBG): $(OBJDIR)/debug/%.o : $(SRCDIR)/%.c
 
 makedirs: 
 	@mkdir -p $(OBJDIR)
-	@mkdir -p $(OBJDIR)/shared
 	@mkdir -p $(OBJDIR)/debug
 	@mkdir -p $(BINDIR)
 

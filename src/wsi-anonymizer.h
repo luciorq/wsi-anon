@@ -6,9 +6,6 @@
 #include "mirax-io.h"
 
 extern
-char* test_function();
-
-extern
 file_format check_file_format(const char *filename);
 
 extern

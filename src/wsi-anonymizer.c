@@ -1,9 +1,5 @@
 #include "wsi-anonymizer.h"
 
-char *test_function() {
-    return strdup("test12300");
-}
-
 file_format check_file_format(const char *filename) {
     if(file_exists(filename) == 1) {
         if(is_aperio(filename)) {
