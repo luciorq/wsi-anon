@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
             if(new_label_name != NULL) {
                 anonymize_wsi(filename, new_label_name, disable_unlinking, disable_inplace);
             } else {
-                //TODO
+                //TODO: new file name (old_filename + tag)
                 anonymize_wsi(filename, "old_file_name", disable_unlinking, disable_inplace);
             }
         } else {

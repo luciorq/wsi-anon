@@ -596,16 +596,14 @@ int32_t handle_hamamatsu(char *filename,
 }
 
 int32_t get_aperio_label_dir(FILE *fp, 
-        struct tiff_file *file, 
-        bool big_tiff, 
-        bool big_endian) {
+        struct tiff_file *file) {
     for(uint64_t i = 0; i < file->used; i++) {
         
         struct tiff_directory dir = file->directories[i];
         for(uint64_t j = 0; j < dir.count; j++) {
-
             struct tiff_entry entry = dir.entries[j];
-            if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
+            if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
+                // get the image description from file
                 fseek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(
                     entry.type, &entry.count);
@@ -616,7 +614,18 @@ int32_t get_aperio_label_dir(FILE *fp,
                     return -1;
                 }
 
-                if(contains(buffer, "label")) {
+                // if aperio image is of type GT450, the label image is the second last
+                if(contains(buffer, "Aperio Leica Biosystems GT450")) {
+                    // if the file has no more than two layers, there is no label image
+                    if(file->used <= 2) {
+                        return -1;
+                    } else {
+                        return file->used - 2;
+                    }                 
+                }
+
+                // otherwise we search for the label tag
+                if(contains(buffer, "Aperio") && contains(buffer, "label")) {
                     return i;
                 }
             }
@@ -654,8 +663,7 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
-    int32_t label_dir = get_aperio_label_dir(
-        fp, file, big_tiff, big_endian);
+    int32_t label_dir = get_aperio_label_dir(fp, file);
 
     if(label_dir == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
@@ -737,7 +745,7 @@ int32_t is_aperio(const char *filename) {
         return result;
     }
 
-    int32_t label_dir = get_aperio_label_dir(fp, file, big_tiff, big_endian);
+    int32_t label_dir = get_aperio_label_dir(fp, file);
 
     if(label_dir == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");

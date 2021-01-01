@@ -134,7 +134,7 @@ char *concat_path_filename(const char *path,
     char *new_string = (char *)malloc(strlen(path) 
                             + strlen(filename) + 3);
     strcpy(new_string, path);
-    strcat(new_string, "\\");
+    strcat(new_string, "/");
     strcat(new_string, filename);
     return new_string;
 }
