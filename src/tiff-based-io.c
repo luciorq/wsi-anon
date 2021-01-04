@@ -540,6 +540,7 @@ int32_t handle_hamamatsu(char *filename,
         const char *new_label_name, 
         bool disable_unlinking,
         bool disable_inplace) {
+    fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
     if(disable_inplace) {
         filename = duplicate_file(filename, new_label_name, DOT_NDPI);
     }
@@ -602,10 +603,10 @@ int32_t get_aperio_label_dir(FILE *fp,
     for(uint64_t i = 0; i < file->used; i++) {
         
         struct tiff_directory dir = file->directories[i];
-        printf("--directory %i\n", i);
+        //printf("--directory %i\n", i);
         for(uint64_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
-            printf("entry id %i; count %i; and offset: %li \n", entry.tag, entry.count, entry.offset);
+            //printf("entry id %i; count %i; and offset: %li \n", entry.tag, entry.count, entry.offset);
             if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
                 // get the image description from file
                 fseek(fp, entry.offset, SEEK_SET);
@@ -625,7 +626,7 @@ int32_t get_aperio_label_dir(FILE *fp,
                         return -1;
                     } else {
                         *is_aperio_gt450 = true;
-                        return file->used - 1;
+                        return file->used - 2;
                     }                 
                 }
 
@@ -643,6 +644,8 @@ int32_t handle_aperio(char *filename,
         const char *new_label_name, 
         bool disable_unlinking,
         bool disable_inplace) {
+    fprintf(stdout, "Anonymize Aperio WSI...\n");
+
     if(disable_inplace) {
         // check if filename is svs or tif here
         filename = duplicate_file(filename, new_label_name, DOT_SVS);        
@@ -690,7 +693,7 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
-    if(!is_aperio_gt450 || !disable_unlinking) {
+    if(!disable_unlinking) {
         result = unlink_label_directory(fp, file, label_dir);
     }
 
@@ -738,6 +741,9 @@ int32_t is_aperio(const char *filename) {
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
+
+    //printf("is big_tiff: %s\n", big_tiff ? "true" : "false");
+    //printf("is big_endian: %s\n", big_endian ? "true" : "false");
 
     if(!result) {
         return result;

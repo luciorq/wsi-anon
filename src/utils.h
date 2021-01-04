@@ -34,9 +34,9 @@ char *int32_to_str(int32_t integer);
 
 int32_t number_of_digits(int32_t integer);
 
-char *add_square_brackets(char *str);
+char *add_square_brackets(const char *str);
 
-char *add_equals_sign(char *str1, char *str2);
+char *add_equals_sign(const char *str1, const char *str2);
 
 bool contains(const char *str1, const char *str2);
 

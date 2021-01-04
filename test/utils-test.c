@@ -32,9 +32,9 @@ extern char *int32_to_str(int32_t integer);
 
 extern int32_t number_of_digits(int32_t integer);
 
-extern char *add_square_brackets(char *str);
+extern char *add_square_brackets(const char *str);
 
-extern char *add_equals_sign(char *str1, char *str2);
+extern char *add_equals_sign(const char *str1, const char *str2);
 
 extern bool contains(const char *str1, const char *str2);
 
@@ -118,10 +118,10 @@ void test_remove_leading_spaces() {
 }
 
 void test_concat_path_filename() {
-    const char *path = strdup("C:\\path\\to");
+    const char *path = strdup("C:/path/to");
     const char *filename = strdup("filename.ext");
     char *result = concat_path_filename(path, filename);
-    CU_ASSERT_STRING_EQUAL(result, "C:\\path\\to\\filename.ext");
+    CU_ASSERT_STRING_EQUAL(result, "C:/path/to/filename.ext");
 }
 
 void test_get_filename_from_path() {

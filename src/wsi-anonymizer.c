@@ -1,6 +1,7 @@
 #include "wsi-anonymizer.h"
 
 file_format check_file_format(const char *filename) {
+    fprintf(stdout, "Checking file format...\n");
     if(file_exists(filename) == 1) {
         if(is_aperio(filename)) {
             return aperio_svs;

@@ -297,9 +297,10 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file,
 int32_t write_ini_file(struct ini_file *ini_file, 
         const char *path, 
         const char *filename) {
+
     char *slidedat_filname = concat_path_filename(path, filename);
     FILE *fp = fopen(slidedat_filname, "w+");
-
+    
     if(fp == NULL) {
         fprintf(stderr, "Error: Failed writing index file.\n");
         return -1;

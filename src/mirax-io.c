@@ -106,16 +106,20 @@ struct mirax_file *get_mirax_file_structure(struct ini_file *ini,
             level->id = level_id;
             level->layer_id = layer_id;
             level->record = layer_id + level_id;
-            level->key_prefix = concat_wildcard_string_m_int32(
+            char *key_prefix = concat_wildcard_string_m_int32(
                 NONHIER_X_VAL_X, 
                 layer_id, 
                 level_id);
+            level->key_prefix = key_prefix;
             level->name = get_value_from_ini_file(
                 ini, 
                 HIERARCHICAL, 
                 level->key_prefix);
+            int32_t length = strlen(NONHIER_X_VAL_X) 
+                + number_of_digits(layer_id) 
+                + number_of_digits(level_id) + 1;
             char *section_key = (char *)malloc(
-                sizeof(level->key_prefix) + sizeof(_SECTION) + 1);
+                length + sizeof(_SECTION) + 2);
             strcpy(section_key, level->key_prefix);
             strcat(section_key, _SECTION);
             level->section_key = section_key;
@@ -130,6 +134,7 @@ struct mirax_file *get_mirax_file_structure(struct ini_file *ini,
         layer->levels = levels;
         layers[layer_id] = layer;
     }
+
     // add layer arrays to mirax file
     mirax_file->all_records_count = records;
     mirax_file->count_layers = l_count;
@@ -448,6 +453,7 @@ int32_t handle_mirax(char *filename,
         const char *new_label_name, 
         bool disable_unlinking,
         bool disable_inplace) {
+    fprintf(stdout, "Anonymize Mirax WSI...\n");
     char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
 
     if(disable_inplace) {
@@ -488,6 +494,9 @@ int32_t handle_mirax(char *filename,
     }
 
     struct mirax_file *mirax_file = get_mirax_file_structure(ini, l_count);
+
+
+
 
     // wipe the image data in the data file
     int32_t result = delete_level(path, 

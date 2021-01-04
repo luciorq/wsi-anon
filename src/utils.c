@@ -183,29 +183,26 @@ int32_t number_of_digits(int32_t integer) {
 }
 
 // put a given string in square brackets
-char *add_square_brackets(char *str) {
-    int32_t length = sizeof(str) + sizeof("[") 
+char *add_square_brackets(const char *str) {
+    int32_t length = strlen(str) + sizeof("[") 
                         + sizeof("]") + sizeof("\0") + 1;
     char *result = (char *)malloc(length);
     strcpy(result, "[");
     strcat(result, str);
     strcat(result, "]");
     strcat(result, "\0");
-    free(str);
     return result;
 }
 
 // add an equal sign with whitespaces between to strings
-char *add_equals_sign(char *str1, char *str2) {
-    int32_t length = sizeof(str1) + sizeof(str2) 
+char *add_equals_sign(const char *str1, const char *str2) {
+    int32_t length = strlen(str1) + strlen(str2) 
                         + sizeof(" = ") + sizeof("\0") + 1;
     char *result = (char *)malloc(length);
     strcpy(result, str1);
     strcat(result, " = ");
     strcat(result, str2);
     strcat(result, "\0");
-    free(str1);
-    free(str2);
     return result;
 }
 

@@ -5,13 +5,13 @@ static const char *VENDOR_STRINGS[] = {
 };
 
 void print_help_message() {
-    // TODO
-    fprintf(stderr, "Usage: wsi-anonymizer [FILE] [-OPTIONS]\n");
+    fprintf(stderr, "Usage: ./wsi-anon [FILE] [-OPTIONS]\n\n");
     fprintf(stderr, "OPTIONS:\n");
-    fprintf(stderr, "-c     only check file for vendor format (other flags will be ignored)\n");
-    fprintf(stderr, "-n     specify new label name (e.g. -n \"labelname\"\n");
-    fprintf(stderr, "-i     if flaf is set, anonymization will be done in-place\n");
-    fprintf(stderr, "-u     if flag is set, tiff directory will NOT be unlinked\n");
+    fprintf(stderr, "-c     only check file for vendor format\n");
+    fprintf(stderr, "-n     specify new label name (e.g. -n \"labelname\")\n");
+    fprintf(stderr, "-m     delete macro image\n");
+    fprintf(stderr, "-i     if flag is set, anonymization will be done in-place\n");
+    fprintf(stderr, "-u     if flag is set, tiff directory will NOT be unlinked\n\n");
 }
 
 int main(int argc, char *argv[]) {   
@@ -27,6 +27,11 @@ int main(int argc, char *argv[]) {
     }
 
     filename = argv[1];
+
+    if (strcmp(filename, "-h\0") == 0) {
+        print_help_message();
+        exit(EXIT_FAILURE);
+    }
 
     size_t optind;
     for (optind = 2; optind < argc; optind++) {
@@ -47,6 +52,10 @@ int main(int argc, char *argv[]) {
                 case 'u': {
                     disable_unlinking = true; 
                     break;
+                }
+                case 'm': {
+                    fprintf(stderr, "Not implemented yet.\n");
+                    exit(EXIT_FAILURE);
                 }
                 case 'h': {
                     print_help_message();
@@ -76,8 +85,9 @@ int main(int argc, char *argv[]) {
                 anonymize_wsi(filename, new_label_name, disable_unlinking, disable_inplace);
             } else {
                 //TODO: new file name (old_filename + tag)
-                anonymize_wsi(filename, "old_file_name", disable_unlinking, disable_inplace);
+                anonymize_wsi(filename, "_anonymized_wsi", disable_unlinking, disable_inplace);
             }
+            fprintf(stdout, "Done.\n");
         } else {
             fprintf(stderr, "No file for anonymization selected.\n");
             exit(EXIT_FAILURE);
