@@ -596,12 +596,16 @@ int32_t handle_hamamatsu(char *filename,
 }
 
 int32_t get_aperio_label_dir(FILE *fp, 
-        struct tiff_file *file) {
+        struct tiff_file *file,
+        bool *is_aperio_gt450) {
+    *is_aperio_gt450 = false;
     for(uint64_t i = 0; i < file->used; i++) {
         
         struct tiff_directory dir = file->directories[i];
+        printf("--directory %i\n", i);
         for(uint64_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
+            printf("entry id %i; count %i; and offset: %li \n", entry.tag, entry.count, entry.offset);
             if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
                 // get the image description from file
                 fseek(fp, entry.offset, SEEK_SET);
@@ -620,7 +624,8 @@ int32_t get_aperio_label_dir(FILE *fp,
                     if(file->used <= 2) {
                         return -1;
                     } else {
-                        return file->used - 2;
+                        *is_aperio_gt450 = true;
+                        return file->used - 1;
                     }                 
                 }
 
@@ -663,7 +668,8 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
-    int32_t label_dir = get_aperio_label_dir(fp, file);
+    bool is_aperio_gt450;
+    int32_t label_dir = get_aperio_label_dir(fp, file, &is_aperio_gt450);
 
     if(label_dir == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
@@ -675,7 +681,8 @@ int32_t handle_aperio(char *filename,
     struct tiff_directory dir = file->directories[label_dir];
 
     // check if dir data starts with LZW_CLEARCODE
-    result = wipe_label(fp, &dir, false, big_endian, LZW_CLEARCODE);
+    //result = wipe_label(fp, &dir, false, big_endian, LZW_CLEARCODE);
+    result = wipe_label(fp, &dir, false, big_endian, NULL);
 
     if(result == -1) {
         free_tiff_file(file);
@@ -683,7 +690,7 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
-    if(!disable_unlinking) {
+    if(!is_aperio_gt450 || !disable_unlinking) {
         result = unlink_label_directory(fp, file, label_dir);
     }
 
@@ -745,7 +752,8 @@ int32_t is_aperio(const char *filename) {
         return result;
     }
 
-    int32_t label_dir = get_aperio_label_dir(fp, file);
+    bool is_aperio_gt450 = false;
+    int32_t label_dir = get_aperio_label_dir(fp, file, &is_aperio_gt450);
 
     if(label_dir == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
