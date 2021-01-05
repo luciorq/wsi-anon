@@ -684,8 +684,11 @@ int32_t handle_aperio(char *filename,
     struct tiff_directory dir = file->directories[label_dir];
 
     // check if dir data starts with LZW_CLEARCODE
-    //result = wipe_label(fp, &dir, false, big_endian, LZW_CLEARCODE);
-    result = wipe_label(fp, &dir, false, big_endian, NULL);
+    if(!is_aperio_gt450) {
+        result = wipe_label(fp, &dir, false, big_endian, LZW_CLEARCODE);
+    } else {
+        result = wipe_label(fp, &dir, false, big_endian, NULL);
+    }
 
     if(result == -1) {
         free_tiff_file(file);
@@ -693,6 +696,7 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
+    // unlinking works also for gt450?
     if(!disable_unlinking) {
         result = unlink_label_directory(fp, file, label_dir);
     }
