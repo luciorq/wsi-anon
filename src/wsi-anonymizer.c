@@ -19,13 +19,14 @@ file_format check_file_format(const char *filename) {
 
 const char* anonymize_wsi(const char *filename, 
         const char *new_label_name,
+        bool delete_macro_image,
         bool disbale_unlinking,
         bool disable_inplace) {
     char *_filename = (char *)filename;
 
     switch(check_file_format(_filename)){
         case aperio_svs: {
-            handle_aperio(_filename, new_label_name, disbale_unlinking, disable_inplace); 
+            handle_aperio(_filename, new_label_name, delete_macro_image, disbale_unlinking, disable_inplace); 
             break;
         }
         case hamamatsu_ndpi: {
@@ -37,11 +38,11 @@ const char* anonymize_wsi(const char *filename,
             break;
         }
         case unknown_format: { 
-            fprintf(stderr, "Error: Unknown file format. Process aborted."); 
+            fprintf(stderr, "Error: Unknown file format. Process aborted.\n"); 
             break;
         }
         case invalid: {
-            fprintf(stderr, "Error: File does not exist or is invalid.");
+            fprintf(stderr, "Error: File does not exist or is invalid.\n");
         }
     }
     return _filename;

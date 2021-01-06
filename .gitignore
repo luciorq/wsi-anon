@@ -1,3 +1,4 @@
+# C
 *.lo
 *.loT
 *.o
@@ -18,4 +19,8 @@ Makefile.in
 .vs/
 bin/
 obj/
-__pycache__
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class

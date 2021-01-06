@@ -32,10 +32,22 @@ def setup():
 @pytest.mark.parametrize(
     "filename, expected",
     [
-        ("CMU-1.svs", "Aperio"),
-        ("CMU-1.ndpi", "Hamamatsu"),
+        ("CMU-1.svs", wsianon.Vendor.Aperio),
+        ("CMU-1.ndpi", wsianon.Vendor.Hamamatsu),
+        ("CMU-1.mrxs", wsianon.Vendor.Mirax),
+        ("Some-other-file", wsianon.Vendor.Unknown),
     ],
 )
 def test_check_vendor(filename, expected):
     result = wsianon.check_file_format(filename)
     assert result == expected
+
+@pytest.mark.parametrize(
+    "filename, label_name, expected",
+    [
+        
+    ],
+)
+def test_anonymize_wsi(filename, label_name, expected):
+    result = wsianon.anonymize_wsi(filename, label_name)
+    assert result == 1

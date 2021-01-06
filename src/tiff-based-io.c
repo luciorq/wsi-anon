@@ -239,7 +239,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
         entries[i] = *entry;
     }
 
-    // get the directory offset of the predecessor
+    // get the directory offset of the successor
     int64_t next_dir_offset = ftell(fp);
 
     tiff_dir->entries = entries;
@@ -471,28 +471,56 @@ int32_t wipe_label(FILE *fp,
 
 int32_t unlink_label_directory(FILE *fp, 
         struct tiff_file *file, 
-        int32_t label_dir) {
-    struct tiff_directory dir = file->directories[label_dir];
-    struct tiff_directory successor = file->directories[label_dir+1];
-    
-    if(fseek(fp, successor.in_pointer_offset, SEEK_SET)) {
-        fprintf(stderr, "Error: Failed to seek to offset.\n");
-        return -1;
-    }
-    uint64_t new_pointer_address[1];
-    if(fread(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-        fprintf(stderr, "Error: Failed to read pointer.\n");
-        return -1;
-    }
-    if(fseek(fp, dir.in_pointer_offset, SEEK_SET)) {
-        fprintf(stderr, "Error: Failed to seek to offset.\n");
-        return -1;
-    }
-    if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-        fprintf(stderr, "Error: Failed to write directory out pointer \
+        int32_t current_dir) {
+    struct tiff_directory dir = file->directories[current_dir];
+    struct tiff_directory successor = file->directories[current_dir+1];
+
+    if(successor.count == 0 && successor.in_pointer_offset == 0) {
+        // TODO: not working correctly; macro image stays last image
+        // directory is last in range
+        struct tiff_directory predecessor = file->directories[current_dir-1];
+        if(fseek(fp, dir.in_pointer_offset, SEEK_SET)) {
+            fprintf(stderr, "Error: Failed to seek to offset.\n");
+            return -1;
+        }
+        uint64_t new_pointer_address[1];
+        if(fread(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+            fprintf(stderr, "Error: Failed to write directory out pointer \
                     to predecessor in pointer position.\n");
-        return -1;
-    }
+            return -1;
+        }
+        printf("new address: %li\n", new_pointer_address[0]);
+        if(fseek(fp, predecessor.in_pointer_offset, SEEK_SET)) {
+            fprintf(stderr, "Error: Failed to seek to offset.\n");
+            return -1;
+        }
+        if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+            fprintf(stderr, "Error: Failed to write directory out pointer \
+                        to predecessor in pointer position.\n");
+            return -1;
+        }
+    } else {
+        // current directory has a successor
+        if(fseek(fp, successor.in_pointer_offset, SEEK_SET)) {
+            fprintf(stderr, "Error: Failed to seek to offset.\n");
+            return -1;
+        }
+        uint64_t new_pointer_address[1];
+        if(fread(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+            fprintf(stderr, "Error: Failed to read pointer.\n");
+            return -1;
+        }
+        if(fseek(fp, dir.in_pointer_offset, SEEK_SET)) {
+            fprintf(stderr, "Error: Failed to seek to offset.\n");
+            return -1;
+        }
+        if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+            fprintf(stderr, "Error: Failed to write directory out pointer \
+                        to predecessor in pointer position.\n");
+            return -1;
+        }
+    } 
+    
     return 0;
 }
 
@@ -596,10 +624,68 @@ int32_t handle_hamamatsu(char *filename,
     return (result == 0);
 }
 
-int32_t get_aperio_label_dir(FILE *fp, 
+// get aperio directory for aperio AT2 and older
+int32_t get_aperio_dir_by_name(FILE *fp,
         struct tiff_file *file,
-        bool *is_aperio_gt450) {
-    *is_aperio_gt450 = false;
+        const char *dir_name) {
+    for(uint64_t i = 0; i < file->used; i++) {
+        
+        struct tiff_directory dir = file->directories[i];
+        for(uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+            if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
+                // get the image description from file
+                fseek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(
+                    entry.type, &entry.count);
+
+                char buffer[entry_size * entry.count];
+                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read image description.\n");
+                    return -1;
+                }
+
+                // search for Aperio and given tag in description
+                if(contains(buffer, "Aperio") && contains(buffer, dir_name)) {
+                    return i;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+bool is_aperio_gt450(FILE *fp, struct tiff_file *file) {
+    for(uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for(uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+            if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
+                // get the image description from file
+                fseek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(
+                    entry.type, &entry.count);
+
+                char buffer[entry_size * entry.count];
+                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read image description.\n");
+                    return false;
+                }
+
+                // search for Aperio GT450
+                if(contains(buffer, "Aperio Leica Biosystems GT450")) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+int32_t get_aperio_gt450_dir_by_name(FILE *fp, 
+        struct tiff_file *file,
+        const char *dir_name) {
     for(uint64_t i = 0; i < file->used; i++) {
         
         struct tiff_directory dir = file->directories[i];
@@ -620,18 +706,17 @@ int32_t get_aperio_label_dir(FILE *fp,
                 }
 
                 // if aperio image is of type GT450, the label image is the second last
-                if(contains(buffer, "Aperio Leica Biosystems GT450")) {
+                if(!contains(buffer, "Aperio Leica Biosystems GT450")) {
                     // if the file has no more than two layers, there is no label image
-                    if(file->used <= 2) {
-                        return -1;
+                    if(strcmp(dir_name, "label") == 0 && file->used > (i + 1)) {
+                        // first directory without description
+                        i += 1;
+                    } else if(strcmp(dir_name, "macro") == 0 && file->used > (i + 2)) {
+                        // second directory without description
+                        i += 2;
                     } else {
-                        *is_aperio_gt450 = true;
-                        return file->used - 2;
-                    }                 
-                }
-
-                // otherwise we search for the label tag
-                if(contains(buffer, "Aperio") && contains(buffer, "label")) {
+                        i = -1;
+                    } 
                     return i;
                 }
             }
@@ -640,8 +725,37 @@ int32_t get_aperio_label_dir(FILE *fp,
     return -1;
 }
 
+int32_t wipe_and_unlink_directory(FILE *fp, 
+        struct tiff_file *file,
+        int32_t directory,
+        bool big_endian,
+        bool is_aperio_gt450,
+        bool disable_unlinking,
+        const char *prefix) {
+    if(directory == -1) {
+        return -1;
+    }
+
+    struct tiff_directory dir = file->directories[directory];
+
+    int32_t result = 0;
+    result = wipe_label(fp, &dir, false, big_endian, prefix);
+
+    if(result == -1) {
+        return -1;
+    }
+
+    // unlinking works also for gt450?
+    if(!disable_unlinking) {
+        result = unlink_label_directory(fp, file, directory);
+    }
+
+    return result;
+}
+
 int32_t handle_aperio(char *filename, 
         const char *new_label_name, 
+        bool delete_macro_image,
         bool disable_unlinking,
         bool disable_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
@@ -671,24 +785,21 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
-    bool is_aperio_gt450;
-    int32_t label_dir = get_aperio_label_dir(fp, file, &is_aperio_gt450);
+    bool _is_aperio_gt450 = is_aperio_gt450(fp, file);
 
-    if(label_dir == -1) {
-        fprintf(stderr, "Error: Could not find aperio label directory.\n");
-        free_tiff_file(file);
-        fclose(fp);
-        return -1;
-    }
-
-    struct tiff_directory dir = file->directories[label_dir];
-
-    // check if dir data starts with LZW_CLEARCODE
-    if(!is_aperio_gt450) {
-        result = wipe_label(fp, &dir, false, big_endian, LZW_CLEARCODE);
+    // delete label image
+    int32_t label_dir = 0;
+    if(_is_aperio_gt450) {
+        label_dir = get_aperio_gt450_dir_by_name(fp, file, "label");
+        result = wipe_and_unlink_directory(fp, file, label_dir, 
+            big_endian, _is_aperio_gt450, disable_unlinking, LZW_CLEARCODE);
     } else {
-        result = wipe_label(fp, &dir, false, big_endian, NULL);
+        label_dir = get_aperio_dir_by_name(fp, file, "label");
+                result = wipe_and_unlink_directory(fp, file, label_dir, 
+            big_endian, _is_aperio_gt450, disable_unlinking, NULL);
     }
+    printf("delete label\n");
+    
 
     if(result == -1) {
         free_tiff_file(file);
@@ -696,11 +807,26 @@ int32_t handle_aperio(char *filename,
         return -1;
     }
 
-    // unlinking works also for gt450?
-    if(!disable_unlinking) {
-        result = unlink_label_directory(fp, file, label_dir);
+    // delete macro image
+    if(delete_macro_image) {
+        int32_t macro_dir = 0;
+        if(_is_aperio_gt450) {
+            macro_dir = get_aperio_gt450_dir_by_name(fp, file, "macro");
+        } else {
+            macro_dir = get_aperio_dir_by_name(fp, file, "macro");
+        }
+    
+        result = wipe_and_unlink_directory(fp, file, macro_dir, 
+            big_endian, _is_aperio_gt450, disable_unlinking, NULL);
+
+        if(result == -1) {
+            free_tiff_file(file);
+            fclose(fp);
+            return -1;
+        }
     }
 
+    // clean up
     free_tiff_file(file);
     fclose(fp);
     return (result == 0);
@@ -723,6 +849,33 @@ int32_t is_hamamatsu(const char *filename) {
     fclose(fp);
 
     return result;
+}
+
+int32_t has_aperio_tag(FILE *fp, struct tiff_file *file) {
+    for(uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for(uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+            if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
+                // get the image description from file
+                fseek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(
+                    entry.type, &entry.count);
+
+                char buffer[entry_size * entry.count];
+                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read image description.\n");
+                    return -1;
+                }
+
+                // search for Aperio and given tag in description
+                if(contains(buffer, "Aperio")) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return -1;
 }
 
 int32_t is_aperio(const char *filename) {
@@ -762,10 +915,9 @@ int32_t is_aperio(const char *filename) {
         return result;
     }
 
-    bool is_aperio_gt450 = false;
-    int32_t label_dir = get_aperio_label_dir(fp, file, &is_aperio_gt450);
+    result = has_aperio_tag(fp, file);
 
-    if(label_dir == -1) {
+    if(result == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
         fclose(fp);
         return result;
@@ -773,5 +925,5 @@ int32_t is_aperio(const char *filename) {
     
     // is aperio
     fclose(fp);
-    return label_dir;
+    return result;
 }

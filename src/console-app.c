@@ -9,13 +9,14 @@ void print_help_message() {
     fprintf(stderr, "OPTIONS:\n");
     fprintf(stderr, "-c     only check file for vendor format\n");
     fprintf(stderr, "-n     specify new label name (e.g. -n \"labelname\")\n");
-    fprintf(stderr, "-m     delete macro image\n");
+    fprintf(stderr, "-m     if flag is set, macro image will NOT be deleted\n");
     fprintf(stderr, "-i     if flag is set, anonymization will be done in-place\n");
     fprintf(stderr, "-u     if flag is set, tiff directory will NOT be unlinked\n\n");
 }
 
 int main(int argc, char *argv[]) {   
     bool only_check = false;
+    bool delete_macro_image = true;
     bool disable_unlinking = false;
     bool disable_inplace = true;
     char *filename = NULL;
@@ -54,8 +55,8 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'm': {
-                    fprintf(stderr, "Not implemented yet.\n");
-                    exit(EXIT_FAILURE);
+                    delete_macro_image = false;
+                    break;
                 }
                 case 'h': {
                     print_help_message();
@@ -82,10 +83,10 @@ int main(int argc, char *argv[]) {
     } else {
         if(filename != NULL) {
             if(new_label_name != NULL) {
-                anonymize_wsi(filename, new_label_name, disable_unlinking, disable_inplace);
+                anonymize_wsi(filename, new_label_name, delete_macro_image, disable_unlinking, disable_inplace);
             } else {
                 //TODO: new file name (old_filename + tag)
-                anonymize_wsi(filename, "_anonymized_wsi", disable_unlinking, disable_inplace);
+                anonymize_wsi(filename, "_anonymized_wsi", delete_macro_image, disable_unlinking, disable_inplace);
             }
             fprintf(stdout, "Done.\n");
         } else {
