@@ -34,7 +34,7 @@ const char* anonymize_wsi(const char *filename,
             break;
         }
         case histech_mirax: {
-            handle_mirax(_filename, new_label_name, disbale_unlinking, disable_inplace); 
+            handle_mirax(_filename, new_label_name, delete_macro_image, disbale_unlinking, disable_inplace); 
             break;
         }
         case unknown_format: { 

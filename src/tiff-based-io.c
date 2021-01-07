@@ -240,7 +240,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
     }
 
     // get the directory offset of the successor
-    int64_t next_dir_offset = ftell(fp);
+    int64_t next_dir_offset = ftell(fp) + 8;
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
@@ -476,27 +476,18 @@ int32_t unlink_label_directory(FILE *fp,
     struct tiff_directory successor = file->directories[current_dir+1];
 
     if(successor.count == 0 && successor.in_pointer_offset == 0) {
-        // TODO: not working correctly; macro image stays last image
-        // directory is last in range
-        struct tiff_directory predecessor = file->directories[current_dir-1];
-        if(fseek(fp, dir.in_pointer_offset, SEEK_SET)) {
+        // current directory is the last in file
+        // search search to out pointer of current dir
+        if(fseek(fp, dir.out_pointer_offset, SEEK_SET)) {
             fprintf(stderr, "Error: Failed to seek to offset.\n");
             return -1;
         }
+        // overwrite out pointer with 0 to end file
         uint64_t new_pointer_address[1];
-        if(fread(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory out pointer \
-                    to predecessor in pointer position.\n");
-            return -1;
-        }
-        printf("new address: %li\n", new_pointer_address[0]);
-        if(fseek(fp, predecessor.in_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
+        new_pointer_address[0] = 0x0;
         if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
             fprintf(stderr, "Error: Failed to write directory out pointer \
-                        to predecessor in pointer position.\n");
+                        to null at pointer position.\n");
             return -1;
         }
     } else {
@@ -515,8 +506,8 @@ int32_t unlink_label_directory(FILE *fp,
             return -1;
         }
         if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory out pointer \
-                        to predecessor in pointer position.\n");
+            fprintf(stderr, "Error: Failed to write directory in pointer \
+                        to predecessor at pointer position.\n");
             return -1;
         }
     } 
@@ -682,6 +673,16 @@ bool is_aperio_gt450(FILE *fp, struct tiff_file *file) {
     return false;
 }
 
+bool dir_contains_image_description(struct tiff_directory *dir) {
+    for(uint64_t i = 0; i < dir->count; i++) {
+        struct tiff_entry entry = dir->entries[i];
+        if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 int32_t get_aperio_gt450_dir_by_name(FILE *fp, 
         struct tiff_file *file,
@@ -690,36 +691,18 @@ int32_t get_aperio_gt450_dir_by_name(FILE *fp,
         
         struct tiff_directory dir = file->directories[i];
         //printf("--directory %i\n", i);
-        for(uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            //printf("entry id %i; count %i; and offset: %li \n", entry.tag, entry.count, entry.offset);
-            if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
-                // get the image description from file
-                fseek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(
-                    entry.type, &entry.count);
-
-                char buffer[entry_size * entry.count];
-                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image description.\n");
-                    return -1;
-                }
-
-                // if aperio image is of type GT450, the label image is the second last
-                if(!contains(buffer, "Aperio Leica Biosystems GT450")) {
-                    // if the file has no more than two layers, there is no label image
-                    if(strcmp(dir_name, "label") == 0 && file->used > (i + 1)) {
-                        // first directory without description
-                        i += 1;
-                    } else if(strcmp(dir_name, "macro") == 0 && file->used > (i + 2)) {
-                        // second directory without description
-                        i += 2;
-                    } else {
-                        i = -1;
-                    } 
-                    return i;
-                }
+        if(!dir_contains_image_description(&dir)) {
+            // if the file has no more than two layers, there is no label image
+            if(strcmp(dir_name, "label") == 0 && file->used > (i + 1)) {
+                // first directory without description
+                i += 1;
+            } else if(strcmp(dir_name, "macro") == 0 && file->used > (i + 2)) {
+                // second directory without description
+                i += 2;
+            } else {
+                i = -1;
             }
+            return i;
         }
     }
     return -1;
@@ -792,13 +775,12 @@ int32_t handle_aperio(char *filename,
     if(_is_aperio_gt450) {
         label_dir = get_aperio_gt450_dir_by_name(fp, file, "label");
         result = wipe_and_unlink_directory(fp, file, label_dir, 
-            big_endian, _is_aperio_gt450, disable_unlinking, LZW_CLEARCODE);
+            big_endian, _is_aperio_gt450, disable_unlinking, NULL);
     } else {
         label_dir = get_aperio_dir_by_name(fp, file, "label");
                 result = wipe_and_unlink_directory(fp, file, label_dir, 
-            big_endian, _is_aperio_gt450, disable_unlinking, NULL);
+            big_endian, _is_aperio_gt450, disable_unlinking, LZW_CLEARCODE);
     }
-    printf("delete label\n");
     
 
     if(result == -1) {
@@ -815,7 +797,7 @@ int32_t handle_aperio(char *filename,
         } else {
             macro_dir = get_aperio_dir_by_name(fp, file, "macro");
         }
-    
+
         result = wipe_and_unlink_directory(fp, file, macro_dir, 
             big_endian, _is_aperio_gt450, disable_unlinking, NULL);
 

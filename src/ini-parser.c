@@ -145,9 +145,10 @@ struct ini_group *remove_ini_group_from_array(struct ini_group *groups,
     }
     
     // copy all elements after the index
-    if (index_to_remove != (size_of_array - 1))
+    if (index_to_remove != (size_of_array - 1)) {
         memcpy(temp+index_to_remove, groups+index_to_remove+1, 
             (size_of_array - index_to_remove - 1) * sizeof(struct ini_group));
+    }
           
     free (groups);
     return temp;
