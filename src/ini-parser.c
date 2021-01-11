@@ -186,18 +186,18 @@ void rename_section_name_for_level_in_section(struct ini_file *ini_file,
         struct mirax_level *current_level, 
         struct mirax_level *next_level) {
     for(int i = 0; i < ini_file->group_count; i++) {
-
         struct ini_group *group = &ini_file->groups[i];
         if(strcmp(group->group_identifier, group_name) == 0) {
             for(int j = 0; j < group->entry_count; j++) {
 
                 struct ini_entry *entry = &group->entries[j];
+                
                 if(entry != NULL) {
-                    if(strcmp(entry->key, current_level->key_prefix) == 0) {
-                        (*entry).value = next_level->name;
-                    }
-                    if(strcmp(entry->key, current_level->section_key) == 0) {
-                        (*entry).value = next_level->section;
+                    
+                    if(strcmp(entry->key, current_level->key_prefix) == 0 
+                        && strcmp(entry->value, current_level->name) == 0) {
+                        group->entries[j].value = strdup(next_level->name);
+                        group->entries[j+1].value = strdup(next_level->section);
                     }
                 }
             }
