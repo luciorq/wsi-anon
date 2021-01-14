@@ -608,17 +608,18 @@ int32_t wipe_data_in_index_file(const char *path,
 
 int32_t handle_mirax(char *filename, 
         const char *new_label_name, 
-        bool delete_macro_image,
+        bool keep_macro_image,
         bool disable_unlinking,
-        bool disable_inplace) {
+        bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
     char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
 
-    if(disable_inplace) {
+    if(!do_inplace) {
         path = duplicate_mirax_filedata(filename, new_label_name, DOT_MRXS_EXT);
 
         if(path == NULL || filename == NULL) {
             fprintf(stderr, "Error: Failed to copy mirax files.\n");
+            return -1;
         }
     }
 
@@ -666,8 +667,8 @@ int32_t handle_mirax(char *filename,
         return result;
     }
 
-    // macro image
-    if(delete_macro_image) {
+    // delete macro image
+    if(!keep_macro_image) {
         result = delete_level(path, 
             index_filename, 
             data_filenames, 
@@ -696,7 +697,8 @@ int32_t handle_mirax(char *filename,
             return -1;
         }
 
-        if(delete_macro_image) {
+        // unlink macro image
+        if(!keep_macro_image) {
             struct mirax_level *macro_image = get_level_by_name(
                 mirax_file->layers, SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
 

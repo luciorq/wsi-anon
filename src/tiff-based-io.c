@@ -471,11 +471,12 @@ int32_t wipe_label(FILE *fp,
 
 int32_t unlink_label_directory(FILE *fp, 
         struct tiff_file *file, 
-        int32_t current_dir) {
+        int32_t current_dir,
+        bool is_ndpi) {
     struct tiff_directory dir = file->directories[current_dir];
     struct tiff_directory successor = file->directories[current_dir+1];
 
-    if(successor.count == 0 && successor.in_pointer_offset == 0) {
+    if(!is_ndpi && successor.count == 0 && successor.in_pointer_offset == 0) {
         // current directory is the last in file
         // search search to out pointer of current dir
         if(fseek(fp, dir.out_pointer_offset, SEEK_SET)) {
@@ -558,9 +559,9 @@ char *duplicate_file(const char *filename,
 int32_t handle_hamamatsu(char *filename, 
         const char *new_label_name, 
         bool disable_unlinking,
-        bool disable_inplace) {
+        bool do_inplace) {
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
-    if(disable_inplace) {
+    if(!do_inplace) {
         filename = duplicate_file(filename, new_label_name, DOT_NDPI);
     }
 
@@ -606,7 +607,7 @@ int32_t handle_hamamatsu(char *filename,
 
     if(!disable_unlinking) {
         // unlink the empty label directory from file structure
-        result = unlink_label_directory(fp, file, dir_count);
+        result = unlink_label_directory(fp, file, dir_count, true);
     }
     
     free_tiff_file(file);
@@ -730,7 +731,7 @@ int32_t wipe_and_unlink_directory(FILE *fp,
 
     // unlinking works also for gt450?
     if(!disable_unlinking) {
-        result = unlink_label_directory(fp, file, directory);
+        result = unlink_label_directory(fp, file, directory, false);
     }
 
     return result;
@@ -738,14 +739,14 @@ int32_t wipe_and_unlink_directory(FILE *fp,
 
 int32_t handle_aperio(char *filename, 
         const char *new_label_name, 
-        bool delete_macro_image,
+        bool keep_macro_image,
         bool disable_unlinking,
-        bool disable_inplace) {
+        bool do_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
 
-    if(disable_inplace) {
+    if(!do_inplace) {
         // check if filename is svs or tif here
-        filename = duplicate_file(filename, new_label_name, DOT_SVS);        
+        filename = duplicate_file(filename, new_label_name, DOT_SVS);      
     }
 
     FILE *fp;
@@ -790,7 +791,7 @@ int32_t handle_aperio(char *filename,
     }
 
     // delete macro image
-    if(delete_macro_image) {
+    if(!keep_macro_image) {
         int32_t macro_dir = 0;
         if(_is_aperio_gt450) {
             macro_dir = get_aperio_gt450_dir_by_name(fp, file, "macro");

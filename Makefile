@@ -76,5 +76,5 @@ makedirs:
 clean:
 	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out
 	@rm -r $(OBJDIR) $(BINDIR)
-	@rm $(RESULT_FILE)
+	@rm -f $(RESULT_FILE)
 	@echo "Cleanup complete!"

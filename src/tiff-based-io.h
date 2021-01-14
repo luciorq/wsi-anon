@@ -16,13 +16,13 @@ char *duplicate_file(const char *filename,
 int32_t handle_hamamatsu(char *filename, 
   const char *new_label_name, 
   bool disable_unlinking,
-  bool disable_inplace);
+  bool do_inplace);
 
 int32_t handle_aperio(char *filename, 
   const char *new_label_name,
-  bool delete_macro_image,
+  bool keep_macro_image,
   bool disable_unlinking,
-  bool disable_inplace);
+  bool do_inplace);
 
 int32_t is_hamamatsu(const char *filename);
 
