@@ -20,8 +20,6 @@ char *get_string_between_delimiters(char *buffer,
     const char *delimiter1, 
     const char *delimiter2);
 
-char *string_remove_char_from_charset(char *string, char *spanset);
-
 void remove_leading_spaces(char *str);
 
 char *concat_path_filename(const char *path, const char *filename);
@@ -36,9 +34,9 @@ char *int32_to_str(int32_t integer);
 
 int32_t number_of_digits(int32_t integer);
 
-char *add_square_brackets(char *str);
+char *add_square_brackets(const char *str);
 
-char *add_equals_sign(char *str1, char *str2);
+char *add_equals_sign(const char *str1, const char *str2);
 
 bool contains(const char *str1, const char *str2);
 

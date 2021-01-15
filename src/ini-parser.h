@@ -11,8 +11,6 @@ char *get_value_from_ini_file(struct ini_file *ini_file,
         const char *group, 
         const char *entry_key);
 
-int32_t get_all_records(struct ini_file *ini_file);
-
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, 
         char *group_name);
 

@@ -6,15 +6,13 @@
 #include "mirax-io.h"
 
 extern
-void test_function();
-
-extern
 file_format check_file_format(const char *filename);
 
 extern
 const char* anonymize_wsi(const char *filename, 
     const char *new_label_name,
+    bool keep_macro_image,
     bool unlink_directory,
-    bool disable_inplace);
+    bool do_inplace);
 
 #endif

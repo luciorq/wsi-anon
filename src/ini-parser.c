@@ -145,9 +145,10 @@ struct ini_group *remove_ini_group_from_array(struct ini_group *groups,
     }
     
     // copy all elements after the index
-    if (index_to_remove != (size_of_array - 1))
+    if (index_to_remove != (size_of_array - 1)) {
         memcpy(temp+index_to_remove, groups+index_to_remove+1, 
             (size_of_array - index_to_remove - 1) * sizeof(struct ini_group));
+    }
           
     free (groups);
     return temp;
@@ -185,18 +186,18 @@ void rename_section_name_for_level_in_section(struct ini_file *ini_file,
         struct mirax_level *current_level, 
         struct mirax_level *next_level) {
     for(int i = 0; i < ini_file->group_count; i++) {
-
         struct ini_group *group = &ini_file->groups[i];
         if(strcmp(group->group_identifier, group_name) == 0) {
             for(int j = 0; j < group->entry_count; j++) {
 
                 struct ini_entry *entry = &group->entries[j];
+                
                 if(entry != NULL) {
-                    if(strcmp(entry->key, current_level->key_prefix) == 0) {
-                        (*entry).value = next_level->name;
-                    }
-                    if(strcmp(entry->key, current_level->section_key) == 0) {
-                        (*entry).value = next_level->section;
+                    
+                    if(strcmp(entry->key, current_level->key_prefix) == 0 
+                        && strcmp(entry->value, current_level->name) == 0) {
+                        group->entries[j].value = strdup(next_level->name);
+                        group->entries[j+1].value = strdup(next_level->section);
                     }
                 }
             }
@@ -297,9 +298,10 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file,
 int32_t write_ini_file(struct ini_file *ini_file, 
         const char *path, 
         const char *filename) {
+
     char *slidedat_filname = concat_path_filename(path, filename);
     FILE *fp = fopen(slidedat_filname, "w+");
-
+    
     if(fp == NULL) {
         fprintf(stderr, "Error: Failed writing index file.\n");
         return -1;

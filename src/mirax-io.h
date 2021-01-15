@@ -8,8 +8,9 @@
 
 int handle_mirax(char *filename, 
     const char *new_label_name, 
+    bool keep_macro_image,
     bool disbale_unlinking,
-    bool disable_inplace);
+    bool do_inplace);
 
 int is_mirax(const char *filename);
 
