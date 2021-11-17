@@ -2,6 +2,7 @@
 #define HEADER_UTILS_H
 
 #include "defines.h"
+#include "file-api.h"
 
 // string operations
 char** str_split(char* a_str, const char a_delim);

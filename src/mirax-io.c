@@ -168,10 +168,10 @@ struct mirax_level *get_level_by_name(struct mirax_layer **layers,
 }
 
 // read a signed integer 32 from file stream
-int32_t *read_int32(FILE *fp) {
+int32_t *read_int32(file_t *fp) {
     int32_t *buffer = (int32_t *)malloc(sizeof(int32_t));
 
-    if(fread(buffer, sizeof(*buffer), 1, fp) != 1) {
+    if(file_read(buffer, sizeof(*buffer), 1, fp) != 1) {
         free(buffer);
         return NULL;
     }
@@ -181,7 +181,7 @@ int32_t *read_int32(FILE *fp) {
 
 // assert a int32_t has a certain value
 // used to skip pointer position on stream
-bool assert_value(FILE *fp, int32_t value) {
+bool assert_value(file_t *fp, int32_t value) {
     int32_t *v_to_check = read_int32(fp);
     return *v_to_check == value;
 }
@@ -191,46 +191,46 @@ int32_t *read_data_location(char *filename,
         int32_t record, 
         int32_t **position, 
         int32_t **size) {
-    FILE *fp = fopen(filename, "r");
+    file_t *fp = file_open(filename, "r");
 
     if(fp == NULL) {
         fprintf(stderr, "Error: Could not open file stream.\n");
         return NULL;
     }
     
-    if(fseek(fp, MRXS_ROOT_OFFSET_NONHIER, SEEK_SET)) {
+    if(file_seek(fp, MRXS_ROOT_OFFSET_NONHIER, SEEK_SET)) {
         fprintf(stderr, "Error: Can not seek to mrxs offset in Index.dat.\n");
-        fclose(fp);
+        file_close(fp);
         return NULL;
     }
 
     int32_t *table_base = read_int32(fp);
-    fseek(fp, (*table_base + (record*4)), SEEK_SET);
+    file_seek(fp, (*table_base + (record*4)), SEEK_SET);
 
     int32_t *list_header = read_int32(fp);
-    fseek(fp, *list_header, SEEK_SET);
+    file_seek(fp, *list_header, SEEK_SET);
     // assert we found the list head
     if(!assert_value(fp, 0)) {
-        fclose(fp);
+        file_close(fp);
         return NULL;
     }
     
     int32_t *page = read_int32(fp);
-    fseek(fp, *page, SEEK_SET);
+    file_seek(fp, *page, SEEK_SET);
     // assert we found the page
     if(!assert_value(fp, 1)) {
-        fclose(fp);
+        file_close(fp);
         return NULL;
     }
 
     // move on 3*4bytes
     read_int32(fp);
     if(!assert_value(fp, 0)) {
-        fclose(fp);
+        file_close(fp);
         return NULL;
     }
     if(!assert_value(fp, 0)) {
-        fclose(fp);
+        file_close(fp);
         return NULL;
     }
 
@@ -240,7 +240,7 @@ int32_t *read_data_location(char *filename,
     *size = read_int32(fp);
     int32_t *fileno = read_int32(fp);
 
-    fclose(fp);
+    file_close(fp);
     return fileno;
 }
 
@@ -249,32 +249,32 @@ int32_t wipe_level_data(char *filename,
         int32_t **offset, 
         int32_t **length, 
         const char *prefix) {
-    FILE *fp = fopen(filename, "r+w");
+    file_t *fp = file_open(filename, "r+w");
 
     if(fp == NULL) {
         fprintf(stderr, "Error: Could not open label file.\n");
         return -1;
     }
 
-    if(fseek(fp, 0, SEEK_END)) {
+    if(file_seek(fp, 0, SEEK_END)) {
         fprintf(stderr, "Error: Failed reading to end of file.\n");
-        fclose(fp);
+        file_close(fp);
         return 1;
     }
 
     // check if offset and length are equal to file pointer at end
-    bool truncation = (ftell(fp) == (**offset + **length));
+    bool truncation = (file_tell(fp) == (**offset + **length));
 
-    if(fseek(fp, **offset, SEEK_SET)) {
+    if(file_seek(fp, **offset, SEEK_SET)) {
         fprintf(stderr, "Error: Failed to seek to offset.\n");
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
     char *buffer = (char *)malloc(sizeof(prefix));
-    if(fread(buffer, sizeof(prefix), 1, fp) != 1) {
+    if(file_read(buffer, sizeof(prefix), 1, fp) != 1) {
         fprintf(stderr, "Error: Could not read strip prefix.\n");
-        fclose(fp);
+        file_close(fp);
         free(buffer);
         return -1;
     }
@@ -283,7 +283,7 @@ int32_t wipe_level_data(char *filename,
     // check for jpeg prefix start of file (soi)
     if(buffer[0] != prefix[0] || buffer[1] != prefix[1]) {
         fprintf(stderr, "Error: Unexpected data in file.\n");
-        fclose(fp);
+        file_close(fp);
         free(buffer);
         return -1;
     }
@@ -291,17 +291,17 @@ int32_t wipe_level_data(char *filename,
     if(truncation) {
         // TODO: replace with truncation  (to make file size zero)
         // must work under win and linux!
-        fseek(fp, **offset, SEEK_SET);
+        file_seek(fp, **offset, SEEK_SET);
         char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
-        fwrite(empty_buffer, **length, 1, fp);
+        file_write(empty_buffer, **length, 1, fp);
     } else {
-        fseek(fp, **offset, SEEK_SET);
+        file_seek(fp, **offset, SEEK_SET);
         char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
-        fwrite(empty_buffer, **length, 1, fp);
+        file_write(empty_buffer, **length, 1, fp);
     }
 
     free(buffer);
-    fclose(fp);
+    file_close(fp);
     return 0;
 }
 
@@ -338,32 +338,32 @@ int32_t delete_level(char *path,
 int32_t delete_record_from_index_file(char *filename, 
         int32_t record, 
         int32_t all_records) {
-    FILE *fp = fopen(filename, "r+w");
+    file_t *fp = file_open(filename, "r+w");
     int32_t to_move = all_records - record -1;
 
     if(to_move == 0) {
-        fclose(fp);
+        file_close(fp);
         return 0;
     }
 
-    fseek(fp, MRXS_ROOT_OFFSET_NONHIER, SEEK_SET);
+    file_seek(fp, MRXS_ROOT_OFFSET_NONHIER, SEEK_SET);
     int32_t *table_base = read_int32(fp);
     int32_t offset = (*table_base) + (record+1)*4;
-    fseek(fp, offset, SEEK_SET);
+    file_seek(fp, offset, SEEK_SET);
 
     char buffer[to_move*4];
-    if(fread(buffer, (to_move * 4), 1, fp) != 1) {
+    if(file_read(buffer, (to_move * 4), 1, fp) != 1) {
         fprintf(stderr, "Error: Unexpected length of buffer.\n");
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
     // we return to record position and overwrite 
     // the file with the tail data
-    fseek(fp, (*table_base + (record * 4)), SEEK_SET);
-    fwrite(&buffer, (to_move * 4), 1, fp);
+    file_seek(fp, (*table_base + (record * 4)), SEEK_SET);
+    file_write(&buffer, (to_move * 4), 1, fp);
 
-    fclose(fp);
+    file_close(fp);
     return 0;
 }
 

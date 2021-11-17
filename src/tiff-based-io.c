@@ -8,8 +8,9 @@ static const char NDPI[] = "ndpi";
 
 // initialize directory array for a given tiff file
 void init_tiff_file(struct tiff_file *file, size_t init_size) {
-    file->directories = (struct tiff_directory *)malloc(
-        init_size * sizeof(struct tiff_directory));
+    size_t alloc_size = init_size * sizeof(struct tiff_directory);
+    file->directories = (struct tiff_directory *)malloc(alloc_size);
+    memset(file->directories, 0, alloc_size);
     file->used = 0;
     file-> size = init_size;
 }
@@ -20,8 +21,9 @@ void insert_dir_into_tiff_file(struct tiff_file *file,
     // reallocate directories array dynamically
     if(file->used == file->size) {
         file->size *= 2;
-        file->directories = (struct tiff_directory *)realloc(
-            file->directories, file->size * sizeof(struct tiff_directory));
+        size_t realloc_size = file->size * sizeof(struct tiff_directory);
+        file->directories = (struct tiff_directory *)realloc(file->directories, realloc_size);
+        memset(&(file->directories[file->size / 2]), 0, realloc_size / 2);
     }
     file->directories[file->used++] = *dir;
 }
@@ -71,9 +73,9 @@ void fix_byte_order(void *data,
 }
 
 // read an unsigned integer from a filestream at current position
-uint64_t read_uint(FILE *fp, int32_t size, bool big_endian) {
+uint64_t read_uint(file_t *fp, int32_t size, bool big_endian) {
     uint8_t buffer[size];
-    if (fread(buffer, size, 1, fp) != 1) {
+    if (file_read(buffer, size, 1, fp) != 1) {
         return 0;
     }
 
@@ -146,7 +148,7 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(FILE *fp, 
+struct tiff_directory *read_tiff_directory(file_t *fp, 
         int64_t *dir_offset,
         int64_t *in_pointer_offset,
         struct tiff_directory *first_directory, 
@@ -157,7 +159,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
     *dir_offset = 0;
     
     // seek to directory offset
-    if(fseek(fp, offset, SEEK_SET) != 0) {
+    if(file_seek(fp, offset, SEEK_SET) != 0) {
         fprintf(stderr, "Error: seeking to offset failed\n");
         return NULL;
     } 
@@ -182,7 +184,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
             return NULL;
         }
 
-        entry->start = ftell(fp);
+        entry->start = file_tell(fp);
 
         uint16_t tag = read_uint(fp, 2, big_endian);
         uint16_t type = read_uint(fp, 2, big_endian);
@@ -201,7 +203,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
 
         // read entry value to array
         uint8_t value[big_tiff ? 8 : 4];
-        if (fread(value, sizeof(value), 1, fp) != 1) {
+        if (file_read(value, sizeof(value), 1, fp) != 1) {
             fprintf(stderr, "Error: reading value to array failed\n");
             return NULL;
         }
@@ -240,7 +242,7 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
     }
 
     // get the directory offset of the successor
-    int64_t next_dir_offset = ftell(fp) + 8;
+    int64_t next_dir_offset = file_tell(fp) + 8;
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
@@ -250,12 +252,12 @@ struct tiff_directory *read_tiff_directory(FILE *fp,
 }
 
 // check tiff file header
-int32_t check_file_header(FILE *fp, bool *big_endian, bool *big_tiff) {
+int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
     int32_t result = 0;
     uint16_t endianess;
 
     // read endianness in header
-    if(fread(&endianess, sizeof endianess, 1, fp) != 1) {
+    if(file_read(&endianess, sizeof endianess, 1, fp) != 1) {
         return result;
     }
             
@@ -282,11 +284,11 @@ int32_t check_file_header(FILE *fp, bool *big_endian, bool *big_tiff) {
 }
 
 // read the tiff file structure with offsets from the file stream
-struct tiff_file *read_tiff_file(FILE *fp, bool big_tiff, 
+struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, 
         bool ndpi, bool big_endian) {
     // get directory offset; file stream pointer must be located just 
     // before the directory offset
-    int64_t in_pointer_offset = ftell(fp);
+    int64_t in_pointer_offset = file_tell(fp);
     int64_t diroff = read_uint(fp, 8, big_endian);
     // reading the initial directory
     struct tiff_directory *prev_dir = NULL;
@@ -307,7 +309,7 @@ struct tiff_file *read_tiff_file(FILE *fp, bool big_tiff,
 
     // when the directory offset is 0 we reached the end of the tiff file
     while(diroff != 0) {
-        int64_t current_in_pointer_offset = ftell(fp) - 8;
+        int64_t current_in_pointer_offset = file_tell(fp) - 8;
         struct tiff_directory *current_dir = read_tiff_directory(fp, &diroff, 
             &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
@@ -325,7 +327,7 @@ struct tiff_file *read_tiff_file(FILE *fp, bool big_tiff,
 
 // retrieve the label directory from the tiff file structure
 int32_t get_hamamatsu_label_dir(struct tiff_file *file, 
-        FILE *fp, 
+        file_t *fp, 
         bool big_endian) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory temp_dir = file->directories[i];
@@ -346,11 +348,11 @@ int32_t get_hamamatsu_label_dir(struct tiff_file *file,
                         // we need to step 8 bytes from start pointer 
                         // to get the expected value
                         uint64_t new_start = temp_entry.start + 8;
-                        if(fseek(fp, new_start, SEEK_SET)) {
+                        if(file_seek(fp, new_start, SEEK_SET)) {
                             fprintf(stderr, "Error: Failed to seek to offset %lu.\n", new_start);
                             return -1;
                         }
-                        if(fread(v_buffer, entry_size, temp_entry.count, fp) != 1) {
+                        if(file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
                             fprintf(stderr, "Error: Failed to read entry value.\n");
                             return -1;
                         }
@@ -369,7 +371,7 @@ int32_t get_hamamatsu_label_dir(struct tiff_file *file,
 }
 
 // read a pointer from the directory entries by tiff tag
-uint32_t *read_pointer_by_tag(FILE *fp, 
+uint32_t *read_pointer_by_tag(file_t *fp, 
         struct tiff_directory *dir, 
         int tag, 
         bool ndpi, 
@@ -389,11 +391,11 @@ uint32_t *read_pointer_by_tag(FILE *fp,
                     new_offset = entry.start + 8;
                 }
 
-                if(fseek(fp, new_offset, SEEK_SET)) {
+                if(file_seek(fp, new_offset, SEEK_SET)) {
                     fprintf(stderr, "Error: Failed to seek to offset %lu.\n", entry.offset);
                     continue;
                 }
-                if(fread(v_buffer, entry_size, entry.count, fp) < 1) {
+                if(file_read(v_buffer, entry_size, entry.count, fp) < 1) {
                     fprintf(stderr, "Error: Failed to read entry value.\n");
                     continue;
                 }
@@ -409,7 +411,7 @@ uint32_t *read_pointer_by_tag(FILE *fp,
     return NULL;
 }
 
-int32_t wipe_label(FILE *fp, 
+int32_t wipe_label(file_t *fp, 
         struct tiff_directory *dir, 
         bool ndpi, 
         bool big_endian, 
@@ -433,32 +435,34 @@ int32_t wipe_label(FILE *fp,
     }
 
     for(int32_t i = 0; i < size_offsets; i++) {
-        fseek(fp, strip_offsets[i], SEEK_SET);
+        file_seek(fp, strip_offsets[i], SEEK_SET);
 
         if(prefix != NULL) {
             // we check the head of the directory offset for a given 
             // prefix if the head is not equal to the given prefix 
             // we do not wipe the label data
-            char *buf =  (char *)malloc(sizeof(prefix));
+            size_t prefix_len = strlen(prefix);
+            char *buf =  (char *)malloc(prefix_len + 1);
+            buf[prefix_len] = '\0';
 
-            if(fread(buf, sizeof(prefix), 1, fp) != 1) {
+            if(file_read(buf, prefix_len, 1, fp) != 1) {
                 fprintf(stderr, "Error: Could not read strip prefix.\n");
                 free(buf);
                 return -1;
             }
 
-            if(*prefix != *buf) {
+            if(strcmp(prefix, buf) != 0) {
                 fprintf(stderr, "Error: Prefix in data strip not found.\n");
                 return -1;
             }
             
-            fseek(fp, strip_offsets[i], SEEK_SET);
+            file_seek(fp, strip_offsets[i], SEEK_SET);
             free(buf);
         }
         
         // fill strip with zeros
         char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix);
-        if(!fwrite(strip, 1, strip_lengths[i], fp)) {
+        if(!file_write(strip, 1, strip_lengths[i], fp)) {
             fprintf(stderr, "Error: Wiping image data failed.\n");
             free(strip);
             return -1;
@@ -469,7 +473,7 @@ int32_t wipe_label(FILE *fp,
     return 0;
 }
 
-int32_t unlink_label_directory(FILE *fp, 
+int32_t unlink_label_directory(file_t *fp, 
         struct tiff_file *file, 
         int32_t current_dir,
         bool is_ndpi) {
@@ -479,34 +483,34 @@ int32_t unlink_label_directory(FILE *fp,
     if(!is_ndpi && successor.count == 0 && successor.in_pointer_offset == 0) {
         // current directory is the last in file
         // search search to out pointer of current dir
-        if(fseek(fp, dir.out_pointer_offset, SEEK_SET)) {
+        if(file_seek(fp, dir.out_pointer_offset, SEEK_SET)) {
             fprintf(stderr, "Error: Failed to seek to offset.\n");
             return -1;
         }
         // overwrite out pointer with 0 to end file
         uint64_t new_pointer_address[1];
         new_pointer_address[0] = 0x0;
-        if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+        if(file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
             fprintf(stderr, "Error: Failed to write directory out pointer \
                         to null at pointer position.\n");
             return -1;
         }
     } else {
         // current directory has a successor
-        if(fseek(fp, successor.in_pointer_offset, SEEK_SET)) {
+        if(file_seek(fp, successor.in_pointer_offset, SEEK_SET)) {
             fprintf(stderr, "Error: Failed to seek to offset.\n");
             return -1;
         }
         uint64_t new_pointer_address[1];
-        if(fread(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+        if(file_read(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
             fprintf(stderr, "Error: Failed to read pointer.\n");
             return -1;
         }
-        if(fseek(fp, dir.in_pointer_offset, SEEK_SET)) {
+        if(file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
             fprintf(stderr, "Error: Failed to seek to offset.\n");
             return -1;
         }
-        if(fwrite(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+        if(file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
             fprintf(stderr, "Error: Failed to write directory in pointer \
                         to predecessor at pointer position.\n");
             return -1;
@@ -565,8 +569,8 @@ int32_t handle_hamamatsu(char *filename,
         filename = duplicate_file(filename, new_label_name, DOT_NDPI);
     }
 
-    FILE *fp;
-    fp = fopen(filename, "r+");
+    file_t *fp;
+    fp = file_open(filename, "r+");
 
     bool big_tiff = false;
     bool big_endian = false;
@@ -576,7 +580,7 @@ int32_t handle_hamamatsu(char *filename,
 
     if(!result) {
         fprintf(stderr, "Error: Could not read header file.\n");
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
@@ -589,7 +593,7 @@ int32_t handle_hamamatsu(char *filename,
     if(dir_count == -1) {
         fprintf(stderr, "Error: No label directory.\n");
         free_tiff_file(file);
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
@@ -601,7 +605,7 @@ int32_t handle_hamamatsu(char *filename,
 
     if(result == -1) {
         free_tiff_file(file);
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
@@ -611,13 +615,13 @@ int32_t handle_hamamatsu(char *filename,
     }
     
     free_tiff_file(file);
-    fclose(fp);
+    file_close(fp);
 
     return (result == 0);
 }
 
 // get aperio directory for aperio AT2 and older
-int32_t get_aperio_dir_by_name(FILE *fp,
+int32_t get_aperio_dir_by_name(file_t *fp,
         struct tiff_file *file,
         const char *dir_name) {
     for(uint64_t i = 0; i < file->used; i++) {
@@ -627,12 +631,12 @@ int32_t get_aperio_dir_by_name(FILE *fp,
             struct tiff_entry entry = dir.entries[j];
             if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
                 // get the image description from file
-                fseek(fp, entry.offset, SEEK_SET);
+                file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(
                     entry.type, &entry.count);
 
                 char buffer[entry_size * entry.count];
-                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
+                if(file_read(&buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image description.\n");
                     return -1;
                 }
@@ -647,19 +651,19 @@ int32_t get_aperio_dir_by_name(FILE *fp,
     return -1;
 }
 
-bool is_aperio_gt450(FILE *fp, struct tiff_file *file) {
+bool is_aperio_gt450(file_t *fp, struct tiff_file *file) {
     for(uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for(uint64_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
             if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
                 // get the image description from file
-                fseek(fp, entry.offset, SEEK_SET);
+                file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(
                     entry.type, &entry.count);
 
                 char buffer[entry_size * entry.count];
-                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
+                if(file_read(&buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image description.\n");
                     return false;
                 }
@@ -685,7 +689,7 @@ bool dir_contains_image_description(struct tiff_directory *dir) {
 }
 
 
-int32_t get_aperio_gt450_dir_by_name(FILE *fp, 
+int32_t get_aperio_gt450_dir_by_name(file_t *fp, 
         struct tiff_file *file,
         const char *dir_name) {
     for(uint64_t i = 0; i < file->used; i++) {
@@ -709,7 +713,7 @@ int32_t get_aperio_gt450_dir_by_name(FILE *fp,
     return -1;
 }
 
-int32_t wipe_and_unlink_directory(FILE *fp, 
+int32_t wipe_and_unlink_directory(file_t *fp, 
         struct tiff_file *file,
         int32_t directory,
         bool big_endian,
@@ -749,15 +753,15 @@ int32_t handle_aperio(char *filename,
         filename = duplicate_file(filename, new_label_name, DOT_SVS);      
     }
 
-    FILE *fp;
-    fp = fopen(filename, "r+");
+    file_t *fp;
+    fp = file_open(filename, "r+");
 
     bool big_tiff = false;
     bool big_endian = false;
     int32_t result = check_file_header(fp, &big_endian, &big_tiff);
 
     if(!result) {
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
@@ -786,7 +790,7 @@ int32_t handle_aperio(char *filename,
 
     if(result == -1) {
         free_tiff_file(file);
-        fclose(fp);
+        file_close(fp);
         return -1;
     }
 
@@ -804,14 +808,14 @@ int32_t handle_aperio(char *filename,
 
         if(result == -1) {
             free_tiff_file(file);
-            fclose(fp);
+            file_close(fp);
             return -1;
         }
     }
 
     // clean up
     free_tiff_file(file);
-    fclose(fp);
+    file_close(fp);
     return (result == 0);
 }
 
@@ -825,28 +829,28 @@ int32_t is_hamamatsu(const char *filename) {
     }
 
     // check if ndpi tiff tags are present
-    FILE *fp = fopen(filename, "r");
+    file_t *fp = file_open(filename, "r");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
-    fclose(fp);
+    file_close(fp);
 
     return result;
 }
 
-int32_t has_aperio_tag(FILE *fp, struct tiff_file *file) {
+int32_t has_aperio_tag(file_t *fp, struct tiff_file *file) {
     for(uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for(uint64_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
             if(entry.tag == TIFFTAG_IMAGEDESCRIPTION) {            
                 // get the image description from file
-                fseek(fp, entry.offset, SEEK_SET);
+                file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(
                     entry.type, &entry.count);
 
                 char buffer[entry_size * entry.count];
-                if(fread(&buffer, entry.count, entry_size, fp) != 1) {
+                if(file_read(&buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image description.\n");
                     return -1;
                 }
@@ -870,8 +874,8 @@ int32_t is_aperio(const char *filename) {
         return result;
     }
 
-    FILE *fp;
-    fp = fopen(filename, "r+w");
+    file_t *fp;
+    fp = file_open(filename, "r+w");
 
     if(fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -894,7 +898,7 @@ int32_t is_aperio(const char *filename) {
 
     if(file == NULL) {
         fprintf(stderr, "Error: Could not read tiff file.\n");
-        fclose(fp);
+        file_close(fp);
         return result;
     }
 
@@ -902,11 +906,11 @@ int32_t is_aperio(const char *filename) {
 
     if(result == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
-        fclose(fp);
+        file_close(fp);
         return result;
     }
     
     // is aperio
-    fclose(fp);
+    file_close(fp);
     return result;
 }

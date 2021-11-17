@@ -1,4 +1,5 @@
 CONSOLE_TARGET   = wsi-anon.out
+WASM_TARGET = wsi-anon.js
 CONSOLE_DBG_TARGET = wsi-anon-dbg.out
 STATIC_LIBRARY_TARGET = libwsianon.a
 SHARED_LIBRARY_TARGET = libwsianon.so
@@ -20,14 +21,15 @@ OBJDIR   = obj
 BINDIR   = bin
 TESTDIR	 = test
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-SOURCES_LIB = $(filter-out $(SRCDIR)/console-app.c, $(wildcard $(SRCDIR)/*.c))
+SOURCES  := $(filter-out $(SRCDIR)/js-file.c $(SRCDIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRCDIR)/*.c))
+SOURCES_LIB = $(filter-out $(SRCDIR)/console-app.c $(SRCDIR)/js-file.c $(SRCDIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRCDIR)/*.c))
+SOURCES_WASM = $(filter-out $(SRCDIR)/console-app.c $(SRCDIR)/native-file.c, $(wildcard $(SRCDIR)/*.c))
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 OBJECTS_DBG  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/debug/%.o)
 OBJECTS_SHARED := $(SOURCES_LIB:$(SRCDIR)/%.c=$(OBJDIR)/shared/%.o)
 
-UNIT_DEPS_FILES = $(SRCDIR)/utils.c $(SRCDIR)/utils.h $(SRCDIR)/ini-parser.c $(SRCDIR)/ini-parser.h
+UNIT_DEPS_FILES = $(SRCDIR)/native-file.c $(SRCDIR)/utils.c $(SRCDIR)/utils.h $(SRCDIR)/ini-parser.c $(SRCDIR)/ini-parser.h
 UNIT_TEST_FILES = $(TESTDIR)/utils-test.c $(TESTDIR)/ini-parser-test.c $(TESTDIR)/test-runner.c
 
 default: static-lib shared-lib console-app
@@ -53,6 +55,11 @@ $(BINDIR)/$(CONSOLE_TARGET): makedirs $(OBJECTS)
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiling "$<"..."
+
+wasm: makedirs $(BINDIR)/$(WASM_TARGET)
+
+$(BINDIR)/$(WASM_TARGET): makedirs
+	@emcc -Wall $(SOURCES_WASM) -Os -o $(BINDIR)/$(WASM_TARGET) --extern-pre-js $(SRCDIR)/anonymized-stream.js -s WASM=1 -s ASYNCIFY -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]'
 
 tests: makedirs
 	@gcc -o $(BINDIR)/$(TEST_TARGET) $(UNIT_DEPS_FILES) $(UNIT_TEST_FILES) -g $(LFLAGS_TESTS)

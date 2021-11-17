@@ -1,0 +1,10 @@
+obj
+src
+test
+wrapper
+.gitignore
+.gitlab-ci.yml
+build.sh
+Dockerfile
+Makefile
+wasm-example.html
