@@ -20,12 +20,12 @@ char *get_value_from_ini_file(struct ini_file *ini_file,
 }
 
 // get the amount of ini groups in the ini
-int32_t get_groups_count(FILE *fp) {
+int32_t get_groups_count(file_t *fp) {
     int32_t count_groups = 0;
     // we only need the first two chars to determine 
     // if line is a group tag
     char *buffer = (char *)malloc(2);
-    while(fgets(buffer, 2, fp) != NULL) {
+    while(file_gets(buffer, 2, fp) != NULL) {
         if(strstr(buffer, "[") != NULL) {
             count_groups++;
         }
@@ -38,7 +38,7 @@ struct ini_file *read_slidedat_ini_file(const char *path,
     // concat slidedat filename
     char *slidedat_filname = concat_path_filename(path, ini_filename);
 
-    FILE *fp = fopen(slidedat_filname, "r");
+    file_t *fp = file_open(slidedat_filname, "r");
 
     if(fp == NULL) {
         fprintf(stderr, "Error: Could not read ini file.\n");
@@ -49,7 +49,7 @@ struct ini_file *read_slidedat_ini_file(const char *path,
     int32_t count_groups = get_groups_count(fp);
     //printf("Count groups[%i]\n", count_groups);
     // we return to the file start
-    fseek(fp, 0, SEEK_SET);
+    file_seek(fp, 0, SEEK_SET);
 
     // initialize line buffer
     char *buffer = (char *)malloc(MAX_CHAR_IN_LINE);
@@ -59,7 +59,7 @@ struct ini_file *read_slidedat_ini_file(const char *path,
         count_groups * sizeof(struct ini_group));
     int32_t line = 0, group_count = 0;
 
-    while(fgets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
+    while(file_gets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
         if(strstr(buffer, "[") != NULL 
             && strstr(buffer, "]") != NULL) {
             // create new group and populate
@@ -89,11 +89,11 @@ struct ini_file *read_slidedat_ini_file(const char *path,
             entry_size * sizeof(struct ini_entry));
 
         // each iteration we return to the file start
-        fseek(fp, 0, SEEK_SET);
+        file_seek(fp, 0, SEEK_SET);
 
         // read lines related to the current group
         int32_t line_count = 0, entry_count = 0;
-        while(fgets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
+        while(file_gets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
             line_count++;
             // skip useless lines
             if(line_count <= current_group.start_line + 1) {
@@ -128,7 +128,7 @@ struct ini_file *read_slidedat_ini_file(const char *path,
     ini_file->group_count = group_count;
     ini_file->groups = groups;
 
-    fclose(fp);
+    file_close(fp);
     return ini_file;
 }
 
@@ -300,7 +300,7 @@ int32_t write_ini_file(struct ini_file *ini_file,
         const char *filename) {
 
     char *slidedat_filname = concat_path_filename(path, filename);
-    FILE *fp = fopen(slidedat_filname, "w+");
+    file_t *fp = file_open(slidedat_filname, "w+");
     
     if(fp == NULL) {
         fprintf(stderr, "Error: Failed writing index file.\n");
@@ -310,15 +310,15 @@ int32_t write_ini_file(struct ini_file *ini_file,
     for(int i = 0; i < ini_file->group_count; i++) {
         struct ini_group group = ini_file->groups[i];
         char *group_line = add_square_brackets(group.group_identifier);
-        fprintf(fp, "%s\n", group_line);
+        file_printf(fp, "%s\n", group_line);
 
         for(int j = 0; j < group.entry_count; j++) {
             struct ini_entry entry = group.entries[j];
             char *entry_line = add_equals_sign(entry.key, entry.value);
-            fprintf(fp, "%s\n", entry_line);
+            file_printf(fp, "%s\n", entry_line);
         }
     }
 
-    fclose(fp);
+    file_close(fp);
     return 0;
 }

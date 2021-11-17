@@ -1,0 +1,11 @@
+{
+  "name": "@empaia/wsi-anon",
+  "version": "0.1.0",
+  "description": "WebAssembly binding of C library anonymizing WSIs by label image removal",
+  "main": "bin/wsi-anon.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "EMPAIA",
+  "license": "MIT"
+}

@@ -53,9 +53,9 @@ const char *get_filename_ext(const char *filename) {
 }
 
 int32_t file_exists(const char *filename) {
-    FILE *file;
-    if ((file = fopen(filename, "r"))) {
-        fclose(file);
+    file_t *file;
+    if ((file = file_open(filename, "r"))) {
+        file_close(file);
         return 1;
     }
     return 0;
@@ -243,30 +243,30 @@ int32_t copy_file_v2(const char *src, const char *dest) {
 }
 
 int32_t copy_file(const char *src, const char *dest) {
-    FILE *source, *target;
+    file_t *source, *target;
  
-    source = fopen(src, "r");
+    source = file_open(src, "r");
  
     if(source == NULL) {
         fprintf(stderr, "Could not open source file.\n");
         return -1;
     }
  
-    target = fopen(dest, "w");
+    target = file_open(dest, "w");
  
     if(target == NULL) {
-       fclose(source);
+       file_close(source);
        fprintf(stderr, "Could not open destination file.\n");
        return -1;
     }
 
     char ch;
-    while((ch = fgetc(source)) != EOF) {
-        fputc(ch, target);
+    while((ch = file_getc(source)) != EOF) {
+        file_putc(ch, target);
     }
 
-    fclose(source);
-    fclose(target);
+    file_close(source);
+    file_close(target);
  
     return 0;
 }
