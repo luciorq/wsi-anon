@@ -1,12 +1,40 @@
 stages:
   - build
+  - publish
 
-build:
+build-wsi-anon:
   stage: build
+  image: emscripten/emsdk
   tags:
-    - mevis-ubuntu-vm
+    - empaia-charite
+  variables:
+    HTTP_PROXY: "http://proxy.charite.de:8080"
+    HTTPS_PROXY: "http://proxy.charite.de:8080"
+    NO_PROXY: "localhost,127.0.0.1"
+    http_proxy: "http://proxy.charite.de:8080"
+    https_proxy: "http://proxy.charite.de:8080"
+    no_proxy: "localhost,127.0.0.1"
   script:
-    - ./build.sh
+    - make
+    - make wasm
   artifacts:
     paths:
-      - bin/*
+      - bin
+
+publish-wsi-anon-package:
+  stage: publish
+  only:
+    - master
+  image: node:16-slim
+  tags:
+    - empaia-charite
+  variables:
+    HTTP_PROXY: "http://proxy.charite.de:8080"
+    HTTPS_PROXY: "http://proxy.charite.de:8080"
+    NO_PROXY: "localhost,127.0.0.1"
+    http_proxy: "http://proxy.charite.de:8080"
+    https_proxy: "http://proxy.charite.de:8080"
+    no_proxy: "localhost,127.0.0.1"
+  script:
+    - echo '//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}' > .npmrc
+    - npm publish --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
