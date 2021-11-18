@@ -17,6 +17,9 @@ build-wsi-anon:
   script:
     - make
     - make wasm
+  artifacts:
+    paths:
+      - bin
 
 publish-wsi-anon-package:
   stage: publish
