@@ -23,8 +23,8 @@ build-wsi-anon:
 
 publish-wsi-anon-package:
   stage: publish
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^wsi\-anon\-\d+.\d+.\d+/'
+  only:
+    - master
   image: node:16-slim
   tags:
     - empaia-charite
