@@ -1,10 +1,9 @@
 obj
-src
+bin/**/*
+!bin/wsi-anon.js
 test
 wrapper
 .gitignore
 .gitlab-ci.yml
-build.sh
-Dockerfile
 Makefile
 wasm-example.html
