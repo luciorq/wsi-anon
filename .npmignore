@@ -8,4 +8,4 @@ wrapper
 Makefile
 wasm-example.html
 bin/**/*
-!bin/**/*.js
+!bin/*.js
