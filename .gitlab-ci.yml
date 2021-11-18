@@ -2,7 +2,7 @@ stages:
   - build
   - publish
 
-build-wsi-anon-wasm:
+build-wsi-anon:
   stage: build
   image: emscripten/emsdk
   tags:
@@ -15,13 +15,13 @@ build-wsi-anon-wasm:
     https_proxy: "http://proxy.charite.de:8080"
     no_proxy: "localhost,127.0.0.1"
   script:
+    - make
     - make wasm
-    - ls -lha ./bin
 
 publish-wsi-anon-package:
   stage: publish
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^wsi\-anon\-\d+.\d+.\d+/'
+#  rules:
+#    - if: '$CI_COMMIT_TAG =~ /^wsi\-anon\-\d+.\d+.\d+/'
   image: node:16-slim
   tags:
     - empaia-charite
@@ -34,4 +34,4 @@ publish-wsi-anon-package:
     no_proxy: "localhost,127.0.0.1"
   script:
     - echo '//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}' > .npmrc
-    - npm publish $CI_PROJECT_DIR/dist/libs/slide-viewer --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
+    - npm publish --dry-run --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
