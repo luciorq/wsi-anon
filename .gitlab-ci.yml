@@ -23,8 +23,8 @@ build-wsi-anon:
 
 publish-wsi-anon-package:
   stage: publish
-#  rules:
-#    - if: '$CI_COMMIT_TAG =~ /^wsi\-anon\-\d+.\d+.\d+/'
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^wsi\-anon\-\d+.\d+.\d+/'
   image: node:16-slim
   tags:
     - empaia-charite
@@ -37,4 +37,4 @@ publish-wsi-anon-package:
     no_proxy: "localhost,127.0.0.1"
   script:
     - echo '//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}' > .npmrc
-    - npm publish --dry-run --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
+    - npm publish --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
