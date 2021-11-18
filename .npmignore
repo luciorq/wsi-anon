@@ -1,9 +1,11 @@
 obj
-bin/**/*
-!bin/wsi-anon.js
+src
 test
 wrapper
 .gitignore
+.gitlab
 .gitlab-ci.yml
 Makefile
 wasm-example.html
+bin/**/*
+!bin/**/*.js
