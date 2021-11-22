@@ -19,8 +19,8 @@ int main(int argc, char *argv[]) {
     bool keep_macro_image = false;
     bool disable_unlinking = false;
     bool do_inplace = false;
-    char *filename = NULL;
-    char *new_label_name = NULL;
+    const char *filename = NULL;
+    const char *new_label_name = NULL;
 
     if(argv[1] == NULL) {
         fprintf(stderr, "No filename specified.\n");

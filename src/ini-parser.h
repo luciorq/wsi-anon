@@ -7,12 +7,12 @@
 struct ini_file *read_slidedat_ini_file(const char *path, 
         const char *ini_filename);
 
-char *get_value_from_ini_file(struct ini_file *ini_file, 
+const char *get_value_from_ini_file(struct ini_file *ini_file, 
         const char *group, 
         const char *entry_key);
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, 
-        char *group_name);
+        const char *group_name);
 
 void rename_section_name_for_level_in_section(struct ini_file *ini_file, 
         const char *group_name, 

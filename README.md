@@ -91,7 +91,11 @@ The `AnonymizedStream` class can be instantiated using its static create functio
 
 ```javascript
 const stream = AnonymizedStream.create(file)
-await stream.anonymize()
+try {
+  await stream.anonymize()
+} catch (error) {
+  console.error(error)
+}
 ```
 
 Anonymization is not done during creation of the instance, because there are WSI formats that consist of multiple files. For all of them, an `AnonymizedStream` instance must be created first. After that, `anonymize` is called **only** for the WSI's main file. After `anonymize` has been successfully awaited, all stream instances belonging to the given WSI can be uploaded, e.g., using the tus.Upload client.

@@ -2,7 +2,7 @@
 
 // retrive an entry value from the ini file by 
 // given group and entry key
-char *get_value_from_ini_file(struct ini_file *ini_file, 
+const char *get_value_from_ini_file(struct ini_file *ini_file, 
         const char *group, 
         const char *entry_key) {
     for(int32_t i = 0; i < ini_file->group_count; i++) {
@@ -36,7 +36,7 @@ int32_t get_groups_count(file_t *fp) {
 struct ini_file *read_slidedat_ini_file(const char *path, 
         const char *ini_filename) {
     // concat slidedat filename
-    char *slidedat_filname = concat_path_filename(path, ini_filename);
+    const char *slidedat_filname = concat_path_filename(path, ini_filename);
 
     file_t *fp = file_open(slidedat_filname, "r");
 
@@ -65,7 +65,7 @@ struct ini_file *read_slidedat_ini_file(const char *path,
             // create new group and populate
             struct ini_group *temp_group = (struct ini_group *)malloc(
                 sizeof(struct ini_group));
-            char* group_id = get_string_between_delimiters(
+            const char* group_id = get_string_between_delimiters(
                 buffer, "[", "]");
             temp_group->group_identifier = group_id;
             temp_group->start_line = line;
@@ -155,7 +155,7 @@ struct ini_group *remove_ini_group_from_array(struct ini_group *groups,
 }
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, 
-        char *group_name) {
+        const char *group_name) {
     // get the group index
     int32_t group_index = -1;
     for(int32_t i = 0; i < ini_file->group_count; i++) {
@@ -286,7 +286,7 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file,
                     int32_t new_count;
                     sscanf(entry->value, "%d", &new_count);
                     new_count--;
-                    char *out_value = int32_to_str(new_count);
+                    const char *out_value = int32_to_str(new_count);
                     (*entry).value = out_value;
                     break;
                 }
@@ -299,7 +299,7 @@ int32_t write_ini_file(struct ini_file *ini_file,
         const char *path, 
         const char *filename) {
 
-    char *slidedat_filname = concat_path_filename(path, filename);
+    const char *slidedat_filname = concat_path_filename(path, filename);
     file_t *fp = file_open(slidedat_filname, "w+");
     
     if(fp == NULL) {
@@ -309,12 +309,12 @@ int32_t write_ini_file(struct ini_file *ini_file,
 
     for(int i = 0; i < ini_file->group_count; i++) {
         struct ini_group group = ini_file->groups[i];
-        char *group_line = add_square_brackets(group.group_identifier);
+        const char *group_line = add_square_brackets(group.group_identifier);
         file_printf(fp, "%s\n", group_line);
 
         for(int j = 0; j < group.entry_count; j++) {
             struct ini_entry entry = group.entries[j];
-            char *entry_line = add_equals_sign(entry.key, entry.value);
+            const char *entry_line = add_equals_sign(entry.key, entry.value);
             file_printf(fp, "%s\n", entry_line);
         }
     }

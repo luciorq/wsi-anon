@@ -32,8 +32,11 @@ export default class AnonymizedStream {
   }
 
   async anonymize () {
-    const awi = Module.cwrap("anonymize_wsi_inplace", null, ["string", "string", "number", "number"], { async: true });
-    await awi(this._original.name, 'newlabel', false, false)
+    const awi = Module.cwrap("wsi_anonymize", "number", ["string", "string", "number", "number"], { async: true })
+    const result = await awi(this._original.name, 'newlabel', false, false)
+    if (result != 0) {
+      throw Error("Anonymization failed");
+    }
   }
 
   addChanges (data, offset) {

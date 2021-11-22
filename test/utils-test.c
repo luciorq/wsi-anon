@@ -12,29 +12,29 @@ extern char *get_empty_char_buffer(const char *x,
     uint64_t length, 
     const char *prefix);
 
-extern bool starts_with(char *str, const char *pre);
+extern bool starts_with(const char *str, const char *pre);
 
-extern char *get_string_between_delimiters(char *buffer, 
+extern const char *get_string_between_delimiters(const char *buffer, 
     const char *delimiter1, 
     const char *delimiter2);
 
 extern void remove_leading_spaces(char *str);
 
-extern char *concat_path_filename(const char *path, const char *filename);
+extern const char *concat_path_filename(const char *path, const char *filename);
 
-extern char *concat_path_filename_ext(const char *path, 
+extern const char *concat_path_filename_ext(const char *path, 
     const char *filename,
     const char *ext);
 
-extern char *get_filename_from_path(char *path);
+extern const char *get_filename_from_path(const char *path);
 
-extern char *int32_to_str(int32_t integer);
+extern const char *int32_to_str(int32_t integer);
 
 extern int32_t number_of_digits(int32_t integer);
 
-extern char *add_square_brackets(const char *str);
+extern const char *add_square_brackets(const char *str);
 
-extern char *add_equals_sign(const char *str1, const char *str2);
+extern const char *add_equals_sign(const char *str1, const char *str2);
 
 extern bool contains(const char *str1, const char *str2);
 
@@ -100,14 +100,14 @@ void test_starts_with2() {
 }
 
 void test_get_string_between_delimiters1() {
-    char *str = strdup("Extract >that< string!");
-    char *result = get_string_between_delimiters(str, ">", "<");
+    const char *str = strdup("Extract >that< string!");
+    const char *result = get_string_between_delimiters(str, ">", "<");
     CU_ASSERT_STRING_EQUAL(result, "that");
 }
 
 void test_get_string_between_delimiters2() {
-    char *str = strdup("Extract >>that<<  >s<tring!");
-    char *result = get_string_between_delimiters(str, ">", "<");
+    const char *str = strdup("Extract >>that<<  >s<tring!");
+    const char *result = get_string_between_delimiters(str, ">", "<");
     CU_ASSERT_STRING_EQUAL(result, ">that");
 }
 
@@ -120,20 +120,20 @@ void test_remove_leading_spaces() {
 void test_concat_path_filename() {
     const char *path = strdup("C:/path/to");
     const char *filename = strdup("filename.ext");
-    char *result = concat_path_filename(path, filename);
+    const char *result = concat_path_filename(path, filename);
     CU_ASSERT_STRING_EQUAL(result, "C:/path/to/filename.ext");
 }
 
 void test_get_filename_from_path() {
     char *path = strdup("C:\\path\\to\\filename.ext");
-    char *result = get_filename_from_path(path);
+    const char *result = get_filename_from_path(path);
     CU_ASSERT_STRING_EQUAL(result, "filename.ext");
 }
 
 void test_int32_to_str() {
-    char *result = int32_to_str(INT32_MIN);
+    const char *result = int32_to_str(INT32_MIN);
     CU_ASSERT_STRING_EQUAL(result, "-2147483648");
-    char *result2 = int32_to_str(INT32_MAX);
+    const char *result2 = int32_to_str(INT32_MAX);
     CU_ASSERT_STRING_EQUAL(result2, "2147483647");
 }
 
@@ -146,14 +146,14 @@ void test_number_of_digits() {
 
 void test_add_square_brackets() {
     char *input = strdup("teststring");
-    char *result = add_square_brackets(input);
+    const char *result = add_square_brackets(input);
     CU_ASSERT_STRING_EQUAL(result, "[teststring]");
 }
 
 void test_add_equals_sign() {
     char *input1 = strdup("teststring1");
     char *input2 = strdup("teststring2");
-    char *result = add_equals_sign(input1, input2);
+    const char *result = add_equals_sign(input1, input2);
     CU_ASSERT_STRING_EQUAL(result, "teststring1 = teststring2");
 }
 

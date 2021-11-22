@@ -4,8 +4,8 @@
 char** str_split(char* a_str, const char a_delim) {
     char **result    = 0;
     size_t count     = 0;
-    char *tmp        = a_str;
-    char *last_comma = 0;
+    const char *tmp        = a_str;
+    const char *last_comma = 0;
     char delim[2];
     delim[0] = a_delim;
     delim[1] = 0;
@@ -93,12 +93,12 @@ char *get_empty_char_buffer(const char *x,
     return result;
 }
 
-bool starts_with(char *str, const char *pre) {
+bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : 
         memcmp(pre, str, strlen(pre)) == 0;
 }
 
-char *get_string_between_delimiters(char *buffer, 
+const char *get_string_between_delimiters(const char *buffer, 
         const char *delimiter1, 
         const char *delimiter2) {
     const char *substring1 = strstr(buffer, delimiter1);
@@ -129,9 +129,9 @@ void remove_leading_spaces(char *str) {
     memmove(str, p, l + 1);
 }
 
-char *concat_path_filename(const char *path, 
+const char *concat_path_filename(const char *path, 
         const char *filename) {
-    char *new_string = (char *)malloc(strlen(path) 
+    char *new_string = malloc(strlen(path) 
                             + strlen(filename) + 3);
     strcpy(new_string, path);
     strcat(new_string, "/");
@@ -139,7 +139,7 @@ char *concat_path_filename(const char *path,
     return new_string;
 }
 
-char *concat_path_filename_ext(const char *path, 
+const char *concat_path_filename_ext(const char *path, 
         const char *filename,
         const char *ext) {
     char *new_string = (char *)malloc(strlen(path) 
@@ -152,13 +152,13 @@ char *concat_path_filename_ext(const char *path,
     return new_string;
 }
 
-char *get_filename_from_path(char *path)
+const char *get_filename_from_path(const char *path)
 {
     if(path == NULL )
         return NULL;
 
-    char *temp_path = path;
-    for(char *p_cur = path; *p_cur != '\0'; p_cur++)
+    const char *temp_path = path;
+    for(const char *p_cur = path; *p_cur != '\0'; p_cur++)
     {
         if(*p_cur == '/' || *p_cur == '\\')
             temp_path = p_cur+1;
@@ -167,7 +167,7 @@ char *get_filename_from_path(char *path)
     return temp_path;
 }
 
-char *int32_to_str(int32_t integer) {
+const char *int32_to_str(int32_t integer) {
     int length = snprintf( NULL, 0, "%d", integer);
     char* str = (char *)malloc(length + 1);
     snprintf( str, length + 1, "%d", integer);
@@ -183,7 +183,7 @@ int32_t number_of_digits(int32_t integer) {
 }
 
 // put a given string in square brackets
-char *add_square_brackets(const char *str) {
+const char *add_square_brackets(const char *str) {
     int32_t length = strlen(str) + sizeof("[") 
                         + sizeof("]") + sizeof("\0") + 1;
     char *result = (char *)malloc(length);
@@ -195,7 +195,7 @@ char *add_square_brackets(const char *str) {
 }
 
 // add an equal sign with whitespaces between to strings
-char *add_equals_sign(const char *str1, const char *str2) {
+const char *add_equals_sign(const char *str1, const char *str2) {
     int32_t length = strlen(str1) + strlen(str2) 
                         + sizeof(" = ") + sizeof("\0") + 1;
     char *result = (char *)malloc(length);

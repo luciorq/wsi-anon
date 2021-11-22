@@ -6,7 +6,7 @@
 #include "ini-parser.h"
 #include "utils.h"
 
-int handle_mirax(char *filename, 
+int handle_mirax(const char **filename, 
     const char *new_label_name, 
     bool keep_macro_image,
     bool disbale_unlinking,

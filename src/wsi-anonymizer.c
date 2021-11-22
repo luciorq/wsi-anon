@@ -17,24 +17,23 @@ file_format check_file_format(const char *filename) {
     }
 }
 
-const char* anonymize_wsi(const char *filename, 
+int32_t anonymize_wsi_with_result(const char **filename, 
         const char *new_label_name,
         bool keep_macro_image,
         bool disbale_unlinking,
         bool do_inplace) {
-    char *_filename = (char *)filename;
-
-    switch(check_file_format(_filename)){
+    int32_t result = -1;
+    switch(check_file_format(*filename)){
         case aperio_svs: {
-            handle_aperio(_filename, new_label_name, keep_macro_image, disbale_unlinking, do_inplace); 
+            result = handle_aperio(filename, new_label_name, keep_macro_image, disbale_unlinking, do_inplace); 
             break;
         }
         case hamamatsu_ndpi: {
-            handle_hamamatsu(_filename, new_label_name, disbale_unlinking, do_inplace); 
+            result = handle_hamamatsu(filename, new_label_name, disbale_unlinking, do_inplace);
             break;
         }
         case histech_mirax: {
-            handle_mirax(_filename, new_label_name, keep_macro_image, disbale_unlinking, do_inplace); 
+            result = handle_mirax(filename, new_label_name, keep_macro_image, disbale_unlinking, do_inplace);
             break;
         }
         case unknown_format: { 
@@ -43,7 +42,25 @@ const char* anonymize_wsi(const char *filename,
         }
         case invalid: {
             fprintf(stderr, "Error: File does not exist or is invalid.\n");
+            break;
         }
     }
-    return _filename;
+    return result;
+}
+
+int32_t anonymize_wsi_inplace(
+        const char* filename,
+        const char* new_label_name,
+        bool keep_macro_image,
+        bool disbale_unlinking) {
+    return anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disbale_unlinking, true);
+}
+
+const char* anonymize_wsi(const char *filename, 
+        const char *new_label_name,
+        bool keep_macro_image,
+        bool disbale_unlinking,
+        bool do_inplace) {
+    anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disbale_unlinking, do_inplace);
+    return filename;
 }

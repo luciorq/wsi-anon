@@ -253,7 +253,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp,
 
 // check tiff file header
 int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
-    int32_t result = 0;
+    int32_t result = -1;
     uint16_t endianess;
 
     // read endianness in header
@@ -273,11 +273,11 @@ int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
             uint16_t pad = read_uint(fp, 2, *big_endian);
             if(offset_size == 8 && pad == 0) {
                 *big_tiff = true;
-                result = 1;
+                result = 0;
             }
         }  else if(version == TIFF_VERSION_CLASSIC) {
             *big_tiff = false;
-            result = 1;
+            result = 0;
         }
     }
     return result;
@@ -520,14 +520,11 @@ int32_t unlink_label_directory(file_t *fp,
     return 0;
 }
 
-char *duplicate_file(const char *filename, 
+const char *duplicate_file(const char *filename, 
         const char *new_label_name,
         const char *file_extension) {
-    // make file name temporary non const
-    char *temp_f = (char *)filename;
     // retrive filename from whole file path
-    char *_filename = (char *)malloc(sizeof(char *));
-    _filename = get_filename_from_path(temp_f);
+    const char* _filename = get_filename_from_path(filename);
 
     if(_filename == NULL) {
         fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
@@ -541,11 +538,11 @@ char *duplicate_file(const char *filename,
     memcpy(path, &filename[0], diff);
     path[diff] = '\0';
 
-    char *new_filename;
+    const char *new_filename;
     // now we can concat the new filename
     if(new_label_name == NULL) {
         // if no label is given, we give the file a generic name
-        char *dummy_filename = "anonymized-wsi";
+        const char *dummy_filename = "anonymized-wsi";
         new_filename = concat_path_filename_ext(path, dummy_filename, file_extension);
     } else {
         new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
@@ -560,17 +557,17 @@ char *duplicate_file(const char *filename,
     }
 }
 
-int32_t handle_hamamatsu(char *filename, 
+int32_t handle_hamamatsu(const char **filename, 
         const char *new_label_name, 
         bool disable_unlinking,
         bool do_inplace) {
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
     if(!do_inplace) {
-        filename = duplicate_file(filename, new_label_name, DOT_NDPI);
+        *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+");
+    fp = file_open(*filename, "r+");
 
     bool big_tiff = false;
     bool big_endian = false;
@@ -578,10 +575,10 @@ int32_t handle_hamamatsu(char *filename,
     // will be placed at the expected position
     int result = check_file_header(fp, &big_endian, &big_tiff);
 
-    if(!result) {
+    if (result != 0) {
         fprintf(stderr, "Error: Could not read header file.\n");
         file_close(fp);
-        return -1;
+        return result;
     }
 
     // read the file structure
@@ -603,10 +600,10 @@ int32_t handle_hamamatsu(char *filename,
     // check for JPEG SOI header in label dir
     result = wipe_label(fp, &dir, true, big_endian, JPEG_SOI);
 
-    if(result == -1) {
+    if (result != 0) {
         free_tiff_file(file);
         file_close(fp);
-        return -1;
+        return result;
     }
 
     if(!disable_unlinking) {
@@ -617,7 +614,7 @@ int32_t handle_hamamatsu(char *filename,
     free_tiff_file(file);
     file_close(fp);
 
-    return (result == 0);
+    return result;
 }
 
 // get aperio directory for aperio AT2 and older
@@ -741,7 +738,7 @@ int32_t wipe_and_unlink_directory(file_t *fp,
     return result;
 }
 
-int32_t handle_aperio(char *filename, 
+int32_t handle_aperio(const char **filename, 
         const char *new_label_name, 
         bool keep_macro_image,
         bool disable_unlinking,
@@ -750,19 +747,19 @@ int32_t handle_aperio(char *filename,
 
     if(!do_inplace) {
         // check if filename is svs or tif here
-        filename = duplicate_file(filename, new_label_name, DOT_SVS);      
+        *filename = duplicate_file(*filename, new_label_name, DOT_SVS);      
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+");
+    fp = file_open(*filename, "r+");
 
     bool big_tiff = false;
     bool big_endian = false;
     int32_t result = check_file_header(fp, &big_endian, &big_tiff);
 
-    if(!result) {
+    if(result != 0) {
         file_close(fp);
-        return -1;
+        return result;
     }
 
     struct tiff_file *file;
@@ -788,10 +785,10 @@ int32_t handle_aperio(char *filename,
     }
     
 
-    if(result == -1) {
+    if(result != 0) {
         free_tiff_file(file);
         file_close(fp);
-        return -1;
+        return result;
     }
 
     // delete macro image
@@ -806,17 +803,17 @@ int32_t handle_aperio(char *filename,
         result = wipe_and_unlink_directory(fp, file, macro_dir, 
             big_endian, _is_aperio_gt450, disable_unlinking, NULL);
 
-        if(result == -1) {
+        if(result != 0) {
             free_tiff_file(file);
             file_close(fp);
-            return -1;
+            return result;
         }
     }
 
     // clean up
     free_tiff_file(file);
     file_close(fp);
-    return (result == 0);
+    return result;
 }
 
 int32_t is_hamamatsu(const char *filename) {
@@ -835,7 +832,7 @@ int32_t is_hamamatsu(const char *filename) {
     result = check_file_header(fp, &big_endian, &big_tiff);
     file_close(fp);
 
-    return result;
+    return (result == 0);
 }
 
 int32_t has_aperio_tag(file_t *fp, struct tiff_file *file) {
@@ -886,10 +883,7 @@ int32_t is_aperio(const char *filename) {
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
 
-    //printf("is big_tiff: %s\n", big_tiff ? "true" : "false");
-    //printf("is big_endian: %s\n", big_endian ? "true" : "false");
-
-    if(!result) {
+    if(result != 0) {
         return result;
     }
 
@@ -904,13 +898,11 @@ int32_t is_aperio(const char *filename) {
 
     result = has_aperio_tag(fp, file);
 
-    if(result == -1) {
+    if (result == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
-        file_close(fp);
-        return result;
     }
     
     // is aperio
     file_close(fp);
-    return result;
+    return (result == 1);
 }

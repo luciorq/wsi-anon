@@ -31,7 +31,7 @@ static const char *SLIDE_BARCODE = "ScanDataLayer_SlideBarcode";
 // macro image
 static const char *SLIDE_THUMBNAIL = "ScanDataLayer_SlideThumbnail";
 
-char *concat_wildcard_string_int32(const char *str, 
+const char *concat_wildcard_string_int32(const char *str, 
         int32_t integer) {
     char *result_string = (char *)malloc(
         strlen(str) + number_of_digits(integer) + 1);
@@ -39,7 +39,7 @@ char *concat_wildcard_string_int32(const char *str,
     return result_string;
 }
 
-char *concat_wildcard_string_m_int32(const char *str, 
+const char *concat_wildcard_string_m_int32(const char *str, 
         int32_t integer1, 
         int32_t integer2) {
     char *result_string = (char *)malloc(strlen(str) 
@@ -49,7 +49,7 @@ char *concat_wildcard_string_m_int32(const char *str,
     return result_string;
 }
 
-char *concat_wildcard_string_string(const char *wildcard_str,
+const char *concat_wildcard_string_string(const char *wildcard_str,
         const char *replacement) {
     char *result_string = (char *)malloc(strlen(wildcard_str)
                             + strlen(replacement) + 1);
@@ -74,11 +74,11 @@ struct mirax_file *get_mirax_file_structure(struct ini_file *ini,
         struct mirax_layer *layer = (struct mirax_layer *)malloc(
             sizeof(struct mirax_layer));
 
-        char *nonhier_level_count_key = concat_wildcard_string_int32(
+        const char *nonhier_level_count_key = concat_wildcard_string_int32(
             NONHIER_X_COUNT, 
             layer_id);
 
-        char *nonhier_level_count = get_value_from_ini_file(
+        const char *nonhier_level_count = get_value_from_ini_file(
             ini, 
             HIERARCHICAL, 
             nonhier_level_count_key);
@@ -87,7 +87,7 @@ struct mirax_file *get_mirax_file_structure(struct ini_file *ini,
         sscanf(nonhier_level_count, "%d", &nhl_count);
         layer->level_count = nhl_count;
 
-        char *layer_name_key = concat_wildcard_string_int32(
+        const char *layer_name_key = concat_wildcard_string_int32(
             NONHIER_X_NAME, 
             layer_id);
 
@@ -109,7 +109,7 @@ struct mirax_file *get_mirax_file_structure(struct ini_file *ini,
             level->id = level_id;
             level->layer_id = layer_id;
             level->record = layer_id + level_id;
-            char *key_prefix = concat_wildcard_string_m_int32(
+            const char *key_prefix = concat_wildcard_string_m_int32(
                 NONHIER_X_VAL_X, 
                 layer_id, 
                 level_id);
@@ -187,7 +187,7 @@ bool assert_value(file_t *fp, int32_t value) {
 }
 
 // read file number, position and size frrom index dat
-int32_t *read_data_location(char *filename, 
+int32_t *read_data_location(const char *filename, 
         int32_t record, 
         int32_t **position, 
         int32_t **size) {
@@ -245,7 +245,7 @@ int32_t *read_data_location(char *filename,
 }
 
 // wipe the image data for filename, offset and length
-int32_t wipe_level_data(char *filename, 
+int32_t wipe_level_data(const char *filename, 
         int32_t **offset, 
         int32_t **length, 
         const char *prefix) {
@@ -292,11 +292,11 @@ int32_t wipe_level_data(char *filename,
         // TODO: replace with truncation  (to make file size zero)
         // must work under win and linux!
         file_seek(fp, **offset, SEEK_SET);
-        char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
+        const char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
         file_write(empty_buffer, **length, 1, fp);
     } else {
         file_seek(fp, **offset, SEEK_SET);
-        char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
+        const char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
         file_write(empty_buffer, **length, 1, fp);
     }
 
@@ -306,9 +306,9 @@ int32_t wipe_level_data(char *filename,
 }
 
 // remove label level
-int32_t delete_level(char *path,
-        char *index_file,
-        char **data_files,
+int32_t delete_level(const char *path,
+        const char *index_file,
+        const char **data_files,
         struct mirax_layer **layers, 
         const char *layer_name,     
         const char *level_name) {
@@ -320,7 +320,7 @@ int32_t delete_level(char *path,
         return -1;
     }
     
-    char *index_file_path = concat_path_filename(path, index_file);
+    const char *index_file_path = concat_path_filename(path, index_file);
     int32_t *position, *size;
     int32_t *fileno = read_data_location(
         index_file_path, level_to_delete->record, &position, &size);
@@ -329,13 +329,13 @@ int32_t delete_level(char *path,
         return -1;
     }
 
-    char *filename = concat_path_filename(path, data_files[*fileno]);
+    const char *filename = concat_path_filename(path, data_files[*fileno]);
 
     return wipe_level_data(filename, &position, &size, JPEG_SOI);
 }
 
 // delete label record from index file
-int32_t delete_record_from_index_file(char *filename, 
+int32_t delete_record_from_index_file(const char *filename, 
         int32_t record, 
         int32_t all_records) {
     file_t *fp = file_open(filename, "r+w");
@@ -386,12 +386,11 @@ struct mirax_level *get_next_level(struct mirax_layer **layers,
 // the associated folder with the image data
 // return new path name of image data folder
 // filename will be modified to new filename
-char *duplicate_mirax_filedata(char *filename, 
+const char *duplicate_mirax_filedata(const char *filename, 
         const char *new_label_name, 
         const char *file_extension) {
     // retrive filename from whole file path
-    char *_filename = (char *)malloc(sizeof(char *));
-    _filename = get_filename_from_path(filename);
+    const char* _filename = get_filename_from_path(filename);
 
     if(_filename == NULL) {
         fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
@@ -420,7 +419,7 @@ char *duplicate_mirax_filedata(char *filename,
         // concat string
         new_label_name = temp_label_name;
     }
-    char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
+    const char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
 
     if(file_exists(new_filename)) {
         fprintf(stderr, "Error: File with stated filename [%s] already exists.\
@@ -528,13 +527,13 @@ void delete_last_entry_from_ini_file(struct ini_file *ini,
     int32_t id_to_delete = mirax_file->layers[0]->level_count;
 
     // we need to delete all old unused entries now
-    char *nonhier_plain = concat_wildcard_string_m_int32(
+    const char *nonhier_plain = concat_wildcard_string_m_int32(
         NONHIER_X_VAL_X, 0, id_to_delete);
-    char *nonhier_section = concat_wildcard_string_m_int32(
+    const char *nonhier_section = concat_wildcard_string_m_int32(
         NONHIER_X_VAL_X_SECTION, 0, id_to_delete);
-    char *nonhier_imgx = concat_wildcard_string_m_int32(
+    const char *nonhier_imgx = concat_wildcard_string_m_int32(
         NONHIER_X_VAL_X_IMAGENUMBER_X, 0, id_to_delete);
-    char *nonhier_imgy = concat_wildcard_string_m_int32(
+    const char *nonhier_imgy = concat_wildcard_string_m_int32(
         NONHIER_X_VAL_X_IMAGENUMBER_Y, 0, id_to_delete);
     remove_entry_for_group_and_key(ini, HIERARCHICAL, nonhier_plain);
     remove_entry_for_group_and_key(ini, HIERARCHICAL, nonhier_section);
@@ -600,34 +599,35 @@ int32_t wipe_data_in_index_file(const char *path,
         struct mirax_file *mirax_file) {
     int32_t result = -1;
     // delete record in index dat
-    char *full_index_filename = concat_path_filename(path, index_filename);
+    const char *full_index_filename = concat_path_filename(path, index_filename);
     result = delete_record_from_index_file(
         full_index_filename, level_to_delete->record, mirax_file->all_records_count);
     return result;
 }
 
-int32_t handle_mirax(char *filename, 
+int32_t handle_mirax(const char **filename, 
         const char *new_label_name, 
         bool keep_macro_image,
         bool disable_unlinking,
         bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
-    char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
+    const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
 
     if(!do_inplace) {
-        path = duplicate_mirax_filedata(filename, new_label_name, DOT_MRXS_EXT);
+        path = duplicate_mirax_filedata(*filename, new_label_name, DOT_MRXS_EXT);
 
         if(path == NULL || filename == NULL) {
             fprintf(stderr, "Error: Failed to copy mirax files.\n");
             return -1;
         }
+        *filename = path;
     }
 
     struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
 
-    char *index_filename = get_value_from_ini_file(ini, HIERARCHICAL, INDEXFILE);
-    char *file_count = get_value_from_ini_file(ini, DATAFILE, FILE_COUNT); 
-    char *layer_count = get_value_from_ini_file(ini, HIERARCHICAL, NONHIER_COUNT);
+    const char *index_filename = get_value_from_ini_file(ini, HIERARCHICAL, INDEXFILE);
+    const char *file_count = get_value_from_ini_file(ini, DATAFILE, FILE_COUNT); 
+    const char *layer_count = get_value_from_ini_file(ini, HIERARCHICAL, NONHIER_COUNT);
 
     if(index_filename == NULL 
         || file_count == NULL 
@@ -643,10 +643,10 @@ int32_t handle_mirax(char *filename,
     sscanf(layer_count, "%d", &l_count);
 
     // get .dat filenames
-    char **data_filenames = (char **)malloc((f_count + 1) * sizeof(char *));
+    const char **data_filenames = (const char **)malloc((f_count + 1) * sizeof(char *));
     for(int32_t i = 0; i < f_count; i++) {
-        char *temp_datafile_key = concat_wildcard_string_int32(FILE_, i);
-        char *temp_datafile_name = get_value_from_ini_file(
+        const char *temp_datafile_key = concat_wildcard_string_int32(FILE_, i);
+        const char *temp_datafile_name = get_value_from_ini_file(
             ini, DATAFILE, temp_datafile_key); 
         data_filenames[i] = temp_datafile_name;
         //printf("%i: %s\n", i, temp_datafile_name);
@@ -721,7 +721,7 @@ int32_t handle_mirax(char *filename,
 
         // general data in slidedat ini
         set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, new_label_name);
-        char *project_name = concat_wildcard_string_string(PROJECT_X, new_label_name);
+        const char *project_name = concat_wildcard_string_string(PROJECT_X, new_label_name);
         set_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, project_name);
 
         if(write_ini_file(ini, path, SLIDEDAT) == -1) {

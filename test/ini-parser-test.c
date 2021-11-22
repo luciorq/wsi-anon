@@ -7,12 +7,12 @@
 struct ini_file *read_slidedat_ini_file(const char *path, 
         const char *ini_filename);
 
-char *get_value_from_ini_file(struct ini_file *ini_file, 
+const char *get_value_from_ini_file(struct ini_file *ini_file, 
         const char *group, 
         const char *entry_key);
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, 
-        char *group_name);
+        const char *group_name);
 
 void rename_section_name_for_level_in_section(struct ini_file *ini_file, 
         const char *group_name, 
@@ -67,7 +67,7 @@ struct ini_file *mock_ini_file() {
 
 void test_get_value_from_ini_file() {
     struct ini_file *ini_file = mock_ini_file();
-    char *result = get_value_from_ini_file(ini_file, "Identifier", "TestKey2");
+    const char *result = get_value_from_ini_file(ini_file, "Identifier", "TestKey2");
     CU_ASSERT_PTR_NOT_NULL(result);
     CU_ASSERT_STRING_EQUAL(result, "TestValue2");
     free(ini_file);
