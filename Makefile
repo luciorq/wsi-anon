@@ -29,8 +29,7 @@ OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 OBJECTS_DBG  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/debug/%.o)
 OBJECTS_SHARED := $(SOURCES_LIB:$(SRCDIR)/%.c=$(OBJDIR)/shared/%.o)
 
-UNIT_DEPS_FILES = $(SRCDIR)/native-file.c $(SRCDIR)/utils.c $(SRCDIR)/utils.h $(SRCDIR)/ini-parser.c $(SRCDIR)/ini-parser.h
-UNIT_TEST_FILES = $(TESTDIR)/utils-test.c $(TESTDIR)/ini-parser-test.c $(TESTDIR)/test-runner.c
+UNIT_TEST_FILES = $(TESTDIR)/utils-test.c $(TESTDIR)/ini-parser-test.c $(TESTDIR)/wsi-anonymizer-test.c $(TESTDIR)/test-runner.c
 
 default: static-lib shared-lib console-app
 
@@ -62,7 +61,7 @@ $(BINDIR)/$(WASM_TARGET): makedirs
 	@emcc -Wall $(SOURCES_WASM) -Os -o $(BINDIR)/$(WASM_TARGET) --extern-pre-js $(SRCDIR)/anonymized-stream.js -s WASM=1 -s ASYNCIFY -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]'
 
 tests: makedirs
-	@gcc -o $(BINDIR)/$(TEST_TARGET) $(UNIT_DEPS_FILES) $(UNIT_TEST_FILES) -g $(LFLAGS_TESTS)
+	@gcc -o $(BINDIR)/$(TEST_TARGET) $(SOURCES_LIB) $(UNIT_TEST_FILES) -g $(LFLAGS_TESTS)
 
 console-app-debug: makedirs $(BINDIR)/$(CONSOLE_DBG_TARGET)
 

@@ -8,10 +8,14 @@ struct file_s {
 
 file_t* file_open(const char* filename, const char* mode)
 {
+  file_t* stream = NULL;
+
   FILE* fp = fopen(filename, mode);
 
-  file_t *stream = (file_t*)malloc(sizeof(file_t));
-  stream->fp = fp;
+  if (fp != NULL) {
+    stream = (file_t*)malloc(sizeof(file_t));
+    stream->fp = fp;
+  }
 
   return stream;
 }

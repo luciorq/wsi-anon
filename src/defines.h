@@ -68,12 +68,12 @@ typedef enum file_format {
 } file_format;
 
 struct ini_entry {
-    char *key;
-    char *value;
+    const char *key;
+    const char *value;
 };
 
 struct ini_group {
-    char* group_identifier;
+    const char* group_identifier;
     int32_t start_line;
     int32_t entry_count;
     struct ini_entry *entries;
@@ -88,14 +88,14 @@ struct mirax_level {
     int32_t id;
     int32_t layer_id;
     int32_t record;
-    char *key_prefix;
-    char *name;
-    char *section_key;
-    char *section;
+    const char *key_prefix;
+    const char *name;
+    const char *section_key;
+    const char *section;
 };
 
 struct mirax_layer {
-    char *layer_name;
+    const char *layer_name;
     int32_t level_count;
     struct mirax_level **levels;
 };

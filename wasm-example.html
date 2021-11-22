@@ -8,8 +8,12 @@ async function onAnonymizeWsi() {
   const files = document.getElementById("file-input").files;
   const anonStream = AnonymizedStream.create(files[0])
   console.log("running anonymization ...");
-  await anonStream.anonymize();
-  console.log("done, stream can now be uploaded");
+  try {
+    await anonStream.anonymize();
+    console.log("done, stream can now be uploaded");
+  } catch (error) {
+    alert(error);
+  }
 }
 
 window.globalThis.onAnonymizeWsi = onAnonymizeWsi;
