@@ -1,17 +1,18 @@
 export default class AnonymizedStream {
-  constructor (original) {
+  constructor (original, chunkSize) {
     this.size = original.size
     this._original = original
     this._changes = []
     this._start = 0
+    this._chunkSize = chunkSize
     this._done = false
   }
 
 
   // Public JS API (used by UI and WASM code)
 
-  static create (file, path) {
-    const stream = new AnonymizedStream(file)
+  static create (file, chunkSize, path) {
+    const stream = new AnonymizedStream(file, chunkSize)
     const filename = path ? path + '/' + file.name : file.name
     AnonymizedStream._files[filename] = stream
     return stream
@@ -58,16 +59,12 @@ export default class AnonymizedStream {
   // ReadableStreamDefaultReader compliant API to be used in upload client
 
   read () {
-    // TODO: use a reasonable chunk size.
     if (this._start === this.size) {
       const value = undefined
       const done = true
       return Promise.resolve({ value, done })
     }
-    let end = Math.floor(this.size / 2)
-    if (this._start !== 0) {
-      end = this.size
-    }
+    let end = Math.min(this._start + this._chunkSize, this.size)
     return new Promise((resolve, reject) => {
       const slice = this._original.slice(this._start, end)
       slice.arrayBuffer().then(buffer => {
