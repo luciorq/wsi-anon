@@ -6,7 +6,8 @@ import AnonymizedStream from './bin/wsi-anon.js';
 
 async function onAnonymizeWsi() {
   const files = document.getElementById("file-input").files;
-  const anonStream = AnonymizedStream.create(files[0])
+  const chunkSize = 10 * 1000*1000;
+  const anonStream = AnonymizedStream.create(files[0], chunkSize)
   console.log("running anonymization ...");
   try {
     await anonStream.anonymize();

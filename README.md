@@ -90,7 +90,8 @@ import AnonymizedStream from 'wsi-anon'
 The `AnonymizedStream` class can be instantiated using its static create function and anoymized via its asynchronous anonymize method:
 
 ```javascript
-const stream = AnonymizedStream.create(file)
+const chunkSize = 10 * 1000*1000; // 10 MB
+const stream = AnonymizedStream.create(file, chunkSize)
 try {
   await stream.anonymize()
 } catch (error) {

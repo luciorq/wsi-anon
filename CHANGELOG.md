@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- Configurable chunk size
+
 ## 0.2.0
 
 - Result propagation
