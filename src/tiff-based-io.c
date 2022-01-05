@@ -385,6 +385,12 @@ uint32_t *read_pointer_by_tag(file_t *fp,
             if(entry_size) {
                 uint32_t *v_buffer = (uint32_t *)malloc(entry_size * entry.count);
 
+                if(entry.count == 1) {
+                    *length = entry.count;
+                    v_buffer[0] = entry.offset;
+                    return v_buffer;
+                }
+
                 uint64_t new_offset = entry.offset;
 
                 if(ndpi) {
@@ -439,7 +445,7 @@ int32_t wipe_label(file_t *fp,
 
         if(prefix != NULL) {
             // we check the head of the directory offset for a given 
-            // prefix if the head is not equal to the given prefix 
+            // prefix. if the head is not equal to the given prefix 
             // we do not wipe the label data
             size_t prefix_len = strlen(prefix);
             char *buf =  (char *)malloc(prefix_len + 1);
@@ -693,21 +699,47 @@ int32_t get_aperio_gt450_dir_by_name(file_t *fp,
         
         struct tiff_directory dir = file->directories[i];
         //printf("--directory %i\n", i);
-        if(!dir_contains_image_description(&dir)) {
-            // if the file has no more than two layers, there is no label image
-            if(strcmp(dir_name, "label") == 0 && file->used > (i + 1)) {
-                // first directory without description
-                i += 1;
-            } else if(strcmp(dir_name, "macro") == 0 && file->used > (i + 2)) {
-                // second directory without description
-                i += 2;
-            } else {
-                i = -1;
+        for(uint64_t j = 0; j < dir.count; j++) {
+
+            struct tiff_entry entry = dir.entries[j];
+            
+            if(entry.tag == TIFFTAG_SUBFILETYPE) {
+                if(entry.offset == 0) { // thumbnail or else
+                    break; // skip IFD
+                }
+
+                if ((strcmp(dir_name, "label") == 0 && entry.offset == 1)||
+                    (strcmp(dir_name, "macro") == 0 && entry.offset == 9)) {
+                    return i;
+                }
             }
-            return i;
         }
     }
     return -1;
+}
+
+int32_t change_macro_image_compression_gt450(file_t *fp, 
+        struct tiff_file *file,
+        int32_t directory) {
+    // macro image for gt450 needs to be treated differently because it is JPEG encoded
+    // therefore we need to convert it to LZW compression
+    struct tiff_directory dir = file->directories[directory];
+    for(int i = 0; i < dir.count; i++) {
+        struct tiff_entry entry = dir.entries[i];
+        if(entry.tag == TIFFTAG_COMPRESSION) {
+            if(file_seek(fp, entry.start + 12, SEEK_SET)) {
+                fprintf(stderr, "Error: Failed to seek to offset %lu.\n", entry.offset);
+                continue;
+            }
+            uint64_t lzw_com = COMPRESSION_LZW;
+            if(!file_write(&lzw_com, 1, sizeof(uint64_t), fp)) {
+                fprintf(stderr, "Error: Wiping image data failed.\n");
+                return -1;
+            }
+            break;
+        }
+    }
+    return 0;
 }
 
 int32_t wipe_and_unlink_directory(file_t *fp, 
@@ -732,6 +764,9 @@ int32_t wipe_and_unlink_directory(file_t *fp,
 
     // unlinking works also for gt450?
     if(!disable_unlinking) {
+        fprintf(stdout, "Unlink DIR \n");
+        // TODO: unlinking of label leads to displaying thumbnail as label
+        // TODO: unlinking of macro image not working
         result = unlink_label_directory(fp, file, directory, false);
     }
 
@@ -776,14 +811,17 @@ int32_t handle_aperio(const char **filename,
     int32_t label_dir = 0;
     if(_is_aperio_gt450) {
         label_dir = get_aperio_gt450_dir_by_name(fp, file, "label");
-        result = wipe_and_unlink_directory(fp, file, label_dir, 
-            big_endian, _is_aperio_gt450, disable_unlinking, NULL);
     } else {
         label_dir = get_aperio_dir_by_name(fp, file, "label");
-                result = wipe_and_unlink_directory(fp, file, label_dir, 
-            big_endian, _is_aperio_gt450, disable_unlinking, LZW_CLEARCODE);
+    }
+
+    if(label_dir == -1) {
+        fprintf(stderr, "Error: Could not find IFD of label image.\n");
+        return -1;
     }
     
+    result = wipe_and_unlink_directory(fp, file, label_dir,
+            big_endian, _is_aperio_gt450, disable_unlinking, LZW_CLEARCODE);
 
     if(result != 0) {
         free_tiff_file(file);
@@ -793,15 +831,24 @@ int32_t handle_aperio(const char **filename,
 
     // delete macro image
     if(!keep_macro_image) {
-        int32_t macro_dir = 0;
+        int32_t macro_dir = -1;
         if(_is_aperio_gt450) {
             macro_dir = get_aperio_gt450_dir_by_name(fp, file, "macro");
         } else {
             macro_dir = get_aperio_dir_by_name(fp, file, "macro");
         }
 
+        if(macro_dir == -1) {
+            fprintf(stderr, "Error: Could not find IFD of macro image.\n");
+            return -1;
+        }
+
         result = wipe_and_unlink_directory(fp, file, macro_dir, 
             big_endian, _is_aperio_gt450, disable_unlinking, NULL);
+
+        if(_is_aperio_gt450) {
+            result = change_macro_image_compression_gt450(fp, file, macro_dir);
+        }
 
         if(result != 0) {
             free_tiff_file(file);
