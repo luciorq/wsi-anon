@@ -4,37 +4,27 @@
 
 // ####################### functions to test ####################### //
 
-struct ini_file *read_slidedat_ini_file(const char *path, 
-        const char *ini_filename);
+struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filename);
 
-const char *get_value_from_ini_file(struct ini_file *ini_file, 
-        const char *group, 
-        const char *entry_key);
+const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group,
+                                    const char *entry_key);
 
-int32_t delete_group_form_ini_file(struct ini_file *ini_file, 
-        const char *group_name);
+int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_name);
 
-void rename_section_name_for_level_in_section(struct ini_file *ini_file, 
-        const char *group_name, 
-        struct mirax_level *current_level, 
-        struct mirax_level *next_level);
+void rename_section_name_for_level_in_section(struct ini_file *ini_file, const char *group_name,
+                                              struct mirax_level *current_level,
+                                              struct mirax_level *next_level);
 
-void set_value_for_group_and_key(struct ini_file *ini_file, 
-        const char *group_name, 
-        const char *key, 
-        const char *value);
+void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
+                                 const char *value);
 
-void remove_entry_for_group_and_key(struct ini_file *ini_file, 
-        const char *group_name, 
-        const char *key);
+void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name,
+                                    const char *key);
 
-void decrement_value_for_group_and_key(struct ini_file *ini_file, 
-        const char *group_name, 
-        const char *key);
+void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
+                                       const char *key);
 
-int32_t write_ini_file(struct ini_file *ini_file, 
-        const char *path, 
-        const char *filename);
+int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *filename);
 
 // ####################### test cases ####################### //
 
@@ -91,7 +81,7 @@ void test_remove_entry_for_group_and_key() {
     struct ini_file *ini_file = mock_ini_file();
     remove_entry_for_group_and_key(ini_file, "Identifier", "TestKey1");
     CU_ASSERT_EQUAL(ini_file->groups[0].entry_count, 2);
-    CU_ASSERT_STRING_EQUAL(ini_file->groups[0].entries[0].key, "TestKey2"); 
+    CU_ASSERT_STRING_EQUAL(ini_file->groups[0].entries[0].key, "TestKey2");
 }
 
 void test_decrement_value_for_group_and_key1() {
@@ -114,29 +104,25 @@ void test_write_ini_file() {
 // ####################### test case setup ####################### //
 
 CU_TestInfo testcases3[] = {
-        
-        {"Test [get_value_from_ini_file]:", test_get_value_from_ini_file},
-        {"Test [delete_group_from_ini_file]:", test_delete_group_from_ini_file},
-        {"Test [set_value_for_group_and_key]:", test_set_value_for_group_and_key},
-        {"Test [remove_entry_for_group_and_key]:", test_remove_entry_for_group_and_key},
-        {"Test [decrement_value_for_group_and_key] 1:", test_decrement_value_for_group_and_key1},
-        {"Test [decrement_value_for_group_and_key] 2:", test_decrement_value_for_group_and_key2},
-        {"Test [write_ini_file]:", test_write_ini_file},
-        CU_TEST_INFO_NULL
-};
 
-CU_SuiteInfo suites2[] = {
-        {"Testing ini-parser.c:", NULL, NULL, NULL, NULL, testcases3},
-        CU_SUITE_INFO_NULL
-};
+    {"Test [get_value_from_ini_file]:", test_get_value_from_ini_file},
+    {"Test [delete_group_from_ini_file]:", test_delete_group_from_ini_file},
+    {"Test [set_value_for_group_and_key]:", test_set_value_for_group_and_key},
+    {"Test [remove_entry_for_group_and_key]:", test_remove_entry_for_group_and_key},
+    {"Test [decrement_value_for_group_and_key] 1:", test_decrement_value_for_group_and_key1},
+    {"Test [decrement_value_for_group_and_key] 2:", test_decrement_value_for_group_and_key2},
+    {"Test [write_ini_file]:", test_write_ini_file},
+    CU_TEST_INFO_NULL};
 
-void AddTestsIniParser(void)
-{
-        assert(NULL != CU_get_registry());
-        assert(!CU_is_test_running());
+CU_SuiteInfo suites2[] = {{"Testing ini-parser.c:", NULL, NULL, NULL, NULL, testcases3},
+                          CU_SUITE_INFO_NULL};
 
-        if(CUE_SUCCESS != CU_register_suites(suites2)){
-                fprintf(stderr, "Register suites failed - %s ", CU_get_error_msg());
-                exit(1);
-        }
+void AddTestsIniParser(void) {
+    assert(NULL != CU_get_registry());
+    assert(!CU_is_test_running());
+
+    if (CUE_SUCCESS != CU_register_suites(suites2)) {
+        fprintf(stderr, "Register suites failed - %s ", CU_get_error_msg());
+        exit(1);
+    }
 }

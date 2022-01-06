@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "CUnit/Basic.h"
 #include <CUnit/Automated.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "ini-parser-test.h"
 #include "utils-test.h"
