@@ -4,7 +4,7 @@ if [ ! -z "$(git status --untracked-files=no  --porcelain)" ]; then
 fi
 
 echo "Used clang version:"
-clang-format --version
+clang-format-10 --version
 echo
 
 find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format-10 -i --verbose
