@@ -3,7 +3,6 @@ if [ ! -z "$(git status --untracked-files=no  --porcelain)" ]; then
   exit 1
 fi
 
-echo "Used clang version:"
 clang-format-10 --version
 echo
 

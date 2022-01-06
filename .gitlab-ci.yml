@@ -39,7 +39,7 @@ test-wsi-anon:
   tags:
     - empaia-charite
   script:
-    - apt-get update -q && apt-get install -yq libcunit1-dev git
+    - apt-get update -q && apt-get install -y -qq libcunit1-dev git
     - make tests
     - bin/utests
   artifacts:
