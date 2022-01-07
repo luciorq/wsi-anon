@@ -8,7 +8,8 @@ extern char **str_split(char *a_str, const char a_delim);
 
 extern const char *get_filename_ext(const char *filename);
 
-extern char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix);
+extern char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
+                                   const char *suffix);
 
 extern bool starts_with(const char *str, const char *pre);
 
@@ -77,9 +78,16 @@ void test_get_filename_ext2() {
 
 void test_get_empty_char_buffer() {
     const char *prefix = strdup("\200");
+    const char *suffix = strdup("\200");
     const char *x_char = strdup("0");
-    const char *result = get_empty_char_buffer(x_char, 5, prefix);
-    CU_ASSERT_STRING_EQUAL(result, "\20000000");
+    const char *result = get_empty_char_buffer(x_char, 5, prefix, suffix);
+    CU_ASSERT_STRING_EQUAL(result, "\200000\200");
+}
+
+void test_get_empty_char_buffer_without_prefix() {
+    const char *x_char = strdup("0");
+    const char *result = get_empty_char_buffer(x_char, 5, NULL, NULL);
+    CU_ASSERT_STRING_EQUAL(result, "00000");
 }
 
 void test_starts_with1() {
@@ -194,6 +202,7 @@ CU_TestInfo testcases1[] = {
     {"Test [get_filename_ext] 1:", test_get_filename_ext1},
     {"Test [get_filename_ext] 2:", test_get_filename_ext2},
     {"Test [get_empty_char_buffer]:", test_get_empty_char_buffer},
+    {"Test [get_empty_char_buffer]:", test_get_empty_char_buffer_without_prefix},
     {"Test [starts_with] 1:", test_starts_with1},
     {"Test [starts_with] 2:", test_starts_with2},
     {"Test [get_string_between_delimiters] 1:", test_get_string_between_delimiters1},

@@ -46,17 +46,6 @@ make wasm
 
 This produces an ES6 module `./bin/wsi-anon.mjs` with embedded, base64 encoded wasm binary to facilitate usage in arbitrary web applications.
 
-## Tests
-
-To run unit tests build project with 
-
-```bash
-make tests
-./bin/utests
-```
-
-// to come: integration tests
-
 ## Run
 
 ### Console Application
@@ -106,8 +95,17 @@ Anonymization is not done during creation of the instance, because there are WSI
 
 ## Code Formatting
 
-Install `clang-format-10` first and then run:
+Install `clang-format-10` first and run
 
 ```
 find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format-10 --Werror -i --verbose
+```
+
+## Tests
+
+To run unit tests install `libcunit1-dev` and build test projects with 
+
+```bash
+make tests
+./bin/utests
 ```

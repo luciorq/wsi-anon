@@ -24,3 +24,7 @@ obj/
 __pycache__/
 *.py[cod]
 *$py.class
+
+
+# unit test output
+Test-Wsi-Anon-Results.xml

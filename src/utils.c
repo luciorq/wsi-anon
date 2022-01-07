@@ -63,30 +63,43 @@ int32_t file_exists(const char *filename) {
 }
 
 // return a char buffer filled with char x
-char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix) {
+char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
+                            const char *suffix) {
     // assure length is a postive integer and not zero
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;
     }
 
-    // allocate buffer
-    char *result = (char *)malloc((length * sizeof(char)) + 1);
+    int32_t prefix_length = 0;
+    int32_t suffix_length = 0;
 
-    int32_t start = 0;
     if (prefix != NULL) {
-        int32_t str_length = strlen(prefix);
-        // add prefix before empty buffer (e.g. JPEG SOI)
-        if (length > str_length) {
-            for (; start < str_length; start++) {
-                result[start] = prefix[start];
-            }
-        }
+        prefix_length = strlen(prefix);
     }
 
-    // fill rest of buffer with x
-    for (int32_t i = start; i <= length; i++) {
-        result[i] = *x;
+    if (suffix != NULL) {
+        suffix_length = strlen(suffix);
+    }
+
+    // allocate buffer
+    char *result = (char *)malloc((length * sizeof(char)) + prefix_length * sizeof(char) +
+                                  suffix_length * sizeof(char));
+
+    int32_t start = 0;
+    // add image prefix
+    for (; start <= prefix_length - 1; start++) {
+        result[start] = prefix[start];
+    }
+
+    // fill body of image with x
+    for (; start < length - suffix_length; start++) {
+        result[start] = *x;
+    }
+
+    // add suffix to image
+    for (int32_t i = 0; i < suffix_length; i++) {
+        result[start + i] = suffix[i];
     }
 
     return result;

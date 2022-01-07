@@ -17,7 +17,7 @@ codecheck:
   tags:
     - empaia-charite
   before_script:
-    - apt-get update -q && apt-get install -y -qq clang-format-10  git
+    - apt-get update -q && apt-get install -y -qq clang-format-10 git
   script:
     - ./clang-format.sh
 

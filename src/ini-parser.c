@@ -98,7 +98,11 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
 
             // parse entry
             struct ini_entry *temp_entry = (struct ini_entry *)malloc(sizeof(struct ini_entry));
+            if (!contains(buffer, "=")) {
+                continue;
+            }
             char **splitted_entry = str_split(buffer, '=');
+
             // remove whitspace
             char *key = splitted_entry[0];
             remove_leading_spaces(key);

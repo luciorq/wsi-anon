@@ -211,7 +211,7 @@ int32_t *read_data_location(const char *filename, int32_t record, int32_t **posi
 
 // wipe the image data for filename, offset and length
 int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length,
-                        const char *prefix) {
+                        const char *prefix, const char *suffix) {
     file_t *fp = file_open(filename, "r+w");
 
     if (fp == NULL) {
@@ -250,17 +250,11 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
         return -1;
     }
 
-    if (truncation) {
-        // TODO: replace with truncation  (to make file size zero)
-        // must work under win and linux!
-        file_seek(fp, **offset, SEEK_SET);
-        const char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
-        file_write(empty_buffer, **length, 1, fp);
-    } else {
-        file_seek(fp, **offset, SEEK_SET);
-        const char *empty_buffer = get_empty_char_buffer("0", **length, prefix);
-        file_write(empty_buffer, **length, 1, fp);
-    }
+    // write empty jpeg image to file
+    // todo: JPEG_SOI is not written to file at the moment
+    const char *empty_buffer = get_empty_char_buffer("0", **length, prefix, suffix);
+    file_seek(fp, **offset, SEEK_SET);
+    file_write(empty_buffer, **length, 1, fp);
 
     free(buffer);
     file_close(fp);
@@ -288,7 +282,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
 
     const char *filename = concat_path_filename(path, data_files[*fileno]);
 
-    return wipe_level_data(filename, &position, &size, JPEG_SOI);
+    return wipe_level_data(filename, &position, &size, JPEG_SOI, JPEG_EOI);
 }
 
 // delete label record from index file
@@ -516,8 +510,8 @@ void unlink_macro_and_label_image(struct ini_file *ini, struct mirax_level *macr
     delete_last_entry_from_ini_file(ini, mirax_file);
 }
 
-void unlink_label_image(struct ini_file *ini, struct mirax_level *level_to_delete,
-                        struct mirax_file *mirax_file) {
+void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
+                  struct mirax_file *mirax_file) {
     // modify internal mirax representation
     struct mirax_level *current_level = level_to_delete;
     struct mirax_level *next_level = get_next_level(mirax_file->layers, current_level);
@@ -596,18 +590,10 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     int32_t result = delete_level(path, index_filename, data_filenames, mirax_file->layers,
                                   SCAN_DATA_LAYER, SLIDE_BARCODE);
 
-    if (result != 0) {
-        return result;
-    }
-
     // delete macro image
     if (!keep_macro_image) {
         result = delete_level(path, index_filename, data_filenames, mirax_file->layers,
                               SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
-
-        if (result != 0) {
-            return result;
-        }
     }
 
     // unlink directory
@@ -616,14 +602,16 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         struct mirax_level *slide_label =
             get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
 
-        if (wipe_data_in_index_file(path, index_filename, slide_label, mirax_file) != 0) {
-            fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
-            return -1;
-        }
+        if (slide_label != NULL) {
+            if (wipe_data_in_index_file(path, index_filename, slide_label, mirax_file) != 0) {
+                fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
+                return -1;
+            }
 
-        if (delete_group_form_ini_file(ini, slide_label->section) != 0) {
-            fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
-            return -1;
+            if (delete_group_form_ini_file(ini, slide_label->section) != 0) {
+                fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
+                return -1;
+            }
         }
 
         // unlink macro image
@@ -631,21 +619,30 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
             struct mirax_level *macro_image =
                 get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
 
-            if (wipe_data_in_index_file(path, index_filename, macro_image, mirax_file) != 0) {
-                fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
-                return -1;
-            }
+            if (macro_image != NULL) {
+                if (wipe_data_in_index_file(path, index_filename, macro_image, mirax_file) != 0) {
+                    fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
+                    return -1;
+                }
 
-            if (delete_group_form_ini_file(ini, macro_image->section) != 0) {
-                fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
-                return -1;
-            }
+                if (delete_group_form_ini_file(ini, macro_image->section) != 0) {
+                    fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
+                    return -1;
+                }
 
-            // unlink macro AND label image
-            unlink_macro_and_label_image(ini, macro_image, slide_label, mirax_file);
+                if (slide_label != NULL) {
+                    // unlink macro AND label image
+                    unlink_macro_and_label_image(ini, macro_image, slide_label, mirax_file);
+                } else {
+                    // unlink only macro image
+                    unlink_level(ini, macro_image, mirax_file);
+                }
+            }
         } else {
-            // unlink only label image
-            unlink_label_image(ini, slide_label, mirax_file);
+            if (slide_label != NULL) {
+                // unlink only label image
+                unlink_level(ini, slide_label, mirax_file);
+            }
         }
 
         // general data in slidedat ini

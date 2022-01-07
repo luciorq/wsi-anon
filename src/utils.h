@@ -11,7 +11,7 @@ const char *get_filename_ext(const char *filename);
 
 int32_t file_exists(const char *filename);
 
-char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix);
+char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix);
 
 bool starts_with(const char *str, const char *pre);
 

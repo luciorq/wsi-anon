@@ -390,7 +390,7 @@ uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int tag, b
 }
 
 int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
-                       const char *prefix) {
+                       const char *prefix, const char *suffix) {
     int32_t size_offsets;
     int32_t size_lengths;
     // gather strip offsets and lengths form tiff directory
@@ -436,7 +436,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
         }
 
         // fill strip with zeros
-        char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix);
+        char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
         if (!file_write(strip, 1, strip_lengths[i], fp)) {
             fprintf(stderr, "Error: Wiping image data failed.\n");
             free(strip);
@@ -589,7 +589,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     // wipe label data from directory
     // check for JPEG SOI header in label dir
-    result = wipe_directory(fp, &dir, true, big_endian, JPEG_SOI);
+    result = wipe_directory(fp, &dir, true, big_endian, JPEG_SOI, NULL);
 
     if (result != 0) {
         free_tiff_file(file);
@@ -760,7 +760,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     struct tiff_directory dir = file->directories[label_dir];
-    result = wipe_directory(fp, &dir, big_endian, _is_aperio_gt450, LZW_CLEARCODE);
+    result = wipe_directory(fp, &dir, big_endian, _is_aperio_gt450, LZW_CLEARCODE, NULL);
 
     if (result != 0) {
         free_tiff_file(file);
@@ -783,7 +783,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
 
         struct tiff_directory dir = file->directories[macro_dir];
-        result = wipe_directory(fp, &dir, big_endian, _is_aperio_gt450, NULL);
+        result = wipe_directory(fp, &dir, big_endian, _is_aperio_gt450, NULL, NULL);
 
         if (_is_aperio_gt450) {
             result = change_macro_image_compression_gt450(fp, file, macro_dir);
