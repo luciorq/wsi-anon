@@ -389,8 +389,8 @@ uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int tag, b
     return NULL;
 }
 
-int32_t wipe_label(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
-                   const char *prefix) {
+int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
+                       const char *prefix) {
     int32_t size_offsets;
     int32_t size_lengths;
     // gather strip offsets and lengths form tiff directory
@@ -448,14 +448,35 @@ int32_t wipe_label(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_e
     return 0;
 }
 
-int32_t unlink_label_directory(file_t *fp, struct tiff_file *file, int32_t current_dir,
-                               bool is_ndpi) {
+int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi,
+                         bool is_aperio_gt450) {
     struct tiff_directory dir = file->directories[current_dir];
     struct tiff_directory successor = file->directories[current_dir + 1];
 
+    if (is_aperio_gt450) {
+        // this is unlinking the macro/label image for gt450
+        // however there will still be refernces to series1/2 in the header
+        // these references will point to the thumbnail image now
+        // todo: remove associated image labels in the tiff header (?)
+        if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
+            fprintf(stderr, "Error: Failed to seek to offset.\n");
+            return -1;
+        }
+        // overwrite out pointer of previous ifd with 0 to end file
+        uint64_t new_pointer_address[1];
+        new_pointer_address[0] = 0x0;
+        if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+            fprintf(stderr, "Error: Failed to write directory out pointer \
+                        to null at pointer position.\n");
+            return -1;
+        }
+
+        return 0;
+    }
+
     if (!is_ndpi && successor.count == 0 && successor.in_pointer_offset == 0) {
         // current directory is the last in file
-        // search search to out pointer of current dir
+        // search to out pointer of current dir
         if (file_seek(fp, dir.out_pointer_offset, SEEK_SET)) {
             fprintf(stderr, "Error: Failed to seek to offset.\n");
             return -1;
@@ -568,7 +589,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     // wipe label data from directory
     // check for JPEG SOI header in label dir
-    result = wipe_label(fp, &dir, true, big_endian, JPEG_SOI);
+    result = wipe_directory(fp, &dir, true, big_endian, JPEG_SOI);
 
     if (result != 0) {
         free_tiff_file(file);
@@ -578,7 +599,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     if (!disable_unlinking) {
         // unlink the empty label directory from file structure
-        result = unlink_label_directory(fp, file, dir_count, true);
+        result = unlink_directory(fp, file, dir_count, true, false);
     }
 
     free_tiff_file(file);
@@ -661,8 +682,8 @@ int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const c
                     break;               // skip IFD
                 }
 
-                if ((strcmp(dir_name, "label") == 0 && entry.offset == 1) ||
-                    (strcmp(dir_name, "macro") == 0 && entry.offset == 9)) {
+                if ((strcmp(dir_name, LABEL) == 0 && entry.offset == 1) ||
+                    (strcmp(dir_name, MACRO) == 0 && entry.offset == 9)) {
                     return i;
                 }
             }
@@ -692,33 +713,6 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
         }
     }
     return 0;
-}
-
-int32_t wipe_and_unlink_directory(file_t *fp, struct tiff_file *file, int32_t directory,
-                                  bool big_endian, bool is_aperio_gt450, bool disable_unlinking,
-                                  const char *prefix) {
-    if (directory == -1) {
-        return -1;
-    }
-
-    struct tiff_directory dir = file->directories[directory];
-
-    int32_t result = 0;
-    result = wipe_label(fp, &dir, false, big_endian, prefix);
-
-    if (result == -1) {
-        return -1;
-    }
-
-    // unlinking works also for gt450?
-    if (!disable_unlinking) {
-        fprintf(stdout, "Unlink DIR \n");
-        // TODO: unlinking of label leads to displaying thumbnail as label
-        // TODO: unlinking of macro image not working
-        result = unlink_label_directory(fp, file, directory, false);
-    }
-
-    return result;
 }
 
 int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image,
@@ -755,9 +749,9 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     // delete label image
     int32_t label_dir = 0;
     if (_is_aperio_gt450) {
-        label_dir = get_aperio_gt450_dir_by_name(fp, file, "label");
+        label_dir = get_aperio_gt450_dir_by_name(fp, file, LABEL);
     } else {
-        label_dir = get_aperio_dir_by_name(fp, file, "label");
+        label_dir = get_aperio_dir_by_name(fp, file, LABEL);
     }
 
     if (label_dir == -1) {
@@ -765,8 +759,8 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         return -1;
     }
 
-    result = wipe_and_unlink_directory(fp, file, label_dir, big_endian, _is_aperio_gt450,
-                                       disable_unlinking, LZW_CLEARCODE);
+    struct tiff_directory dir = file->directories[label_dir];
+    result = wipe_directory(fp, &dir, big_endian, _is_aperio_gt450, LZW_CLEARCODE);
 
     if (result != 0) {
         free_tiff_file(file);
@@ -775,12 +769,12 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     // delete macro image
+    int32_t macro_dir = -1;
     if (!keep_macro_image) {
-        int32_t macro_dir = -1;
         if (_is_aperio_gt450) {
-            macro_dir = get_aperio_gt450_dir_by_name(fp, file, "macro");
+            macro_dir = get_aperio_gt450_dir_by_name(fp, file, MACRO);
         } else {
-            macro_dir = get_aperio_dir_by_name(fp, file, "macro");
+            macro_dir = get_aperio_dir_by_name(fp, file, MACRO);
         }
 
         if (macro_dir == -1) {
@@ -788,8 +782,8 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
             return -1;
         }
 
-        result = wipe_and_unlink_directory(fp, file, macro_dir, big_endian, _is_aperio_gt450,
-                                           disable_unlinking, NULL);
+        struct tiff_directory dir = file->directories[macro_dir];
+        result = wipe_directory(fp, &dir, big_endian, _is_aperio_gt450, NULL);
 
         if (_is_aperio_gt450) {
             result = change_macro_image_compression_gt450(fp, file, macro_dir);
@@ -800,6 +794,12 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
             file_close(fp);
             return result;
         }
+    }
+
+    if (!disable_unlinking) {
+        fprintf(stdout, "Unlink label and macro directory. \n");
+        result = unlink_directory(fp, file, label_dir, false, _is_aperio_gt450);
+        result = unlink_directory(fp, file, macro_dir, false, _is_aperio_gt450);
     }
 
     // clean up

@@ -58,6 +58,9 @@ typedef enum {
 #define JPEG_SOI "\xff\xd8\0"
 #define LZW_CLEARCODE "\x80\0"
 
+#define MACRO "macro"
+#define LABEL "label"
+
 // hamamatsu
 #define NDPI_FORMAT_FLAG 65420
 #define NDPI_SOURCELENS 65421
