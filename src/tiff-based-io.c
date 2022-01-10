@@ -448,31 +448,9 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     return 0;
 }
 
-int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi,
-                         bool is_aperio_gt450) {
+int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi) {                         
     struct tiff_directory dir = file->directories[current_dir];
     struct tiff_directory successor = file->directories[current_dir + 1];
-
-    if (is_aperio_gt450) {
-        // this is unlinking the macro/label image for gt450
-        // however there will still be refernces to series1/2 in the header
-        // these references will point to the thumbnail image now
-        // todo: remove associated image labels in the tiff header (?)
-        if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
-        // overwrite out pointer of previous ifd with 0 to end file
-        uint64_t new_pointer_address[1];
-        new_pointer_address[0] = 0x0;
-        if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory out pointer \
-                        to null at pointer position.\n");
-            return -1;
-        }
-
-        return 0;
-    }
 
     if (!is_ndpi && successor.count == 0 && successor.in_pointer_offset == 0) {
         // current directory is the last in file
@@ -489,26 +467,27 @@ int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir
                         to null at pointer position.\n");
             return -1;
         }
-    } else {
-        // current directory has a successor
-        if (file_seek(fp, successor.in_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
-        uint64_t new_pointer_address[1];
-        if (file_read(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to read pointer.\n");
-            return -1;
-        }
-        if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
-        if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory in pointer \
-                        to predecessor at pointer position.\n");
-            return -1;
-        }
+        return 0;
+    }
+
+    // current directory has a successor
+    if (file_seek(fp, successor.in_pointer_offset, SEEK_SET)) {
+        fprintf(stderr, "Error: Failed to seek to offset.\n");
+        return -1;
+    }
+    uint64_t new_pointer_address[1];
+    if (file_read(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+        fprintf(stderr, "Error: Failed to read pointer.\n");
+        return -1;
+    }
+    if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
+        fprintf(stderr, "Error: Failed to seek to offset.\n");
+        return -1;
+    }
+    if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+        fprintf(stderr, "Error: Failed to write directory in pointer \
+                    to predecessor at pointer position.\n");
+        return -1;
     }
 
     return 0;
@@ -599,7 +578,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     if (!disable_unlinking) {
         // unlink the empty label directory from file structure
-        result = unlink_directory(fp, file, dir_count, true, false);
+        result = unlink_directory(fp, file, dir_count, true);
     }
 
     free_tiff_file(file);
@@ -797,9 +776,8 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     if (!disable_unlinking) {
-        fprintf(stdout, "Unlink label and macro directory. \n");
-        result = unlink_directory(fp, file, label_dir, false, _is_aperio_gt450);
-        result = unlink_directory(fp, file, macro_dir, false, _is_aperio_gt450);
+        unlink_directory(fp, file, label_dir, false);
+        unlink_directory(fp, file, macro_dir, false); 
     }
 
     // clean up

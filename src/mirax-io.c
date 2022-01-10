@@ -219,15 +219,6 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
         return -1;
     }
 
-    if (file_seek(fp, 0, SEEK_END)) {
-        fprintf(stderr, "Error: Failed reading to end of file.\n");
-        file_close(fp);
-        return 1;
-    }
-
-    // check if offset and length are equal to file pointer at end
-    bool truncation = (file_tell(fp) == (**offset + **length));
-
     if (file_seek(fp, **offset, SEEK_SET)) {
         fprintf(stderr, "Error: Failed to seek to offset.\n");
         file_close(fp);
@@ -251,7 +242,6 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
     }
 
     // write empty jpeg image to file
-    // todo: JPEG_SOI is not written to file at the moment
     const char *empty_buffer = get_empty_char_buffer("0", **length, prefix, suffix);
     file_seek(fp, **offset, SEEK_SET);
     file_write(empty_buffer, **length, 1, fp);

@@ -6,11 +6,12 @@ static const char *VENDOR_STRINGS[] = {"Aperio", "Hamamatsu", "3DHistech (Mirax)
 void print_help_message() {
     fprintf(stderr, "Usage: ./wsi-anon [FILE] [-OPTIONS]\n\n");
     fprintf(stderr, "OPTIONS:\n");
-    fprintf(stderr, "-c     only check file for vendor format\n");
-    fprintf(stderr, "-n     specify new label name (e.g. -n \"labelname\")\n");
-    fprintf(stderr, "-m     if flag is set, macro image will NOT be deleted\n");
-    fprintf(stderr, "-i     if flag is set, anonymization will be done in-place\n");
-    fprintf(stderr, "-u     if flag is set, tiff directory will NOT be unlinked\n\n");
+    fprintf(stderr, "-c     Only check file for vendor format\n");
+    fprintf(stderr, "-n     Specify pseudo label name (e.g. -n \"labelname\")\n");
+    fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
+    fprintf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
+    fprintf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
+    fprintf(stderr, "       Note: For file formats using JPEG compression this does not work currently.");
 }
 
 int main(int argc, char *argv[]) {
