@@ -448,7 +448,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     return 0;
 }
 
-int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi) {                         
+int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi) {
     struct tiff_directory dir = file->directories[current_dir];
     struct tiff_directory successor = file->directories[current_dir + 1];
 
@@ -777,7 +777,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 
     if (!disable_unlinking) {
         unlink_directory(fp, file, label_dir, false);
-        unlink_directory(fp, file, macro_dir, false); 
+        unlink_directory(fp, file, macro_dir, false);
     }
 
     // clean up
