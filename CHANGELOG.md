@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+
+- Basic support for Leica Aperio GT450
+- Bugfix for Mirax
+- Added code checks to CI
+
 ## 0.3.0
 
 - Configurable chunk size
