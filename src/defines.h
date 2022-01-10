@@ -55,7 +55,7 @@ typedef enum {
 #define DOUBLE 12
 #define LONG8 16
 
-#define JPEG_SOI "\xff\xd8\0"
+#define JPEG_SOI "\xff\xd8\xff\xe0\0"
 #define JPEG_EOI "\xff\xd9\0"
 #define LZW_CLEARCODE "\x80\0"
 
