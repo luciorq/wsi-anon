@@ -640,16 +640,6 @@ bool is_aperio_gt450(file_t *fp, struct tiff_file *file) {
     return false;
 }
 
-bool dir_contains_image_description(struct tiff_directory *dir) {
-    for (uint64_t i = 0; i < dir->count; i++) {
-        struct tiff_entry entry = dir->entries[i];
-        if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-            return true;
-        }
-    }
-    return false;
-}
-
 int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const char *dir_name) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
