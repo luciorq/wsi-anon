@@ -5,29 +5,24 @@
 #include "file-api.h"
 
 // string operations
-char** str_split(char* a_str, const char a_delim);
+char **str_split(char *a_str, const char a_delim);
 
 const char *get_filename_ext(const char *filename);
 
 int32_t file_exists(const char *filename);
 
-char *get_empty_char_buffer(const char *x, 
-    uint64_t length, 
-    const char *prefix);
+char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix);
 
 bool starts_with(const char *str, const char *pre);
 
-const char *get_string_between_delimiters(const char *buffer, 
-    const char *delimiter1, 
-    const char *delimiter2);
+const char *get_string_between_delimiters(const char *buffer, const char *delimiter1,
+                                          const char *delimiter2);
 
 void remove_leading_spaces(char *str);
 
 const char *concat_path_filename(const char *path, const char *filename);
 
-const char *concat_path_filename_ext(const char *path, 
-    const char *filename,
-    const char *ext);
+const char *concat_path_filename_ext(const char *path, const char *filename, const char *ext);
 
 const char *get_filename_from_path(const char *path);
 
@@ -46,7 +41,7 @@ int32_t copy_file_v2(const char *src, const char *dest);
 
 int32_t copy_file(const char *src, const char *dest);
 
-int32_t copy_directory(const char *src , const char *dest);
+int32_t copy_directory(const char *src, const char *dest);
 
 // byte operations
 bool is_system_big_endian();

@@ -1,14 +1,13 @@
 #ifndef HEADER_DEFINES_H
 #define HEADER_DEFINES_H
 
+#include <assert.h>
+#include <ctype.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <assert.h>
 
 #define MAX_CHAR_IN_LINE 100
 
@@ -16,33 +15,37 @@
 #define MRXS_ROOT_OFFSET_NONHIER 41
 
 // tiff like
-#define TIFF_BIGENDIAN      0x4d4d
-#define TIFF_LITTLEENDIAN   0x4949
+#define TIFF_BIGENDIAN 0x4d4d
+#define TIFF_LITTLEENDIAN 0x4949
 
-#define TIFF_VERSION_CLASSIC        42
-#define TIFF_VERSION_BIG            43
-#define	TIFFTAG_IMAGEDESCRIPTION    270	
-#define	TIFFTAG_STRIPOFFSETS        273
-#define TIFFTAG_STRIPBYTECOUNTS     279
+#define TIFF_VERSION_CLASSIC 42
+#define TIFF_VERSION_BIG 43
+#define TIFFTAG_IMAGEDESCRIPTION 270
+#define TIFFTAG_STRIPOFFSETS 273
+#define TIFFTAG_STRIPBYTECOUNTS 279
+#define TIFFTAG_SUBFILETYPE 254
+#define TIFFTAG_COMPRESSION 259
+
+#define COMPRESSION_LZW 5
 
 typedef enum {
-	TIFF_NOTYPE = 0, 
-	TIFF_BYTE = 1, 
-	TIFF_ASCII = 2,
-	TIFF_SHORT = 3,
+    TIFF_NOTYPE = 0,
+    TIFF_BYTE = 1,
+    TIFF_ASCII = 2,
+    TIFF_SHORT = 3,
     TIFF_LONG = 4,
-	TIFF_RATIONAL = 5,
-	TIFF_SBYTE = 6,
-	TIFF_UNDEFINED = 7,
-	TIFF_SSHORT = 8,
-	TIFF_SLONG = 9,
-	TIFF_SRATIONAL = 10,
-	TIFF_FLOAT = 11,
-	TIFF_DOUBLE = 12,
-	TIFF_IFD = 13,
-	TIFF_LONG8 = 16,
-	TIFF_SLONG8 = 17,
-	TIFF_IFD8 = 18
+    TIFF_RATIONAL = 5,
+    TIFF_SBYTE = 6,
+    TIFF_UNDEFINED = 7,
+    TIFF_SSHORT = 8,
+    TIFF_SLONG = 9,
+    TIFF_SRATIONAL = 10,
+    TIFF_FLOAT = 11,
+    TIFF_DOUBLE = 12,
+    TIFF_IFD = 13,
+    TIFF_LONG8 = 16,
+    TIFF_SLONG8 = 17,
+    TIFF_IFD8 = 18
 } TIFFDataType;
 
 #define ASCII 2
@@ -52,12 +55,16 @@ typedef enum {
 #define DOUBLE 12
 #define LONG8 16
 
-#define JPEG_SOI "\xff\xd8\0"
+#define JPEG_SOI "\xff\xd8\xff\xe0\0"
+#define JPEG_EOI "\xff\xd9\0"
 #define LZW_CLEARCODE "\x80\0"
 
+#define MACRO "macro"
+#define LABEL "label"
+
 // hamamatsu
-#define NDPI_FORMAT_FLAG    65420
-#define NDPI_SOURCELENS     65421
+#define NDPI_FORMAT_FLAG 65420
+#define NDPI_SOURCELENS 65421
 
 typedef enum file_format {
     aperio_svs,
@@ -73,7 +80,7 @@ struct ini_entry {
 };
 
 struct ini_group {
-    const char* group_identifier;
+    const char *group_identifier;
     int32_t start_line;
     int32_t entry_count;
     struct ini_entry *entries;
