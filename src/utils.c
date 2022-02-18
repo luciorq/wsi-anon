@@ -105,6 +105,62 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
     return result;
 }
 
+char *get_empty_string(const char *x, uint64_t length) {
+    if (length < 1) {
+        fprintf(stderr, "Error: Length smaller 1.\n");
+        return NULL;
+    }
+
+    char *result = (char *)malloc(length + 1);
+
+    for (int32_t start = 0; start < length; start++) {
+        result[start] = *x;
+    }
+
+    result[length] = '\0';
+
+    return result;
+}
+
+char *replace_str(const char *original_str, const char *replace_str, const char *with_str) {
+    char *result;
+    char *tmp;
+    int32_t length_front;
+    int32_t count;
+
+    if (!original_str || !replace_str || !with_str) {
+        return NULL;
+    }
+    int32_t length_rep = strlen(replace_str);
+    int32_t length_with = strlen(with_str);
+
+    if (length_rep == 0 || length_with == 0) {
+        return NULL;
+    }
+
+    const char *ins = original_str;
+    for (count = 0; (tmp = strstr(ins, replace_str)); ++count) {
+        ins = tmp + length_rep;
+    }
+
+    tmp = result = malloc(strlen(original_str) + (length_with - length_rep) * count + 1);
+
+    if (!result) {
+        return NULL;
+    }
+
+    while (count--) {
+        ins = strstr(original_str, replace_str);
+        length_front = ins - original_str;
+        tmp = strncpy(tmp, original_str, length_front) + length_front;
+        tmp = strcpy(tmp, with_str) + length_with;
+        original_str += length_front + length_rep;
+    }
+
+    strcpy(tmp, original_str);
+    return result;
+}
+
 bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
 }
