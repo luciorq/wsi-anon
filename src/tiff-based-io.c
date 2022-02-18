@@ -758,7 +758,7 @@ int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32
 
 int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
                                              int32_t directory) {
-    // macro image for gt450 needs to be treated differently because it is JPEG encoded. 
+    // macro image for gt450 needs to be treated differently because it is JPEG encoded.
     // therefore we need to convert it to LZW compression
     struct tiff_directory dir = file->directories[directory];
     for (int i = 0; i < dir.count; i++) {
