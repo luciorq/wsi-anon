@@ -519,10 +519,10 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     struct tiff_file *file;
     file = read_tiff_file(fp, big_tiff, true, big_endian);
 
-    // find the label directory
+    // find the macro directory
     int dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
     if (dir_count == -1) {
-        fprintf(stderr, "Error: No label directory.\n");
+        fprintf(stderr, "Error: No macro directory.\n");
         free_tiff_file(file);
         file_close(fp);
         return -1;
@@ -530,8 +530,8 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     struct tiff_directory dir = file->directories[dir_count];
 
-    // wipe label data from directory
-    // check for JPEG SOI header in label dir
+    // wipe macro data from directory
+    // check for JPEG SOI header in macro dir
     result = wipe_directory(fp, &dir, true, big_endian, JPEG_SOI, NULL);
 
     if (result != 0) {
@@ -541,7 +541,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     }
 
     if (!disable_unlinking) {
-        // unlink the empty label directory from file structure
+        // unlink the empty macro directory from file structure
         result = unlink_directory(fp, file, dir_count, true);
     }
 
