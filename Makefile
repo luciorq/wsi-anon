@@ -14,17 +14,19 @@ CFLAGS_DEBUG = -g -ggdb -O0 -Wall
 LINKER   = gcc
 LFLAGS   = -Wall -I.
 
+EMCC 	 = emcc
+
 LFLAGS_TESTS = -lcunit
 
 SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
-TESTDIR	 = test
+TESTDIR	 = test/unit
 
 SOURCES  := $(filter-out $(SRCDIR)/js-file.c $(SRCDIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRCDIR)/*.c))
 SOURCES_LIB = $(filter-out $(SRCDIR)/console-app.c $(SRCDIR)/js-file.c $(SRCDIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRCDIR)/*.c))
 SOURCES_WASM = $(filter-out $(SRCDIR)/console-app.c $(SRCDIR)/native-file.c, $(wildcard $(SRCDIR)/*.c))
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
+
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 OBJECTS_DBG  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/debug/%.o)
 OBJECTS_SHARED := $(SOURCES_LIB:$(SRCDIR)/%.c=$(OBJDIR)/shared/%.o)
@@ -58,10 +60,10 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 wasm: makedirs $(BINDIR)/$(WASM_TARGET)
 
 $(BINDIR)/$(WASM_TARGET): makedirs
-	@emcc -Wall $(SOURCES_WASM) -Os -o $(BINDIR)/$(WASM_TARGET) --extern-pre-js $(SRCDIR)/anonymized-stream.js -s WASM=1 -s ASYNCIFY -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]'
+	@$(EMCC) -Wall $(SOURCES_WASM) -Os -o $(BINDIR)/$(WASM_TARGET) --extern-pre-js /wrapper/js/anonymized-stream.js -s WASM=1 -s ASYNCIFY -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]'
 
 tests: makedirs
-	@gcc -o $(BINDIR)/$(TEST_TARGET) $(SOURCES_LIB) $(UNIT_TEST_FILES) -g $(LFLAGS_TESTS)
+	@$(CC) -o $(BINDIR)/$(TEST_TARGET) $(SOURCES_LIB) $(UNIT_TEST_FILES) -g $(LFLAGS_TESTS)
 
 console-app-debug: makedirs $(BINDIR)/$(CONSOLE_DBG_TARGET)
 

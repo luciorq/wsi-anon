@@ -1,6 +1,6 @@
 #include "CUnit/Basic.h"
 
-#include "../src/wsi-anonymizer.h"
+#include "../../src/wsi-anonymizer.h"
 
 // ####################### functions to test ####################### //
 

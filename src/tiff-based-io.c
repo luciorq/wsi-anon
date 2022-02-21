@@ -673,9 +673,10 @@ int32_t anonymize_aperio_image_description(file_t *fp, struct tiff_file *file) {
 
                 char buffer[entry_size * entry.count];
                 if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read tag IMAGEDESCRIPTION.\n");
+                    fprintf(stderr, "Error: Could not read tag image description.\n");
                     return -1;
                 }
+                // fprintf(stdout, buffer);
 
                 char *result;
                 if (contains(buffer, APERIO_FILENAME_TAG)) {
