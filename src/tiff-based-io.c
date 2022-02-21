@@ -306,7 +306,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
 }
 
 // retrieve the label directory from the tiff file structure
-int32_t get_hamamatsu_label_dir(struct tiff_file *file, file_t *fp, bool big_endian) {
+int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory temp_dir = file->directories[i];
 
@@ -556,7 +556,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     file = read_tiff_file(fp, big_tiff, true, big_endian);
 
     // find the label directory
-    int dir_count = get_hamamatsu_label_dir(file, fp, big_endian);
+    int dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
     if (dir_count == -1) {
         fprintf(stderr, "Error: No label directory.\n");
         free_tiff_file(file);
@@ -612,32 +612,6 @@ int32_t get_aperio_dir_by_name(file_t *fp, struct tiff_file *file, const char *d
         }
     }
     return -1;
-}
-
-bool is_aperio_gt450(file_t *fp, struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-                // get the image description from file
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image description.\n");
-                    return false;
-                }
-
-                // search for Aperio GT450
-                if (contains(buffer, "Aperio Leica Biosystems GT450")) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
 }
 
 int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const char *dir_name) {
@@ -893,32 +867,6 @@ int32_t is_hamamatsu(const char *filename) {
     return (result == 0);
 }
 
-int32_t has_aperio_tag(file_t *fp, struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-                // get the image description from file
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image description.\n");
-                    return -1;
-                }
-
-                // search for Aperio and given tag in description
-                if (contains(buffer, "Aperio")) {
-                    return 1;
-                }
-            }
-        }
-    }
-    return -1;
-}
-
 int32_t is_aperio(const char *filename) {
     int32_t result = 0;
     const char *ext = get_filename_ext(filename);
@@ -953,7 +901,7 @@ int32_t is_aperio(const char *filename) {
         return result;
     }
 
-    result = has_aperio_tag(fp, file);
+    result = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Aperio");
 
     if (result == -1) {
         fprintf(stderr, "Error: Could not find aperio label directory.\n");
