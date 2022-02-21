@@ -493,42 +493,6 @@ int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir
     return 0;
 }
 
-const char *duplicate_file(const char *filename, const char *new_label_name,
-                           const char *file_extension) {
-    // retrive filename from whole file path
-    const char *_filename = get_filename_from_path(filename);
-
-    if (_filename == NULL) {
-        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
-        return NULL;
-    }
-
-    // get the directory path
-    int32_t l_filename = strlen(filename);
-    int32_t diff = l_filename - strlen(_filename);
-    char path[diff + 1];
-    memcpy(path, &filename[0], diff);
-    path[diff] = '\0';
-
-    const char *new_filename;
-    // now we can concat the new filename
-    if (new_label_name == NULL) {
-        // if no label is given, we give the file a generic name
-        const char *dummy_filename = "anonymized-wsi";
-        new_filename = concat_path_filename_ext(path, dummy_filename, file_extension);
-    } else {
-        new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
-    }
-
-    // we copy the file in our current directory
-    // create a subfolder /output/?
-    if (new_filename != NULL && copy_file_v2(filename, new_filename) == 0) {
-        return new_filename;
-    } else {
-        return NULL;
-    }
-}
-
 int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool disable_unlinking,
                          bool do_inplace) {
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
@@ -652,30 +616,33 @@ int32_t anonymize_aperio_image_description(file_t *fp, struct tiff_file *file) {
                 }
                 // fprintf(stdout, buffer);
 
-                char *result;
-                if (contains(buffer, APERIO_FILENAME_TAG)) {
+                bool rewrite = false;
+                char *result = buffer;
+                if (contains(result, APERIO_FILENAME_TAG)) {
                     const char *value =
-                        get_string_between_delimiters(buffer, APERIO_FILENAME_TAG, "|");
+                        get_string_between_delimiters(result, APERIO_FILENAME_TAG, "|");
                     char *replacement = get_empty_string("X", strlen(value));
-                    result = replace_str(buffer, value, replacement);
+                    result = replace_str(result, value, replacement);
+                    rewrite = true;
                 }
                 if (contains(result, APERIO_USER_TAG)) {
                     const char *value = get_string_between_delimiters(result, APERIO_USER_TAG, "|");
                     char *replacement = get_empty_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
+                    rewrite = true;
                 }
 
-                file_seek(fp, entry.offset, SEEK_SET);
-                if (file_write(result, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not overwrite image description.\n");
-                    return -1;
-                } else {
-                    return 1;
+                if (rewrite == true) {
+                    file_seek(fp, entry.offset, SEEK_SET);
+                    if (file_write(result, entry.count, entry_size, fp) != 1) {
+                        fprintf(stderr, "Error: Could not overwrite image description.\n");
+                        return -1;
+                    }
                 }
             }
         }
     }
-    return -1;
+    return 1;
 }
 
 int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,

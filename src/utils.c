@@ -284,6 +284,42 @@ bool contains(const char *str1, const char *str2) {
     return false;
 }
 
+const char *duplicate_file(const char *filename, const char *new_file_name,
+                           const char *file_extension) {
+    // retrive filename from whole file path
+    const char *_filename = get_filename_from_path(filename);
+
+    if (_filename == NULL) {
+        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
+        return NULL;
+    }
+
+    // get the directory path
+    int32_t l_filename = strlen(filename);
+    int32_t diff = l_filename - strlen(_filename);
+    char path[diff + 1];
+    memcpy(path, &filename[0], diff);
+    path[diff] = '\0';
+
+    const char *new_filename;
+    // now we can concat the new filename
+    if (new_file_name == NULL) {
+        // if no label is given, we give the file a generic name
+        const char *dummy_filename = "anonymized-wsi";
+        new_filename = concat_path_filename_ext(path, dummy_filename, file_extension);
+    } else {
+        new_filename = concat_path_filename_ext(path, new_file_name, file_extension);
+    }
+
+    // we copy the file in our current directory
+    // create a subfolder /output/?
+    if (new_filename != NULL && copy_file_v2(filename, new_filename) == 0) {
+        return new_filename;
+    } else {
+        return NULL;
+    }
+}
+
 int32_t copy_file_v2(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 15];
 #ifdef __linux__

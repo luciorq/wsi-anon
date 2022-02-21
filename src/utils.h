@@ -41,6 +41,9 @@ const char *add_equals_sign(const char *str1, const char *str2);
 bool contains(const char *str1, const char *str2);
 
 // file operations
+const char *duplicate_file(const char *filename, const char *new_file_name,
+                           const char *file_extension);
+
 int32_t copy_file_v2(const char *src, const char *dest);
 
 int32_t copy_file(const char *src, const char *dest);
