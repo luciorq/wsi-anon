@@ -50,7 +50,7 @@ test-integration:
   stage: test
   image: registry.gitlab.com/empaia/integration/test-runner
   tags:
-    - empaia-charite
+    - empaia-docker
     - testdata
   script:
     - cp sample.env .env
