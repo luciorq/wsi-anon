@@ -196,6 +196,13 @@ void remove_leading_spaces(char *str) {
     memmove(str, p, l + 1);
 }
 
+const char *concat_str(const char *str1, const char *str2) {
+    char *new_string = malloc(strlen(str1) + strlen(str2) + 2);
+    strcpy(new_string, str1);
+    strcat(new_string, str2);
+    return new_string;
+}
+
 const char *concat_path_filename(const char *path, const char *filename) {
     char *new_string = malloc(strlen(path) + strlen(filename) + 3);
     strcpy(new_string, path);

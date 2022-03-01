@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- Added integration tests
+
 ## 0.3.2
 
 - Remove metadata from tiff-based files

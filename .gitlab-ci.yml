@@ -33,7 +33,7 @@ build-wsi-anon:
     paths:
       - bin
 
-test-wsi-anon:
+test-unit:
   stage: test
   image: emscripten/emsdk
   tags:
@@ -45,6 +45,16 @@ test-wsi-anon:
   artifacts:
     paths:
       - Test-Wsi-Anon-Results.xml
+
+test-integration:
+  stage: test
+  tags:
+    - empaia-charite
+  script:
+    - cp sample.env .env
+    - docker-compose -f docker-compose.test.yml up --build
+  after_script:
+    - docker-compose -f docker-compose.test.yml down
 
 publish-wsi-anon-package:
   stage: publish
