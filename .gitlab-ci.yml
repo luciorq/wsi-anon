@@ -48,8 +48,10 @@ test-unit:
 
 test-integration:
   stage: test
+  image: registry.gitlab.com/empaia/integration/test-runner
   tags:
     - empaia-charite
+    - testdata
   script:
     - cp sample.env .env
     - docker-compose -f docker-compose.test.yml up --build
