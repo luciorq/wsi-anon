@@ -49,6 +49,14 @@ test-unit:
 test-integration:
   stage: test
   image: registry.gitlab.com/empaia/integration/test-runner
+  variables:
+    <<: *proxy_settings
+    HTTP_PROXY: ''
+    HTTPS_PROXY: ''
+    NO_PROXY: ''
+    http_proxy: ''
+    https_proxy: ''
+    no_proxy: ''
   tags:
     - empaia-docker
     - testdata
