@@ -548,7 +548,6 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     }
 
     struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
-
     const char *index_filename = get_value_from_ini_file(ini, HIERARCHICAL, INDEXFILE);
     const char *file_count = get_value_from_ini_file(ini, DATAFILE, FILE_COUNT);
     const char *layer_count = get_value_from_ini_file(ini, HIERARCHICAL, NONHIER_COUNT);
@@ -634,6 +633,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
                 unlink_level(ini, slide_label, mirax_file);
             }
         }
+
 
         // general data in slidedat ini
         set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, new_label_name);
