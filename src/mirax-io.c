@@ -634,7 +634,6 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
             }
         }
 
-
         // general data in slidedat ini
         set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, new_label_name);
         const char *project_name = concat_wildcard_string_string(PROJECT_X, new_label_name);
@@ -644,6 +643,8 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
             return -1;
         }
     }
+
+    free(mirax_file);
 
     return result;
 }
