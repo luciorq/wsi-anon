@@ -105,6 +105,62 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
     return result;
 }
 
+char *get_empty_string(const char *x, uint64_t length) {
+    if (length < 1) {
+        fprintf(stderr, "Error: Length smaller 1.\n");
+        return NULL;
+    }
+
+    char *result = (char *)malloc(length + 1);
+
+    for (int32_t start = 0; start < length; start++) {
+        result[start] = *x;
+    }
+
+    result[length] = '\0';
+
+    return result;
+}
+
+char *replace_str(const char *original_str, const char *replace_str, const char *with_str) {
+    char *result;
+    char *tmp;
+    int32_t length_front;
+    int32_t count;
+
+    if (!original_str || !replace_str || !with_str) {
+        return NULL;
+    }
+    int32_t length_rep = strlen(replace_str);
+    int32_t length_with = strlen(with_str);
+
+    if (length_rep == 0 || length_with == 0) {
+        return NULL;
+    }
+
+    const char *ins = original_str;
+    for (count = 0; (tmp = strstr(ins, replace_str)); ++count) {
+        ins = tmp + length_rep;
+    }
+
+    tmp = result = malloc(strlen(original_str) + (length_with - length_rep) * count + 1);
+
+    if (!result) {
+        return NULL;
+    }
+
+    while (count--) {
+        ins = strstr(original_str, replace_str);
+        length_front = ins - original_str;
+        tmp = strncpy(tmp, original_str, length_front) + length_front;
+        tmp = strcpy(tmp, with_str) + length_with;
+        original_str += length_front + length_rep;
+    }
+
+    strcpy(tmp, original_str);
+    return result;
+}
+
 bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
 }
@@ -226,6 +282,42 @@ bool contains(const char *str1, const char *str2) {
         i++;
     }
     return false;
+}
+
+const char *duplicate_file(const char *filename, const char *new_file_name,
+                           const char *file_extension) {
+    // retrive filename from whole file path
+    const char *_filename = get_filename_from_path(filename);
+
+    if (_filename == NULL) {
+        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
+        return NULL;
+    }
+
+    // get the directory path
+    int32_t l_filename = strlen(filename);
+    int32_t diff = l_filename - strlen(_filename);
+    char path[diff + 1];
+    memcpy(path, &filename[0], diff);
+    path[diff] = '\0';
+
+    const char *new_filename;
+    // now we can concat the new filename
+    if (new_file_name == NULL) {
+        // if no label is given, we give the file a generic name
+        const char *dummy_filename = "anonymized-wsi";
+        new_filename = concat_path_filename_ext(path, dummy_filename, file_extension);
+    } else {
+        new_filename = concat_path_filename_ext(path, new_file_name, file_extension);
+    }
+
+    // we copy the file in our current directory
+    // create a subfolder /output/?
+    if (new_filename != NULL && copy_file_v2(filename, new_filename) == 0) {
+        return new_filename;
+    } else {
+        return NULL;
+    }
 }
 
 int32_t copy_file_v2(const char *src, const char *dest) {

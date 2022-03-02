@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- Remove metadata from tiff-based files
+
 ## 0.3.1
 
 - Basic support for Leica Aperio GT450

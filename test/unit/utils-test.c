@@ -1,6 +1,6 @@
 #include "CUnit/Basic.h"
 
-#include "../src/utils.h"
+#include "../../src/utils.h"
 
 // ####################### functions to test ####################### //
 

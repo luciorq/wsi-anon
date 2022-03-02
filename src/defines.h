@@ -28,6 +28,9 @@
 
 #define COMPRESSION_LZW 5
 
+#define APERIO_FILENAME_TAG "Filename = "
+#define APERIO_USER_TAG "User = "
+
 typedef enum {
     TIFF_NOTYPE = 0,
     TIFF_BYTE = 1,

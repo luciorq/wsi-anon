@@ -1,6 +1,6 @@
 #include "CUnit/Basic.h"
 
-#include "../src/ini-parser.h"
+#include "../../src/ini-parser.h"
 
 // ####################### functions to test ####################### //
 
