@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 import pytest
 import openslide
 
@@ -14,7 +15,6 @@ def cleanup():
 
     yield add_filename
 
-
     for filename in set(temporary_files):
         remove_file(filename=filename)
 
@@ -24,6 +24,12 @@ def remove_file(filename):
         mrxs_path = filename[:len(filename)-5]
         shutil.rmtree(mrxs_path)
     os.remove(filename)
+
+
+@pytest.fixture(autouse=True)
+def wait_between_tests():
+    yield
+    time.sleep(1)
 
 
 @pytest.mark.parametrize(
@@ -88,7 +94,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name,
         ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
     ],
 )
-def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filename, new_label_name, result_label_name):
+def test_anonymize_file_format_only_label_hamamatsu(wsi_filename, new_label_name, result_label_name):
     if os.path.exists(result_label_name):
         remove_file(result_label_name)
 
@@ -98,5 +104,3 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filename, new_l
     slide = openslide.OpenSlide(result_label_name)
     assert "label" not in slide.associated_images
     assert "macro" not in slide.associated_images
-
-    cleanup(result_label_name)

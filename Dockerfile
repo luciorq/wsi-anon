@@ -18,3 +18,5 @@ WORKDIR /wsi-anon
 RUN make
 
 RUN pip3 install -r wrapper/python/test/requirements.txt
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

@@ -4,11 +4,11 @@ services:
   wsi-anon:
     build:
       context: "."
-    command:
-      [
-        "sh",
-        "-c",
-        "pytest wrapper/python/test"
-      ]
+    #command:
+      #[
+      #  "sh",
+      #  "-c",
+      #  "pytest wrapper/python/test"
+      #]
     volumes:
       - ${COMPOSE_DATA_DIR}:/data
