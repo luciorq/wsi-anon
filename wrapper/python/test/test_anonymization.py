@@ -64,14 +64,19 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
     assert "label" not in slide.associated_images
     assert "macro" not in slide.associated_images
 
+    if wsi_filename == "/data/Aperio/CMU-1.svs":
+        assert "XXXXX" in slide.properties["aperio.Filename"]
+        assert "XXXXX" in slide.properties["aperio.User"]
+
+    slide.close()
     cleanup(result_label_name)
 
 
 @pytest.mark.parametrize(
     "wsi_filename, new_label_name, result_label_name",
     [
-        ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
-        ("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax", "/data/MIRAX/anon-mirax.mrxs"),
+        #("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax", "/data/MIRAX/anon-mirax.mrxs"),
     ],
 )
 def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name, result_label_name):
@@ -85,6 +90,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name,
     assert "label" not in slide.associated_images
     assert "macro" in slide.associated_images
 
+    slide.close()
     cleanup(result_label_name)
 
 

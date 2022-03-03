@@ -5,10 +5,10 @@ services:
     build:
       context: "."
     #command:
-      #[
-      #  "sh",
-      #  "-c",
-      #  "pytest wrapper/python/test"
-      #]
+    #  [
+    #    "sh",
+    #    "-c",
+    #    "pytest wrapper/python/test -s"
+    #  ]
     volumes:
       - ${COMPOSE_DATA_DIR}:/data

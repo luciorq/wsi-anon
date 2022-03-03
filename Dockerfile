@@ -1,10 +1,10 @@
-FROM python:3.9 AS wsi_service_dev
+FROM docker.io/ubuntu:20.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
-  build-essential python3-openslide
+  build-essential python3-dev python3-pip python3-openslide
 
 RUN mkdir /openslide_deps
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
@@ -19,4 +19,4 @@ RUN make
 
 RUN pip3 install -r wrapper/python/test/requirements.txt
 
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
