@@ -1,5 +1,7 @@
 import ctypes
 import os
+import threading
+
 from enum import Enum
 
 class Vendor(Enum):
@@ -8,6 +10,8 @@ class Vendor(Enum):
     Mirax = 2
     Unknown = 3
     Invalid = 4
+
+lock = threading.Lock()
 
 libname = os.path.abspath(os.path.join("bin", "libwsianon.so"))
 _wsi_anonymizer = ctypes.cdll.LoadLibrary(libname)
@@ -30,13 +34,14 @@ def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unli
     c_filename = filename.encode('utf-8')
     c_new_label_name = new_label_name.encode('utf-8')
 
-    result =_wsi_anonymizer.anonymize_wsi(
-        c_filename, 
-        c_new_label_name,
-        keep_macro_image, 
-        disable_unlinking, 
-        do_inplace
-    )
+    with lock:
+        result =_wsi_anonymizer.anonymize_wsi(
+            c_filename, 
+            c_new_label_name,
+            keep_macro_image, 
+            disable_unlinking, 
+            do_inplace
+        )
 
-    value = ctypes.cast(result, ctypes.c_char_p).value.decode('utf-8')
-    return value
+        value = ctypes.cast(result, ctypes.c_char_p).value.decode('utf-8')
+        return value

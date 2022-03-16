@@ -1,5 +1,6 @@
 import os
 import shutil
+import threading
 import time
 import pytest
 import openslide
@@ -7,7 +8,9 @@ import openslide
 from ..wsianon import check_file_format, anonymize_wsi, Vendor
 
 
-@pytest.fixture(scope='function', autouse=True)
+lock = threading.Lock()
+
+@pytest.fixture(scope='session', autouse=True)
 def cleanup():
     temporary_files = []
     def add_filename(filename):
@@ -20,10 +23,11 @@ def cleanup():
 
 
 def remove_file(filename):
-    if filename.endswith(".mrxs"):
-        mrxs_path = filename[:len(filename)-5]
-        shutil.rmtree(mrxs_path)
-    os.remove(filename)
+    with lock:
+        if filename.endswith(".mrxs"):
+            mrxs_path = filename[:len(filename)-5]
+            shutil.rmtree(mrxs_path)
+        os.remove(filename)
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +54,7 @@ def test_check_fileformat(wsi_filename, vendor):
     [
         ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
         ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
-        ("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax", "/data/MIRAX/anon-mirax.mrxs"),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"),
     ],
 )
 def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_label_name):
@@ -67,7 +71,7 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
     if wsi_filename == "/data/Aperio/CMU-1.svs":
         assert "XXXXX" in slide.properties["aperio.Filename"]
         assert "XXXXX" in slide.properties["aperio.User"]
-
+    
     slide.close()
     cleanup(result_label_name)
 
@@ -75,8 +79,8 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
 @pytest.mark.parametrize(
     "wsi_filename, new_label_name, result_label_name",
     [
-        #("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
-        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax", "/data/MIRAX/anon-mirax.mrxs"),
+        ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax2", "/data/MIRAX/anon-mirax2.mrxs"),
     ],
 )
 def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name, result_label_name):
@@ -110,3 +114,5 @@ def test_anonymize_file_format_only_label_hamamatsu(wsi_filename, new_label_name
     slide = openslide.OpenSlide(result_label_name)
     assert "label" not in slide.associated_images
     assert "macro" not in slide.associated_images
+    
+    slide.close()

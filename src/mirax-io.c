@@ -644,6 +644,9 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         }
     }
 
+    free(mirax_file);
+    free(ini);
+
     return result;
 }
 
