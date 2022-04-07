@@ -11,8 +11,9 @@ void print_help_message() {
     fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
     fprintf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
     fprintf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
-    fprintf(stderr,
-            "       Note: For file formats using JPEG compression this does not work currently.");
+    fprintf(
+        stderr,
+        "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -24,13 +25,14 @@ int main(int argc, char *argv[]) {
     const char *new_label_name = NULL;
 
     if (argv[1] == NULL) {
-        fprintf(stderr, "No filename specified.\n");
+        fprintf(stderr, "No filename specified.\n\n");
+        print_help_message();
         exit(EXIT_FAILURE);
     }
 
     filename = argv[1];
 
-    if (strcmp(filename, "-h\0") == 0) {
+    if (strcmp(filename, "-h\0") == 0 || strcmp(filename, "-help\0") == 0) {
         print_help_message();
         exit(EXIT_FAILURE);
     }

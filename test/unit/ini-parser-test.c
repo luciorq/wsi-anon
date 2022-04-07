@@ -69,12 +69,14 @@ void test_delete_group_from_ini_file() {
     CU_ASSERT_EQUAL(result, 0);
     CU_ASSERT_EQUAL(ini_file->group_count, 0);
     CU_ASSERT_EQUAL(ini_file->groups[0].entry_count, 0);
+    free(ini_file);
 }
 
 void test_set_value_for_group_and_key() {
     struct ini_file *ini_file = mock_ini_file();
     set_value_for_group_and_key(ini_file, "Identifier", "TestKey1", "NEW_VALUE");
     CU_ASSERT_STRING_EQUAL(ini_file->groups[0].entries[0].value, "NEW_VALUE");
+    free(ini_file);
 }
 
 void test_remove_entry_for_group_and_key() {
@@ -88,12 +90,14 @@ void test_decrement_value_for_group_and_key1() {
     struct ini_file *ini_file = mock_ini_file();
     decrement_value_for_group_and_key(ini_file, "Identifier", "TestKey3");
     CU_ASSERT_STRING_EQUAL(ini_file->groups[0].entries[2].value, "999");
+    free(ini_file);
 }
 
 void test_decrement_value_for_group_and_key2() {
     struct ini_file *ini_file = mock_ini_file();
     decrement_value_for_group_and_key(ini_file, "Identifier", "TestKey2");
     CU_ASSERT_STRING_NOT_EQUAL(ini_file->groups[0].entries[1].value, "TestValue2");
+    free(ini_file);
 }
 
 void test_write_ini_file() {

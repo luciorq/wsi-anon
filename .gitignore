@@ -25,6 +25,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # unit test output
 Test-Wsi-Anon-Results.xml

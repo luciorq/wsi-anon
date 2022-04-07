@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  wsi-anon:
+    build:
+      context: "."
+    #command:
+    #  [
+    #    "sh",
+    #    "-c",
+    #    "pytest wrapper/python/test -s"
+    #  ]
+    volumes:
+      - ${COMPOSE_DATA_DIR}:/data

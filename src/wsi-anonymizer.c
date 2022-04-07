@@ -59,3 +59,5 @@ const char *anonymize_wsi(const char *filename, const char *new_label_name, bool
                               do_inplace);
     return filename;
 }
+
+void freeMem(void *ptr) { free(ptr); }

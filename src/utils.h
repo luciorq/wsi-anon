@@ -24,6 +24,8 @@ const char *get_string_between_delimiters(const char *buffer, const char *delimi
 
 void remove_leading_spaces(char *str);
 
+const char *concat_str(const char *str1, const char *str2);
+
 const char *concat_path_filename(const char *path, const char *filename);
 
 const char *concat_path_filename_ext(const char *path, const char *filename, const char *ext);

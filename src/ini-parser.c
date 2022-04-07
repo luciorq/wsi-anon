@@ -29,6 +29,7 @@ int32_t get_groups_count(file_t *fp) {
             count_groups++;
         }
     }
+    free(buffer);
     return count_groups;
 }
 
@@ -119,6 +120,8 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         groups[i].entries = entries;
         groups[i].entry_count = entry_count;
     }
+
+    free(buffer);
 
     struct ini_file *ini_file = (struct ini_file *)malloc(sizeof(struct ini_file));
     ini_file->group_count = group_count;

@@ -428,6 +428,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
             if (strcmp(prefix, buf) != 0) {
                 fprintf(stderr, "Error: Prefix in data strip not found.\n");
+                free(buf);
                 return -1;
             }
 
