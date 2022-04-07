@@ -1,31 +1,16 @@
-stages:
-  - codecheck
-  - build
-  - test
-  - publish
-
-variables: &proxy_settings
-  HTTP_PROXY: 'http://proxy.charite.de:8080'
-  HTTPS_PROXY: 'http://proxy.charite.de:8080'
-  NO_PROXY: 'localhost,127.0.0.1'
-  http_proxy: 'http://proxy.charite.de:8080'
-  https_proxy: 'http://proxy.charite.de:8080'
-  no_proxy: 'localhost,127.0.0.1'
-
 codecheck:
-  stage: codecheck
+  image: ubuntu
   tags:
-    - empaia-charite
+    - empaia-parallel
   before_script:
     - apt-get update -q && apt-get install -y -qq clang-format-10 git
   script:
     - ./clang-format.sh
 
 build-wsi-anon:
-  stage: build
   image: emscripten/emsdk
   tags:
-    - empaia-charite
+    - empaia-parallel
   script:
     - make
     - make wasm
@@ -33,11 +18,11 @@ build-wsi-anon:
     paths:
       - bin
 
-test-unit:
+test-wsi-anon:
   stage: test
   image: emscripten/emsdk
   tags:
-    - empaia-charite
+    - empaia-parallel
   script:
     - apt-get update -q && apt-get install -yq libcunit1-dev
     - make tests
@@ -70,14 +55,16 @@ test-integration:
     - docker-compose -f docker-compose.test.yml down
 
 publish-wsi-anon-package:
-  stage: publish
   only:
     - master
-  dependencies:
-    - build-wsi-anon
   image: node:16-slim
   tags:
-    - empaia-charite
+    - empaia-parallel
+  needs:
+    - job: codecheck
+    - job: test-wsi-anon
+    - job: build-wsi-anon
+      artifacts: true
   script:
     - echo '//gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}' > .npmrc
     - npm publish --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
