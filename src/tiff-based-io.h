@@ -21,7 +21,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
                       bool disable_unlinking, bool do_inplace);
 
 int32_t handle_ventana(const char **filename, const char *new_label_name, bool disable_unlinking,
-                         bool do_inplace);
+                       bool do_inplace);
 
 int32_t is_hamamatsu(const char *filename);
 

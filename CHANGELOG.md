@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.5
+
+- Added ventana anonymization
+
 ## 0.3.4
 
 - Added integration tests
