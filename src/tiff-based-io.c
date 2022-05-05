@@ -1128,14 +1128,13 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
 
 // ToDo: check if metadata is present somewhere else in file (tags)
 int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
-
     for (uint64_t i = 0; i < file->used; i++) {
 
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
+
             struct tiff_entry entry = dir.entries[j];
             if (entry.tag == TIFFTAG_XMP) {
-
                 // get the XMP Tag from dir
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
@@ -1152,7 +1151,7 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
                 // searches for Unit Number and replaces its value with equal amount of X's in
                 // String
                 if (contains(result, VENTANA_UNITNUMBER_ATT)) {
-                    char *value =
+                    const char *value =
                         get_string_between_delimiters(result, VENTANA_UNITNUMBER_ATT, "\"");
                     char *replacement = get_empty_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
@@ -1161,7 +1160,7 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
 
                 // searches for Build Date and replaces its value with equal amount of X's in String
                 if (contains(result, VENTANA_BUILDDATE_ATT)) {
-                    char *value =
+                    const char *value =
                         get_string_between_delimiters(result, VENTANA_BUILDDATE_ATT, "\"");
                     char *replacement = get_empty_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
@@ -1170,7 +1169,7 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
 
                 // searches for 1D Barcode and replaces its value with equal amount of X's in String
                 if (contains(result, VENTANA_BARCODE1D_ATT)) {
-                    char *value =
+                    const char *value =
                         get_string_between_delimiters(result, VENTANA_BARCODE1D_ATT, "\"");
                     char *replacement = get_empty_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
@@ -1179,34 +1178,20 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
 
                 // searches for 2D Barcode and replaces its value with equal amount of X's in String
                 if (contains(result, VENTANA_BARCODE2D_ATT)) {
-                    char *value =
+                    const char *value =
                         get_string_between_delimiters(result, VENTANA_BARCODE2D_ATT, "\"");
                     char *replacement = get_empty_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
 
-                // alters XML data of XMP tag       <------
+                // alters XML data of XMP tag
                 if (rewrite) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(result, entry_size, entry.count, fp)) {
                         fprintf(stderr, "Error: changing XMP data in XML Tag failed.\n");
                         return -1;
-                    } else {
-                        fprintf(stdout, "Changed XMP Tag successfully. \n");
                     }
-                }
-
-                // prints new XML data of XMP Tag
-                if (rewrite) {
-                    file_seek(fp, entry.offset, SEEK_SET);
-                    int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-                    char buffer2[entry_size * entry.count];
-                    if (file_read(&buffer2, entry.count, entry_size, fp) != 1) {
-                        fprintf(stderr, "Error: Could not read XMP Tag.\n");
-                        return -1;
-                    }
-                    fprintf(stdout, buffer2);
                 }
             }
         }
@@ -1269,7 +1254,6 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
         return -1;
     }
 
-    // ToDo: persist changes to xml file             <-----------------
     result = anonymize_ventana_metadata(fp, file);
 
     // clean up

@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     filename = argv[1];
 
-    if (strcmp(filename, "-h\0") == 0 || strcmp(filename, "-help\0") == 0) {
+    if (strcmp(filename, "-h\0") == 0 || strcmp(filename, "--help\0") == 0) {
         print_help_message();
         exit(EXIT_FAILURE);
     }

@@ -8,8 +8,9 @@ class Vendor(Enum):
     Aperio = 0
     Hamamatsu = 1
     Mirax = 2
-    Unknown = 3
-    Invalid = 4
+    Ventana = 3
+    Unknown = 4
+    Invalid = 5
 
 lock = threading.Lock()
 
