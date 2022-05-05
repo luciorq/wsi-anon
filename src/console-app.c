@@ -1,7 +1,7 @@
 #include "wsi-anonymizer.h"
 
-static const char *VENDOR_STRINGS[] = {"Aperio",  "Hamamatsu", "3DHistech (Mirax)",
-                                       "Ventana", "Unknown",   "Invalid"};
+static const char *VENDOR_STRINGS[] = {"Aperio", "Hamamatsu", "3DHistech (Mirax)",
+                                       "Ventana", "Unknown", "Invalid"};
 
 void print_help_message() {
     fprintf(stderr, "Usage: ./wsi-anon [FILE] [-OPTIONS]\n\n");

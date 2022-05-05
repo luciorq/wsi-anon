@@ -882,6 +882,34 @@ int32_t is_aperio(const char *filename) {
     return (result == 1);
 }
 
+// checks if file has an iScan Tag in the XMP Tag
+int32_t has_iScan_tag(file_t *fp, struct tiff_file *file) {
+    for (uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for (uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+            if (entry.tag == TIFFTAG_XMP) {
+                // get XMP tag from file
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                // xml
+                char xml_data[entry_size * entry.count];
+                if (file_read(&xml_data, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read XML of XMP.\n");
+                    return 0;
+                }
+
+                // search for tag iScan
+                if (contains(xml_data, "iScan")) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
 // checks if file is in ventana format
 int32_t is_ventana(const char *filename) {
     int32_t result = 0;
@@ -951,34 +979,6 @@ int32_t is_ventana(const char *filename) {
     // is ventana
     file_close(fp);
     return result;
-}
-
-// checks if file has an iScan Tag in the XMP Tag
-int32_t has_iScan_tag(file_t *fp, struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_XMP) {
-                // get XMP tag from file
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                // xml
-                char xml_data[entry_size * entry.count];
-                if (file_read(&xml_data, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read XML of XMP.\n");
-                    return 0;
-                }
-
-                // search for tag iScan
-                if (contains(xml_data, "iScan")) {
-                    return 1;
-                }
-            }
-        }
-    }
-    return -1;
 }
 
 // gets label directory which holds information about the overview image (label and macro image)
