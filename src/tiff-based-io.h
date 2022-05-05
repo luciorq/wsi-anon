@@ -20,8 +20,13 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image,
                       bool disable_unlinking, bool do_inplace);
 
+int32_t handle_ventana(const char **filename, const char *new_label_name, bool disable_unlinking,
+                         bool do_inplace);
+
 int32_t is_hamamatsu(const char *filename);
 
 int32_t is_aperio(const char *filename);
+
+int32_t is_ventana(const char *filename);
 
 #endif

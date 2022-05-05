@@ -18,18 +18,26 @@
 #define TIFF_BIGENDIAN 0x4d4d
 #define TIFF_LITTLEENDIAN 0x4949
 
-#define TIFF_VERSION_CLASSIC 42
-#define TIFF_VERSION_BIG 43
-#define TIFFTAG_IMAGEDESCRIPTION 270
-#define TIFFTAG_STRIPOFFSETS 273
-#define TIFFTAG_STRIPBYTECOUNTS 279
-#define TIFFTAG_SUBFILETYPE 254
-#define TIFFTAG_COMPRESSION 259
+#define TIFF_VERSION_CLASSIC        42
+#define TIFF_VERSION_BIG            43
+#define TIFFTAG_IMAGEDESCRIPTION    270
+#define TIFFTAG_STRIPOFFSETS        273
+#define TIFFTAG_STRIPBYTECOUNTS     279
+#define TIFFTAG_SUBFILETYPE         254
+#define TIFFTAG_COMPRESSION         259
+#define TIFFTAG_TILEOFFSETS         324
+#define TIFFTAG_TILEBYTECOUNTS      325
+#define TIFFTAG_XMP                 700	
 
 #define COMPRESSION_LZW 5
 
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
+
+#define VENTANA_UNITNUMBER_ATT "UnitNumber=\""
+#define VENTANA_BUILDDATE_ATT "BuildDate=\""
+#define VENTANA_BARCODE1D_ATT "Barcode1D=\""
+#define VENTANA_BARCODE2D_ATT "Barcode2D=\""
 
 typedef enum {
     TIFF_NOTYPE = 0,
@@ -73,6 +81,7 @@ typedef enum file_format {
     aperio_svs,
     hamamatsu_ndpi,
     histech_mirax,
+    ventana,
     unknown_format,
     invalid
 } file_format;
