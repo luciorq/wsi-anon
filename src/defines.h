@@ -34,10 +34,15 @@
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
 
-#define VENTANA_UNITNUMBER_ATT "UnitNumber=\""
-#define VENTANA_BUILDDATE_ATT "BuildDate=\""
-#define VENTANA_BARCODE1D_ATT "Barcode1D=\""
-#define VENTANA_BARCODE2D_ATT "Barcode2D=\""
+#define VENTANA_FILENAME_ATT "JP2FileName="
+#define VENTANA_UNITNUMBER_ATT "UnitNumber="
+#define VENTANA_USERNAME_ATT "UserName="
+#define VENTANA_BARCODE1D_ATT "Barcode1D="
+#define VENTANA_BARCODE2D_ATT "Barcode2D="
+#define VENTANA_BASENAME_ATT "BaseName="
+
+#define VENTANA_BUILDDATE1_ATT "BuildDate=\'"
+#define VENTANA_BUILDDATE2_ATT "BuildDate=\""
 
 typedef enum {
     TIFF_NOTYPE = 0,

@@ -413,3 +413,11 @@ uint64_t _swap_uint64(uint64_t value) {
     value = ((value << 16) & 0xFFFF0000FFFF0000ULL) | ((value >> 16) & 0x0000FFFF0000FFFFULL);
     return (value << 32) | (value >> 32);
 }
+
+// skip first and last character of String
+const char *skip_first_and_last_char(const char *value) {
+    char *trimmed = value;
+    trimmed++;
+    trimmed[strlen(trimmed) - 1] = 0;
+    return trimmed;
+}

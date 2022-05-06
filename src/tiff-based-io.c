@@ -1126,7 +1126,15 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
     return result;
 }
 
-// ToDo: check if metadata is present somewhere else in file (tags)
+// searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
+char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
+    const char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
+    value = skip_first_and_last_char(value);
+    char *replacement = get_empty_string(" ", strlen(value));
+    return replace_str(result, value, replacement);
+}
+
+// anonymizes metadata in XMP Tags of ventana file
 int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
 
@@ -1134,11 +1142,11 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
         for (uint64_t j = 0; j < dir.count; j++) {
 
             struct tiff_entry entry = dir.entries[j];
+
+            // searches for XMP Tag in all directories
             if (entry.tag == TIFFTAG_XMP) {
-                // get the XMP Tag from dir
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
                 char buffer[entry_size * entry.count];
                 if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read XMP Tag.\n");
@@ -1148,40 +1156,49 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
                 char *result = buffer;
                 bool rewrite = false;
 
-                // searches for Unit Number and replaces its value with equal amount of X's in
-                // String
+                if (contains(result, VENTANA_BASENAME_ATT)) {
+                    result = wipe_xmp_data(result, VENTANA_BASENAME_ATT, " ");
+                    rewrite = true;
+                }
+
+                if (contains(result, VENTANA_FILENAME_ATT)) {
+                    result = wipe_xmp_data(result, VENTANA_FILENAME_ATT, " ");
+                    rewrite = true;
+                }
+
                 if (contains(result, VENTANA_UNITNUMBER_ATT)) {
+                    result = wipe_xmp_data(result, VENTANA_UNITNUMBER_ATT, " ");
+                    rewrite = true;
+                }
+
+                if (contains(result, VENTANA_USERNAME_ATT)) {
+                    result = wipe_xmp_data(result, VENTANA_USERNAME_ATT, " ");
+                    rewrite = true;
+                }
+
+                if (contains(result, VENTANA_BUILDDATE1_ATT)) {
                     const char *value =
-                        get_string_between_delimiters(result, VENTANA_UNITNUMBER_ATT, "\"");
-                    char *replacement = get_empty_string("X", strlen(value));
+                        get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
+                    char *replacement = get_empty_string(" ", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
 
-                // searches for Build Date and replaces its value with equal amount of X's in String
-                if (contains(result, VENTANA_BUILDDATE_ATT)) {
+                if (contains(result, VENTANA_BUILDDATE2_ATT)) {
                     const char *value =
-                        get_string_between_delimiters(result, VENTANA_BUILDDATE_ATT, "\"");
-                    char *replacement = get_empty_string("X", strlen(value));
+                        get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
+                    char *replacement = get_empty_string(" ", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
 
-                // searches for 1D Barcode and replaces its value with equal amount of X's in String
                 if (contains(result, VENTANA_BARCODE1D_ATT)) {
-                    const char *value =
-                        get_string_between_delimiters(result, VENTANA_BARCODE1D_ATT, "\"");
-                    char *replacement = get_empty_string("X", strlen(value));
-                    result = replace_str(result, value, replacement);
+                    result = wipe_xmp_data(result, VENTANA_BARCODE1D_ATT, " ");
                     rewrite = true;
                 }
 
-                // searches for 2D Barcode and replaces its value with equal amount of X's in String
                 if (contains(result, VENTANA_BARCODE2D_ATT)) {
-                    const char *value =
-                        get_string_between_delimiters(result, VENTANA_BARCODE2D_ATT, "\"");
-                    char *replacement = get_empty_string("X", strlen(value));
-                    result = replace_str(result, value, replacement);
+                    result = wipe_xmp_data(result, VENTANA_BARCODE2D_ATT, " ");
                     rewrite = true;
                 }
 
@@ -1189,7 +1206,7 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
                 if (rewrite) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(result, entry_size, entry.count, fp)) {
-                        fprintf(stderr, "Error: changing XMP data in XML Tag failed.\n");
+                        fprintf(stderr, "Error: changing XML Data in XMP Tag failed.\n");
                         return -1;
                     }
                 }
@@ -1199,8 +1216,6 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
     return 1;
 }
 
-// ToDo:
-// remove metadata
 // anonymizes ventana file
 int32_t handle_ventana(const char **filename, const char *new_label_name, bool disable_unlinking,
                        bool do_inplace) {
@@ -1254,7 +1269,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
         return -1;
     }
 
-    result = anonymize_ventana_metadata(fp, file);
+    anonymize_ventana_metadata(fp, file);
 
     // clean up
     free_tiff_file(file);
