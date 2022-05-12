@@ -907,13 +907,8 @@ int32_t is_ventana(const char *filename) {
 
     result = check_file_header(fp, &big_endian, &big_tiff);
 
-    if (result == -1) {
-        file_close(fp);
-        return result;
-    }
-
-    if (!big_tiff) {
-        fprintf(stderr, "Error: File is not BigTiff.\n");
+    if (!big_tiff || result == -1) {
+        fprintf(stderr, "Error: Not a valid Ventana file.\n");
         file_close(fp);
         return -1;
     }
@@ -1008,11 +1003,7 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
 
     int32_t result = wipe_label_ventana(fp, &dir, big_endian);
 
-    if (result == -1) {
-        return -1;
-    }
-
-    if (!disable_unlinking) {
+    if (result != -1 && !disable_unlinking) {
         result = unlink_directory(fp, file, directory, false);
     }
 
