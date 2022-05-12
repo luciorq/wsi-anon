@@ -882,34 +882,6 @@ int32_t is_aperio(const char *filename) {
     return (result == 1);
 }
 
-// checks if file has an iScan Tag in the XMP Tag
-int32_t has_iScan_tag(file_t *fp, struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_XMP) {
-                // get XMP tag from file
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                // xml
-                char xml_data[entry_size * entry.count];
-                if (file_read(&xml_data, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read XML of XMP.\n");
-                    return 0;
-                }
-
-                // search for tag iScan
-                if (contains(xml_data, "iScan")) {
-                    return 1;
-                }
-            }
-        }
-    }
-    return -1;
-}
-
 // checks if file is in ventana format
 int32_t is_ventana(const char *filename) {
     int32_t result = 0;
@@ -922,7 +894,7 @@ int32_t is_ventana(const char *filename) {
         return result;
     }
 
-    file_t *fp = file_open(filename, "r+w");
+    file_t *fp = file_open(filename, "r+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -935,17 +907,13 @@ int32_t is_ventana(const char *filename) {
 
     result = check_file_header(fp, &big_endian, &big_tiff);
 
-    // result equals -1 if its not a ventana file
     if (result == -1) {
         file_close(fp);
         return result;
     }
 
-    // check BigTIFF, because Ventana slides are stored in single-file BigTIFF format
     if (!big_tiff) {
-        if (is_bif) {
-            fprintf(stderr, "Error: Invalid Ventana file.\n");
-        }
+        fprintf(stderr, "Error: File is not BigTiff.\n");
         file_close(fp);
         return -1;
     }
@@ -953,25 +921,16 @@ int32_t is_ventana(const char *filename) {
     struct tiff_file *file;
     file = read_tiff_file(fp, big_tiff, false, big_endian);
 
-    // if file could not be read
     if (file == NULL) {
         fprintf(stderr, "Error: Could not read tiff file.\n");
         file_close(fp);
         return result;
     }
 
-    result = has_iScan_tag(fp, file);
+    result = tag_value_contains(fp, file, TIFFTAG_XMP, "iScan");
 
-    if (result == 0) {
-        file_close(fp);
-        return -1;
-    }
-
-    // if XMP tag could not be found
     if (result == -1) {
-        if (is_bif) {
-            fprintf(stderr, "Error: Could not find XMP tag.\n");
-        }
+        fprintf(stderr, "Error: Could not find XMP tag.\n");
         file_close(fp);
         return result;
     }
@@ -981,7 +940,6 @@ int32_t is_ventana(const char *filename) {
     return result;
 }
 
-// gets label directory which holds information about the overview image (label and macro image)
 int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 
     for (uint64_t i = 0; i < file->used; i++) {
@@ -990,7 +948,6 @@ int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
         for (uint64_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
             if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-                // get the image description from file
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
@@ -1000,8 +957,7 @@ int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
                     return -1;
                 }
 
-                // search "Label Image"/ "Label_Image" in description
-                if (contains(buffer, "Label Image") || contains(buffer, "Label_Image")) {
+                if (contains(buffer, "Label")) {
                     return i;
                 }
             }
@@ -1013,19 +969,16 @@ int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 // wipes the label directory of ventana file by replacing bytes with zeros
 int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endian) {
 
-    uint32_t tile_offsets = -1;
-    uint32_t tile_byte_counts = -1;
+    int32_t tile_offsets = -1;
+    int32_t tile_byte_counts = -1;
 
-    int count = 0;
-    for (uint64_t i = 0; i < dir->count && count < 2; i++) {
+    for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
 
         if (entry.tag == TIFFTAG_TILEOFFSETS) {
             tile_offsets = entry.offset;
-            count++;
         } else if (entry.tag == TIFFTAG_TILEBYTECOUNTS) {
-            tile_byte_counts = entry.offset;
-            count++;
+            tile_byte_counts = entry.count;
         }
     }
 
@@ -1048,67 +1001,8 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
     return 0;
 }
 
-// ToDo:
-// check for similarities in unlink_directory / delete method
-//
-// unlinks the label directory
-int32_t unlink_label_directory(file_t *fp, struct tiff_file *file, int32_t current_dir,
-                               bool is_ndpi) {
-
-    struct tiff_directory dir = file->directories[current_dir];
-    struct tiff_directory successor = file->directories[current_dir + 1];
-
-    if (!is_ndpi && successor.count == 0 && successor.in_pointer_offset == 0) {
-        // current directory is the last in file
-        // search search to out pointer of current dir
-        if (file_seek(fp, dir.out_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
-        // overwrite out pointer with 0 to end file
-        uint64_t new_pointer_address[1];
-        new_pointer_address[0] = 0x0;
-        if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory out pointer \
-                        to null at pointer position.\n");
-            return -1;
-        }
-    } else {
-        // current directory has a successor
-        if (file_seek(fp, successor.in_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
-        uint64_t new_pointer_address[1];
-        if (file_read(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to read pointer.\n");
-            return -1;
-        }
-        if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
-            return -1;
-        }
-        if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory in pointer \
-                        to predecessor at pointer position.\n");
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-// ToDo:
-// add docs
-// unlink_label_directory oder unlink_directory verwenden
-//
-// wipes and unlinks the directory that is passed
 int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_t directory,
                                       bool big_endian, bool disable_unlinking) {
-
-    if (directory == -1) {
-        return -1;
-    }
 
     struct tiff_directory dir = file->directories[directory];
 
@@ -1119,7 +1013,6 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
     }
 
     if (!disable_unlinking) {
-        // result = unlink_label_directory(fp, file, directory, false);
         result = unlink_directory(fp, file, directory, false);
     }
 
@@ -1176,11 +1069,15 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
                     rewrite = true;
                 }
 
+                // checks if attribute occurs more than once in directory
                 if (contains(result, VENTANA_BUILDDATE1_ATT)) {
-                    const char *value =
-                        get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
-                    char *replacement = get_empty_string(" ", strlen(value));
-                    result = replace_str(result, value, replacement);
+                    int count = count_contains(result, VENTANA_BUILDDATE1_ATT);
+                    for (int i = 0; i <= count; i++) {
+                        const char *value =
+                            get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
+                        char *replacement = get_empty_string(" ", strlen(value));
+                        result = replace_str(result, value, replacement);
+                    }
                     rewrite = true;
                 }
 
@@ -1224,7 +1121,6 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
 
     const char *ext = get_filename_ext(*filename);
 
-    // check for valid file extension
     bool is_bif = strcmp(ext, BIF) == 0;
 
     if (!do_inplace) {
@@ -1237,7 +1133,6 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
     bool big_endian = false;
     int32_t result = check_file_header(fp, &big_endian, &big_tiff);
 
-    // result -1 if its not a ventana file
     if (result == -1) {
         file_close(fp);
         return -1;
@@ -1251,16 +1146,13 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
         return -1;
     }
 
-    // get label image directory
     int32_t label_dir = get_ventana_label_dir(fp, file);
 
-    // throw error message if file dir of label image does not exist
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find Image File Directory of Label image.\n");
         return -1;
     }
 
-    // delete label directory
     result = wipe_and_unlink_ventana_directory(fp, file, label_dir, big_endian, disable_unlinking);
 
     if (result == -1) {
