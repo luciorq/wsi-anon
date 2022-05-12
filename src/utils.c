@@ -291,6 +291,26 @@ bool contains(const char *str1, const char *str2) {
     return false;
 }
 
+// function to check how many times str1 contains str2
+int count_contains(const char *str1, const char *str2) {
+    int i = 0, j = 0, count = 0;
+
+    while (str1[i] != '\0') {
+        if (str1[i] == str2[j]) {
+            while (str1[i] == str2[j] && str2[j] != '\0') {
+                j++;
+                i++;
+            }
+            if (str2[j] == '\0') {
+                count++;
+            }
+            j = 0;
+        }
+        i++;
+    }
+    return count;
+}
+
 const char *duplicate_file(const char *filename, const char *new_file_name,
                            const char *file_extension) {
     // retrive filename from whole file path
@@ -412,4 +432,12 @@ uint64_t _swap_uint64(uint64_t value) {
     value = ((value << 8) & 0xFF00FF00FF00FF00ULL) | ((value >> 8) & 0x00FF00FF00FF00FFULL);
     value = ((value << 16) & 0xFFFF0000FFFF0000ULL) | ((value >> 16) & 0x0000FFFF0000FFFFULL);
     return (value << 32) | (value >> 32);
+}
+
+// skip first and last character of String
+const char *skip_first_and_last_char(const char *value) {
+    char *trimmed = value;
+    trimmed++;
+    trimmed[strlen(trimmed) - 1] = '\0';
+    return trimmed;
 }

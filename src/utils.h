@@ -61,4 +61,8 @@ uint32_t _swap_uint32(uint32_t value);
 
 uint64_t _swap_uint64(uint64_t value);
 
+const char *skip_first_and_last_char(const char *value);
+
+int count_contains(const char *str1, const char *str2);
+
 #endif
