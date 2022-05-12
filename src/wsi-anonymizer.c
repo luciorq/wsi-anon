@@ -38,6 +38,9 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
         break;
     }
     case ventana: {
+        if(keep_macro_image){
+            fprintf(stderr, "Error: Cannot keep macro image in ventana file.\n");
+        }
         result = handle_ventana(filename, new_label_name, disbale_unlinking, do_inplace);
         break;
     }
