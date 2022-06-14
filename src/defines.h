@@ -47,7 +47,7 @@
 
 // isyntax
 #define ISYNTAX_ROOTNODE "DPUfsImport"
-#define ISYNTAX_ROOTNODE_SIZE 77                      //ToDo: Check if size to Root Node is always the same
+#define ISYNTAX_ROOTNODE_SIZE 77 // ToDo: Check if size to Root Node is always the same
 #define ISYNTAX_DELIMITER_STR "\"IString\""
 #define ISYNTAX_DELIMITER_INT "\"IUInt16\""
 #define ISYNTAX_DELIMITER2 "</Attribute"

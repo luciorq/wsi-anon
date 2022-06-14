@@ -2,9 +2,9 @@
 #define HEADER_WSI_ANONYMIZER_H
 
 #include "defines.h"
+#include "isyntax-io.h"
 #include "mirax-io.h"
 #include "tiff-based-io.h"
-#include "isyntax-io.h"
 
 extern file_format check_file_format(const char *filename);
 

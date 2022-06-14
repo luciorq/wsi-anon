@@ -47,7 +47,7 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
         break;
     }
     case philips_isyntax: {
-        if (disbale_unlinking){
+        if (disbale_unlinking) {
             fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
         }
         result = handle_isyntax(filename, new_label_name, keep_macro_image, do_inplace);

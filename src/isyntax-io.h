@@ -14,7 +14,5 @@ int32_t anonymize_isyntax_metadata(file_t *fp);
 
 int32_t wipe_label_image(file_t *fp);
 
-int32_t handle_isyntax(const char **filename, 
-  const char *new_label_name,
-  bool keep_macro_image,
-  bool do_inplace);
+int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool do_inplace);
