@@ -1,23 +1,31 @@
-# wsi-anon
+# WSI Anon
 
-C library to anonymize WSIs by label image removal
+## Description
+
+A C library to anonymize Whole Slide Images in proprietary file formats. The library removes all sensitive data within the file structure including the filename itself, associated image data (as label and macro image) and metadata that is related to the slide acquisition and/or tissue. Associated image data is overwritten with blank image data and subsequently unlinked from the file structure. Unlinking can be disabled by a CLI / method parameter (for later pseudonymization). The related metadata is always removed from the file, usually containing identifiers or acquisition-related information as serial numbers, date and time, users, etc. A wrapper for JavaScript (WebAssembly) and python is provided.
 
 Currently supported formats:
 
-* Aperio (`.svs` / `.tif`)
-* Hamamatsu (`.ndpi`)
-* Mirax (`.mrxs`)
+| Vendor | Scanner types (tested) | File extension | Comment |
+|---|---|---|---|
+| Leica Aperio | AT20, GT450 | `*.svs` `*.tif` | - |
+| Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
+| 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
+| Roche Ventana | VS200, iScan Coreo | `*.bif` `*.bif` | - |
+| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` | experimental (see branch ...) |
 
-## Prerequisites
+The library is implemented and tested unter Linux (Ubuntu 20.04). 
 
-* install build-essential
-* install emscripten (only required for Web Assembly target)
+## Requirements
+
+* install `build-essential`
+* install `emscripten` (only required for Web Assembly target)
 
 ## Build
 
 ### Native Target
 
-To build the console application simply run
+To build the shared library with command line interface simply run
 
 ```bash
 make
@@ -32,7 +40,7 @@ To build the console application in debug mode type
 make console-app-debug
 ```
 
-and run with `gdb -args wsi-anon-dbg.out` afterwards.
+and run with `gdb -args wsi-anon-dbg.out "/path/to/wsi.tif"` afterwards.
 
 ### Web Assembly Target
 
@@ -62,11 +70,11 @@ Anonyimize slide:
 ./wsi-anon.out "/path/to/wsi.tif" [-OPTIONS]
 ```
 
-Add `-h` for help. Further flags are:
+Type `-h` or `--help` for help. Further CLI parameters are:
 
-* `-n "label-name"`: File will be renamed to given label name.
-* `-u` : Disables the unlinking of tiff directories (default: dir will be unlinked)
-* `-i` : Enable in-place anonymization. (default: copy of file will be created)
+* `-n "label-name"`: File will be renamed to given the label name
+* `-u` : Disables the unlinking of associated image data (default: associated image will be unlinked)
+* `-i` : Enable in-place anonymization (default: copy of the file will be created)
 
 ### Web Assembly Usage
 
@@ -95,13 +103,13 @@ Anonymization is not done during creation of the instance, because there are WSI
 
 ### Code Formatting
 
-Install `clang-format-10` first and run
+Format the code before committing. Install `clang-format-10` and run
 
 ```
 find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format-10 --Werror -i --verbose
 ```
 
-### Tests
+### Unit Tests
 
 To run unit tests install `libcunit1-dev` and build test projects with 
 
@@ -109,3 +117,5 @@ To run unit tests install `libcunit1-dev` and build test projects with
 make tests
 ./bin/utests
 ```
+
+### Integration Tests
