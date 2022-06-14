@@ -12,7 +12,7 @@ Currently supported formats:
 | Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
 | 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
 | Roche Ventana | VS200, iScan Coreo | `*.bif` `*.bif` | - |
-| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` | experimental (see branch ...) |
+| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` | experimental (see branch 'isyntax') |
 
 The library is implemented and tested unter Linux (Ubuntu 20.04). 
 
