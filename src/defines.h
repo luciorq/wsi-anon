@@ -31,9 +31,11 @@
 
 #define COMPRESSION_LZW 5
 
+// aperio
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
 
+// ventana
 #define VENTANA_FILENAME_ATT "JP2FileName="
 #define VENTANA_UNITNUMBER_ATT "UnitNumber="
 #define VENTANA_USERNAME_ATT "UserName="
@@ -42,6 +44,19 @@
 #define VENTANA_BASENAME_ATT "BaseName="
 #define VENTANA_BUILDDATE1_ATT "BuildDate=\'"
 #define VENTANA_BUILDDATE2_ATT "BuildDate=\""
+
+// isyntax
+#define ISYNTAX_ROOTNODE "DPUfsImport"
+#define ISYNTAX_ROOTNODE_SIZE 77                      //ToDo: Check if size to Root Node is always the same
+#define ISYNTAX_DELIMITER_STR "\"IString\""
+#define ISYNTAX_DELIMITER_INT "\"IUInt16\""
+#define ISYNTAX_DELIMITER2 "</Attribute"
+#define ISYNTAX_DATETIME_ATT "DICOM_ACQUISITION_DATETIME"
+#define ISYNTAX_SERIAL_ATT "DICOM_DEVICE_SERIAL_NUMBER"
+#define ISYNTAX_RACK_ATT "PIIM_DP_SCANNER_RACK_NUMBER"
+#define ISYNTAX_SLOT_ATT "PIIM_DP_SCANNER_SLOT_NUMBER"
+#define ISYNTAX_OPERID_ATT "PIIM_DP_SCANNER_OPERATOR_ID"
+#define ISYNTAX_BARCODE_ATT "PIM_DP_UFS_BARCODE"
 
 typedef enum {
     TIFF_NOTYPE = 0,
@@ -86,6 +101,7 @@ typedef enum file_format {
     hamamatsu_ndpi,
     histech_mirax,
     ventana,
+    philips_isyntax,
     unknown_format,
     invalid
 } file_format;

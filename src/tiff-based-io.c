@@ -828,7 +828,7 @@ int32_t is_hamamatsu(const char *filename) {
     }
 
     // check if ndpi tiff tags are present
-    file_t *fp = file_open(filename, "r");
+    file_t *fp = file_open(filename, "r+");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
@@ -847,7 +847,7 @@ int32_t is_aperio(const char *filename) {
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+w");
+    fp = file_open(filename, "r+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
