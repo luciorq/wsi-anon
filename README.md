@@ -19,7 +19,14 @@ The library is implemented and tested unter Linux (Ubuntu 20.04).
 ## Requirements
 
 * install `build-essential`
+
+WebAssembly:
 * install `emscripten` (only required for Web Assembly target)
+
+Development (Testing and code checks):
+* install `clang-format-10`
+* install `libcunit1-dev`
+* install `docker` and `docker-compose`
 
 ## Build
 
@@ -31,8 +38,7 @@ To build the shared library with command line interface simply run
 make
 ```
 
-This will build the object files and subsequently a static and a shared library. 
-Also the console application will be build as .out file. These files are stored in `/bin/`.
+This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored in `/bin/`.
 
 To build the console application in debug mode type
 
@@ -44,9 +50,7 @@ and run with `gdb -args wsi-anon-dbg.out "/path/to/wsi.tif"` afterwards.
 
 ### Web Assembly Target
 
-The library also has a Web Assembly (WASM) target in order to enable client-side anonymization
-of supported file formats from the browser. In this case the file I/O system calls are redirected
-to JavaScript and evaluated there for chunk reading and writing. **This is currently experimental.**
+The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. **This is currently experimental.**
 
 ```bash
 make wasm
@@ -119,3 +123,16 @@ make tests
 ```
 
 ### Integration Tests
+
+To run integration tests install `docker` and `docker-compose`. Start the testing environment
+
+```bash
+cp sample.env .env
+docker-compose -f docker-compose.test.yml up -d --build
+```
+
+and run tests with
+
+```bash
+docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test
+```
