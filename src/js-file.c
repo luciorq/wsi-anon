@@ -146,7 +146,7 @@ int file_printf(file_t *stream, const char *format, const char *value) {
     return buffer_size;
 }
 
-long file_tell(file_t *stream) { return stream->offset; }
+long file_tell(file_t *stream) { return stream->size; }
 
 int file_close(file_t *stream) {
     free(stream->mode);
