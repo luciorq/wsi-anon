@@ -6,6 +6,10 @@ static const char SLIDEDAT[] = "Slidedat.ini";
 static const char GENERAL[] = "GENERAL";
 static const char SLIDE_NAME[] = "SLIDE_NAME";
 static const char PROJECT_NAME[] = "PROJECT_NAME";
+static const char SLIDE_ID[] = "SLIDE_ID";
+static const char SLIDE_CREATIONDATETIME[] = "SLIDE_CREATIONDATETIME";
+static const char NONHIERLAYER_1_SECTION[] = "NONHIERLAYER_1_SECTION";
+static const char SCANNER_HARDWARE_ID[] = "SCANNER_HARDWARE_ID";
 static const char HIERARCHICAL[] = "HIERARCHICAL";
 static const char INDEXFILE[] = "INDEXFILE";
 static const char DATAFILE[] = "DATAFILE";
@@ -19,7 +23,6 @@ static const char NONHIER_X_VAL_X_IMAGENUMBER_X[] = "NONHIER_%d_VAL_%d_IMAGENUMB
 static const char NONHIER_X_VAL_X_IMAGENUMBER_Y[] = "NONHIER_%d_VAL_%d_IMAGENUMBER_Y";
 static const char _SECTION[] = "_SECTION";
 static const char FILE_[] = "FILE_%d";
-static const char PROJECT_X[] = "Project (%s)";
 
 // define layer and level name in mirax file
 static const char *SCAN_DATA_LAYER = "Scan data layer";
@@ -634,17 +637,19 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
             }
         }
 
-        // general data in slidedat ini
-        set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, new_label_name);
-        const char *project_name = concat_wildcard_string_string(PROJECT_X, new_label_name);
-        set_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, project_name);
+        // remove metadata in slidedata ini
+        set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME);
+        set_value_for_group_and_key(ini, GENERAL, PROJECT_NAME);
+        set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
+        set_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME);
+        set_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID);
 
         if (write_ini_file(ini, path, SLIDEDAT) == -1) {
             return -1;
         }
     }
 
-    free(mirax_file);
+    // free(mirax_file);
     free(ini);
 
     return result;

@@ -71,7 +71,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         line++;
     }
     // set last group start line to end of file
-    groups[count_groups].start_line = line;
+    groups[count_groups - 1].start_line = line;
 
     // populate the ini groups with associated entries
     for (int i = 0; i < count_groups; i++) {
@@ -201,14 +201,15 @@ void rename_section_name_for_level_in_section(struct ini_file *ini_file, const c
     }
 }
 
-void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
-                                 const char *value) {
+void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
+                                 const char *key) {
     for (int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
             for (int j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if (strcmp(entry->key, key) == 0) {
+                    const char *value = get_empty_string("X", strlen((*entry).value));
                     (*entry).value = strdup(value);
                     break;
                 }
