@@ -4,6 +4,10 @@
  * copyright (c) 2014 joseph werle
  */
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 //#ifndef B64_H
 #define B64_H 1
 

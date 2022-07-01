@@ -1,7 +1,4 @@
 #include "b64.h"
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 // The number of buffers we need
 int bufc = 0;

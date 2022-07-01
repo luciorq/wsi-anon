@@ -340,8 +340,8 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
 static int current_pos;
 
-unsigned char *create_black_image(unsigned char *new_image, unsigned char *width_str,
-                                  unsigned char *height_str) {
+void create_black_image(unsigned char *new_image, unsigned char *width_str,
+                        unsigned char *height_str) {
     add_soi(new_image);
     add_app(new_image);
     // add the rest here
