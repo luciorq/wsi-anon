@@ -8,6 +8,8 @@ static const char SLIDE_NAME[] = "SLIDE_NAME";
 static const char PROJECT_NAME[] = "PROJECT_NAME";
 static const char SLIDE_ID[] = "SLIDE_ID";
 static const char SLIDE_CREATIONDATETIME[] = "SLIDE_CREATIONDATETIME";
+static const char SLIDE_UTC_CREATIONDATETIME[] = "SLIDE_UTC_CREATIONDATETIME";
+static const char NONHIERLAYER_0_SECTION[] = "NONHIERLAYER_0_SECTION";
 static const char NONHIERLAYER_1_SECTION[] = "NONHIERLAYER_1_SECTION";
 static const char SCANNER_HARDWARE_ID[] = "SCANNER_HARDWARE_ID";
 static const char HIERARCHICAL[] = "HIERARCHICAL";
@@ -640,8 +642,10 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         // remove metadata in slidedata ini
         set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME);
         set_value_for_group_and_key(ini, GENERAL, PROJECT_NAME);
-        set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
+        //set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
         set_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME);
+        set_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME);
+        set_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID);
         set_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID);
 
         if (write_ini_file(ini, path, SLIDEDAT) == -1) {
