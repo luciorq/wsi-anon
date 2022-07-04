@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.6
+
+- Remove more metadata
+- Bugfix for Mirax
+
 ## 0.3.5
 
 - Added ventana anonymization

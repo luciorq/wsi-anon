@@ -438,6 +438,11 @@ int32_t delete_level_from_mirax_file(struct mirax_file *mirax_file,
             }
         }
 
+        if (level_id == -1) {
+            fprintf(stderr, "Error: Could not find level id to delete.\n");
+            return -1;
+        }
+
         // remove the level entry and exchange the mirax layer in the array
         struct mirax_layer *new_layer = (struct mirax_layer *)malloc(sizeof(struct mirax_layer));
         new_layer = delete_level_by_id(layer, level_id);
@@ -546,7 +551,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         path = duplicate_mirax_filedata(*filename, new_label_name, DOT_MRXS_EXT);
 
         if (path == NULL || filename == NULL) {
-            fprintf(stderr, "Error: Failed to copy mirax files.\n");
+            fprintf(stderr, "Error: File already exists.\n");
             return -1;
         }
         *filename = path;
@@ -653,7 +658,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         }
     }
 
-    // free(mirax_file);
+    free(mirax_file);
     free(ini);
 
     return result;
