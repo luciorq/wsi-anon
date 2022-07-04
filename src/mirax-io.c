@@ -642,7 +642,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         // remove metadata in slidedata ini
         set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME);
         set_value_for_group_and_key(ini, GENERAL, PROJECT_NAME);
-        //set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
+        // set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
         set_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME);
         set_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME);
         set_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID);
