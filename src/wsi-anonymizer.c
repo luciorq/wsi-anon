@@ -20,28 +20,28 @@ file_format check_file_format(const char *filename) {
 }
 
 int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_name,
-                                  bool keep_macro_image, bool disbale_unlinking, bool do_inplace) {
+                                  bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
     int32_t result = -1;
     switch (check_file_format(*filename)) {
     case aperio_svs: {
-        result = handle_aperio(filename, new_label_name, keep_macro_image, disbale_unlinking,
+        result = handle_aperio(filename, new_label_name, keep_macro_image, disable_unlinking,
                                do_inplace);
         break;
     }
     case hamamatsu_ndpi: {
-        result = handle_hamamatsu(filename, new_label_name, disbale_unlinking, do_inplace);
+        result = handle_hamamatsu(filename, new_label_name, disable_unlinking, do_inplace);
         break;
     }
     case histech_mirax: {
         result =
-            handle_mirax(filename, new_label_name, keep_macro_image, disbale_unlinking, do_inplace);
+            handle_mirax(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
         break;
     }
     case ventana: {
         if (keep_macro_image) {
             fprintf(stderr, "Error: Cannot keep macro image in ventana file.\n");
         }
-        result = handle_ventana(filename, new_label_name, disbale_unlinking, do_inplace);
+        result = handle_ventana(filename, new_label_name, disable_unlinking, do_inplace);
         break;
     }
     case unknown_format: {

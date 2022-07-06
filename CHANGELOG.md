@@ -2,7 +2,7 @@
 
 ## 0.3.7
 
-- Remove more metadata
+- Remove more metadata and ScanDataLayer_WholeSlide 
 - Bugfix for Mirax
 
 ## 0.3.6

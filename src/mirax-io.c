@@ -32,6 +32,8 @@ static const char *SCAN_DATA_LAYER = "Scan data layer";
 static const char *SLIDE_BARCODE = "ScanDataLayer_SlideBarcode";
 // macro image
 static const char *SLIDE_THUMBNAIL = "ScanDataLayer_SlideThumbnail";
+// whole slide image
+static const char *SLIDE_WSI = "ScanDataLayer_WholeSlide";
 
 const char *concat_wildcard_string_int32(const char *str, int32_t integer) {
     char *result_string = (char *)malloc(strlen(str) + number_of_digits(integer) + 1);
@@ -595,8 +597,31 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
                               SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
     }
 
+    // delete whole slide image
+    result = delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER,
+                          SLIDE_WSI);
+
     // unlink directory
     if (!disable_unlinking) {
+
+        // whole slide image
+        struct mirax_level *wsi_image =
+            get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
+
+        if (wsi_image != NULL) {
+            if (wipe_data_in_index_file(path, index_filename, wsi_image, mirax_file) != 0) {
+                fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
+                return -1;
+            }
+
+            if (delete_group_form_ini_file(ini, wsi_image->section) != 0) {
+                fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
+                return -1;
+            }
+
+            unlink_level(ini, wsi_image, mirax_file);
+        }
+
         // slide label
         struct mirax_level *slide_label =
             get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
