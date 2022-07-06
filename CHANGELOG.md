@@ -2,8 +2,7 @@
 
 ## 0.3.6
 
-- Remove more metadata
-- Bugfix for Mirax
+- Updated Readme
 
 ## 0.3.5
 
