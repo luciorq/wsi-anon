@@ -327,7 +327,7 @@ struct mirax_level *get_next_level(struct mirax_layer **layers, struct mirax_lev
 }
 
 // TODO: CHECK IF THIS WORKS UNDER WINDOWS!!
-// duplicate and rename qthe mirax file file.mrxs and
+// duplicate and rename the mirax file file.mrxs and
 // the associated folder with the image data
 // return new path name of image data folder
 // filename will be modified to new filename
@@ -440,19 +440,17 @@ int32_t delete_level_from_mirax_file(struct mirax_file *mirax_file,
             }
         }
 
-        if (level_id == -1) {
-            fprintf(stderr, "Error: Could not find level id to delete.\n");
-            return -1;
-        }
+        if (level_id != -1) {
+            // remove the level entry and exchange the mirax layer in the array
+            struct mirax_layer *new_layer =
+                (struct mirax_layer *)malloc(sizeof(struct mirax_layer));
+            new_layer = delete_level_by_id(layer, level_id);
 
-        // remove the level entry and exchange the mirax layer in the array
-        struct mirax_layer *new_layer = (struct mirax_layer *)malloc(sizeof(struct mirax_layer));
-        new_layer = delete_level_by_id(layer, level_id);
-
-        if (new_layer != NULL) {
-            mirax_file->layers[i] = new_layer;
-            mirax_file->all_records_count--;
-            return 0;
+            if (new_layer != NULL) {
+                mirax_file->layers[i] = new_layer;
+                mirax_file->all_records_count--;
+                return 0;
+            }
         }
     }
     return -1;
@@ -468,29 +466,36 @@ void rename_mirax_file_levels(struct mirax_file *mirax_file, int32_t layer,
     mirax_file->layers[layer]->levels[current_level->id]->section = section_copy;
 }
 
-void delete_last_entry_from_ini_file(struct ini_file *ini, struct mirax_file *mirax_file) {
+void delete_last_entry_from_ini_file(struct ini_file *ini, struct mirax_file *mirax_file,
+                                     int32_t layer_id) {
     // change count in hierarchy layer
-    decrement_value_for_group_and_key(ini, HIERARCHICAL, "NONHIER_0_COUNT");
+    decrement_value_for_group_and_key(ini, HIERARCHICAL,
+                                      concat_wildcard_string_int32(NONHIER_X_COUNT, layer_id));
 
-    int32_t id_to_delete = mirax_file->layers[0]->level_count;
+    int32_t id_to_delete = mirax_file->layers[layer_id]->level_count;
 
     // we need to delete all old unused entries now
-    const char *nonhier_plain = concat_wildcard_string_m_int32(NONHIER_X_VAL_X, 0, id_to_delete);
+    const char *nonhier_plain =
+        concat_wildcard_string_m_int32(NONHIER_X_VAL_X, layer_id, id_to_delete);
     const char *nonhier_section =
-        concat_wildcard_string_m_int32(NONHIER_X_VAL_X_SECTION, 0, id_to_delete);
+        concat_wildcard_string_m_int32(NONHIER_X_VAL_X_SECTION, layer_id, id_to_delete);
     const char *nonhier_imgx =
-        concat_wildcard_string_m_int32(NONHIER_X_VAL_X_IMAGENUMBER_X, 0, id_to_delete);
+        concat_wildcard_string_m_int32(NONHIER_X_VAL_X_IMAGENUMBER_X, layer_id, id_to_delete);
     const char *nonhier_imgy =
-        concat_wildcard_string_m_int32(NONHIER_X_VAL_X_IMAGENUMBER_Y, 0, id_to_delete);
+        concat_wildcard_string_m_int32(NONHIER_X_VAL_X_IMAGENUMBER_Y, layer_id, id_to_delete);
     remove_entry_for_group_and_key(ini, HIERARCHICAL, nonhier_plain);
     remove_entry_for_group_and_key(ini, HIERARCHICAL, nonhier_section);
     remove_entry_for_group_and_key(ini, HIERARCHICAL, nonhier_imgx);
     remove_entry_for_group_and_key(ini, HIERARCHICAL, nonhier_imgy);
-    mirax_file->layers[0]->level_count--;
+    mirax_file->layers[layer_id]->level_count--;
 }
 
 void unlink_macro_and_label_image(struct ini_file *ini, struct mirax_level *macro,
                                   struct mirax_level *label, struct mirax_file *mirax_file) {
+
+    int32_t label_layer_id = label->layer_id;
+    int32_t macro_layer_id = macro->layer_id;
+
     struct mirax_level *current_level = macro;
     struct mirax_level *next_level = get_next_level(mirax_file->layers, label);
 
@@ -508,12 +513,15 @@ void unlink_macro_and_label_image(struct ini_file *ini, struct mirax_level *macr
     delete_level_from_mirax_file(mirax_file, current_level);
     free(current_level);
 
-    delete_last_entry_from_ini_file(ini, mirax_file);
-    delete_last_entry_from_ini_file(ini, mirax_file);
+    delete_last_entry_from_ini_file(ini, mirax_file, label_layer_id);
+    delete_last_entry_from_ini_file(ini, mirax_file, macro_layer_id);
 }
 
 void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
                   struct mirax_file *mirax_file) {
+
+    int32_t layer_id = level_to_delete->layer_id;
+
     // modify internal mirax representation
     struct mirax_level *current_level = level_to_delete;
     struct mirax_level *next_level = get_next_level(mirax_file->layers, current_level);
@@ -530,7 +538,7 @@ void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
     delete_level_from_mirax_file(mirax_file, current_level);
     free(current_level);
 
-    delete_last_entry_from_ini_file(ini, mirax_file);
+    delete_last_entry_from_ini_file(ini, mirax_file, layer_id);
 }
 
 int32_t wipe_data_in_index_file(const char *path, const char *index_filename,

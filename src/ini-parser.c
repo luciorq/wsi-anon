@@ -71,7 +71,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         line++;
     }
     // set last group start line to end of file
-    groups[count_groups - 1].start_line = line;
+    groups[count_groups].start_line = line;
 
     // populate the ini groups with associated entries
     for (int i = 0; i < count_groups; i++) {
@@ -178,9 +178,10 @@ int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_
 
 // overwrite section name and section key of the current level with the
 // values from the successor level
-void rename_section_name_for_level_in_section(struct ini_file *ini_file, const char *group_name,
-                                              struct mirax_level *current_level,
-                                              struct mirax_level *next_level) {
+void rename_section_name_for_level_in_section(
+    struct ini_file *ini_file,
+    const char *group_name, // funktioniert bei durchschmischten layer ids
+    struct mirax_level *current_level, struct mirax_level *next_level) {
     for (int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
