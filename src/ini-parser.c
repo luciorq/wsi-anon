@@ -176,25 +176,34 @@ int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_
     return 0;
 }
 
-// overwrite section name and section key of the current level with the
-// values from the successor level
-void rename_section_name_for_level_in_section(
-    struct ini_file *ini_file,
-    const char *group_name, // funktioniert bei durchschmischten layer ids
-    struct mirax_level *current_level, struct mirax_level *next_level) {
-    for (int i = 0; i < ini_file->group_count; i++) {
-        struct ini_group *group = &ini_file->groups[i];
-        if (strcmp(group->group_identifier, group_name) == 0) {
+// modify structure of levels in mirax_file
+void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer, int32_t layer_id,
+                                struct mirax_file *mirax_file) {
+    for (int i = level_pos_in_layer; i < mirax_file->layers[layer_id]->level_count - 1; i++) {
+        restructure_groups_in_file(ini, mirax_file->layers[layer_id]->levels[i],
+                                   mirax_file->layers[layer_id]->levels[i + 1]);
+        mirax_file->layers[layer_id]->levels[i]->name =
+            mirax_file->layers[layer_id]->levels[i + 1]->name;
+    }
+}
+
+// modify structure of groups in ini_file
+void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *current_level,
+                                struct mirax_level *next_level) {
+    for (int i = 0; i < ini->group_count; i++) {
+        struct ini_group *group = &ini->groups[i];
+        if (strcmp(group->group_identifier, "HIERARCHICAL") == 0) {
             for (int j = 0; j < group->entry_count; j++) {
 
                 struct ini_entry *entry = &group->entries[j];
 
                 if (entry != NULL) {
 
-                    if (strcmp(entry->key, current_level->key_prefix) == 0 &&
-                        strcmp(entry->value, current_level->name) == 0) {
-                        group->entries[j].value = strdup(next_level->name);
-                        group->entries[j + 1].value = strdup(next_level->section);
+                    if (strcmp(entry->value, current_level->name) == 0 &&
+                        strcmp(group->entries[j + 4].value, next_level->name) == 0) {
+                        group->entries[j].value = group->entries[j + 4].value; // change level name
+                        group->entries[j + 1].value =
+                            group->entries[j + 4 + 1].value; // change section
                     }
                 }
             }
@@ -202,8 +211,8 @@ void rename_section_name_for_level_in_section(
     }
 }
 
-void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                 const char *key) {
+const char *set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
+                                        const char *key) {
     for (int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
@@ -212,11 +221,12 @@ void set_value_for_group_and_key(struct ini_file *ini_file, const char *group_na
                 if (strcmp(entry->key, key) == 0) {
                     const char *value = get_empty_string("X", strlen((*entry).value));
                     (*entry).value = strdup(value);
-                    break;
+                    return value;
                 }
             }
         }
     }
+    return NULL;
 }
 
 struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, int32_t size_of_array,
