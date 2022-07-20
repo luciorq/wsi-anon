@@ -568,7 +568,7 @@ int32_t change_slide_id_in_datfiles(const char *path, const char *filename, cons
         // initialize buffer
         char *buffer = (char *)malloc(size);
 
-        // overwrite value for slide id in index.dat
+        // overwrite value for slide id in data.dat files
         if (file_gets(buffer, size, fp) != NULL) {
             if (contains(buffer, value)) {
                 buffer = replace_str(buffer, value, replacement);
@@ -739,7 +739,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         set_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID);
         set_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID);
 
-        // --- remove comments from 742 to 747 in order to remove slide id data ---
+        // --- remove comments below in order to remove slide id data ---
         // value for slide id in slidedat needs to be the same as in first line of indexdat file and
         // all data.dat files
         /*
