@@ -17,8 +17,8 @@ void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer
 void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *current_level,
                                 struct mirax_level *next_level);
 
-const char *set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                        const char *key);
+const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
+                                              const char *key);
 
 void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name,
                                     const char *key);

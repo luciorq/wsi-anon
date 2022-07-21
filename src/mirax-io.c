@@ -590,6 +590,28 @@ int32_t wipe_data_in_index_file(const char *path, const char *index_filename,
     return result;
 }
 
+int32_t wipe_delete_unlink(const char *path, struct ini_file *ini, const char *index_filename,
+                           struct mirax_file *mirax_file, const char *layer,
+                           const char *level_to_delete) {
+
+    struct mirax_level *level = get_level_by_name(mirax_file->layers, layer, level_to_delete);
+
+    if (level != NULL) {
+        if (wipe_data_in_index_file(path, index_filename, level, mirax_file) != 0) {
+            fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
+            return -1;
+        }
+
+        if (delete_group_form_ini_file(ini, level->section) != 0) {
+            fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
+            return -1;
+        }
+
+        unlink_level(ini, level, mirax_file);
+    }
+    return 1;
+}
+
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
                      bool disable_unlinking, bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
@@ -654,93 +676,31 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     // unlink directory
     if (!disable_unlinking) {
 
-        // whole slide image
-        struct mirax_level *wsi_image =
-            get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
-
-        if (wsi_image != NULL) {
-            if (wipe_data_in_index_file(path, index_filename, wsi_image, mirax_file) != 0) {
-                fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
-                return -1;
-            }
-
-            if (delete_group_form_ini_file(ini, wsi_image->section) != 0) {
-                fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
-                return -1;
-            }
-
-            unlink_level(ini, wsi_image, mirax_file);
-        }
-
-        // preview image
-        struct mirax_level *preview_image =
-            get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_PREVIEW);
-
-        if (preview_image != NULL) {
-            if (wipe_data_in_index_file(path, index_filename, preview_image, mirax_file) != 0) {
-                fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
-                return -1;
-            }
-
-            if (delete_group_form_ini_file(ini, preview_image->section) != 0) {
-                fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
-                return -1;
-            }
-
-            unlink_level(ini, preview_image, mirax_file);
-        }
-
-        // slide label
-        struct mirax_level *slide_label =
-            get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
-
-        if (slide_label != NULL) {
-            if (wipe_data_in_index_file(path, index_filename, slide_label, mirax_file) != 0) {
-                fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
-                return -1;
-            }
-
-            if (delete_group_form_ini_file(ini, slide_label->section) != 0) {
-                fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
-                return -1;
-            }
-
-            unlink_level(ini, slide_label, mirax_file);
-        }
+        // unlink whole slide, preview and label images
+        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_WSI);
+        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_PREVIEW);
+        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_BARCODE);
 
         // unlink macro image
         if (!keep_macro_image) {
-            struct mirax_level *macro_image =
-                get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
-
-            if (macro_image != NULL) {
-                if (wipe_data_in_index_file(path, index_filename, macro_image, mirax_file) != 0) {
-                    fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
-                    return -1;
-                }
-
-                if (delete_group_form_ini_file(ini, macro_image->section) != 0) {
-                    fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
-                    return -1;
-                }
-                unlink_level(ini, macro_image, mirax_file);
-            }
+            wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER,
+                               SLIDE_THUMBNAIL);
         }
 
         // remove metadata in slidedata ini
-        set_value_for_group_and_key(ini, GENERAL, SLIDE_NAME);
-        set_value_for_group_and_key(ini, GENERAL, PROJECT_NAME);
-        set_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME);
-        set_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME);
-        set_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID);
-        set_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID);
+        anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME);
+        anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME);
+        anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME);
+        anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME);
+        anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID);
+        anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID);
 
         // --- remove comments below in order to remove slide id data ---
         // value for slide id in slidedat needs to be the same as in first line of indexdat file and
         // all data.dat files
         /*
         const char *value = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);
-        const char *replacement = set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
+        const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
         int32_t size =
             strlen(get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION)) + strlen(value) + 1;
         change_slide_id_in_indexdat(path, INDEXDAT, value, replacement, size);

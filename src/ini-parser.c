@@ -211,8 +211,8 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
     }
 }
 
-const char *set_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                        const char *key) {
+const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
+                                              const char *key) {
     for (int i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
