@@ -9,6 +9,7 @@ static const char GENERAL[] = "GENERAL";
 static const char SLIDE_NAME[] = "SLIDE_NAME";
 static const char PROJECT_NAME[] = "PROJECT_NAME";
 static const char SLIDE_ID[] = "SLIDE_ID";
+static const char SLIDE_VERSION[] = "SLIDE_VERSION";
 static const char SLIDE_CREATIONDATETIME[] = "SLIDE_CREATIONDATETIME";
 static const char SLIDE_UTC_CREATIONDATETIME[] = "SLIDE_UTC_CREATIONDATETIME";
 static const char NONHIERLAYER_0_SECTION[] = "NONHIERLAYER_0_SECTION";
@@ -499,7 +500,7 @@ void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
 
 // change the value for slide id in index.dat to the same as in slidedat
 int32_t change_slide_id_in_indexdat(const char *path, const char *filename, const char *value,
-                                    const char *replacement) {
+                                    const char *replacement, int32_t size) {
 
     // concat index.dat filename
     const char *indexdat_filename = concat_path_filename(path, filename);
@@ -513,10 +514,7 @@ int32_t change_slide_id_in_indexdat(const char *path, const char *filename, cons
 
     file_seek(fp, 0, SEEK_SET);
 
-    // malloc just enough to modify the value
-    int32_t size = strlen(value) + 50;
-
-    // initialize buffer
+    // malloc buffer as big as slide version and slide id
     char *buffer = (char *)malloc(size);
 
     // overwrite value for slide id in index.dat
@@ -525,7 +523,7 @@ int32_t change_slide_id_in_indexdat(const char *path, const char *filename, cons
             buffer = replace_str(buffer, value, replacement);
             file_seek(fp, 0, SEEK_SET);
             if (file_write(buffer, size, 1, fp) != 1) {
-                fprintf(stderr, "Error: Could not overwrite slide id in data.dat.\n");
+                fprintf(stderr, "Error: Could not overwrite slide id in index.dat.\n");
                 return -1;
             }
         }
@@ -536,11 +534,11 @@ int32_t change_slide_id_in_indexdat(const char *path, const char *filename, cons
 
 // change the value for slide id in all dat files to the same as in slidedat
 int32_t change_slide_id_in_datfiles(const char *path, const char *filename, const char *value,
-                                    const char *replacement, const char *file_count) {
+                                    const char *replacement, const char *file_count, int32_t size) {
 
     int lim = strtol(file_count, NULL, 10);
 
-    // iterate through every dat file
+    // iterate through every data file
     for (int i = 0; i < lim; i++) {
         const char *num = int32_to_str(i);
 
@@ -563,9 +561,7 @@ int32_t change_slide_id_in_datfiles(const char *path, const char *filename, cons
 
         file_seek(fp, 0, SEEK_SET);
 
-        int32_t size = strlen(value) + 50;
-
-        // initialize buffer
+        // malloc buffer as big as slide version and slide id
         char *buffer = (char *)malloc(size);
 
         // overwrite value for slide id in data.dat files
@@ -745,9 +741,11 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         /*
         const char *value = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);
         const char *replacement = set_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
-        change_slide_id_in_indexdat(path, INDEXDAT, value, replacement);
-        change_slide_id_in_datfiles(path, DATADAT, value, replacement, get_value_from_ini_file(ini,
-        DATAFILE, FILE_COUNT));
+        int32_t size =
+            strlen(get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION)) + strlen(value) + 1;
+        change_slide_id_in_indexdat(path, INDEXDAT, value, replacement, size);
+        change_slide_id_in_datfiles(path, DATADAT, value, replacement,
+                                    get_value_from_ini_file(ini, DATAFILE, FILE_COUNT), size);
         */
 
         if (write_ini_file(ini, path, SLIDEDAT) == -1) {
