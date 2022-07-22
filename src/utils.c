@@ -105,7 +105,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
     return result;
 }
 
-char *get_empty_string(const char *x, uint64_t length) {
+char *anonymize_string(const char *x, uint64_t length) {
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;

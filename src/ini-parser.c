@@ -219,7 +219,7 @@ const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const c
             for (int j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if (strcmp(entry->key, key) == 0) {
-                    const char *value = get_empty_string("X", strlen((*entry).value));
+                    const char *value = anonymize_string("X", strlen((*entry).value));
                     (*entry).value = strdup(value);
                     return value;
                 }

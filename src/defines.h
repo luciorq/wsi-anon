@@ -13,6 +13,8 @@
 
 // mirax
 #define MRXS_ROOT_OFFSET_NONHIER 41
+#define MAX_SIZE_FOR_DATA_DAT 1000
+#define MRXS_PROFILENAME "ProfileName=\""
 
 // tiff like
 #define TIFF_BIGENDIAN 0x4d4d

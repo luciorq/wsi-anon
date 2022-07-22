@@ -3,8 +3,6 @@
 static const char MRXS_EXT[] = "mrxs";
 static const char DOT_MRXS_EXT[] = ".mrxs";
 static const char SLIDEDAT[] = "Slidedat.ini";
-static const char INDEXDAT[] = "Index.dat";
-static const char DATADAT[] = "Data00%s.dat";
 static const char GENERAL[] = "GENERAL";
 static const char SLIDE_NAME[] = "SLIDE_NAME";
 static const char PROJECT_NAME[] = "PROJECT_NAME";
@@ -499,8 +497,8 @@ void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
 }
 
 // change the value for slide id in index.dat to the same as in slidedat
-int32_t change_slide_id_in_indexdat(const char *path, const char *filename, const char *value,
-                                    const char *replacement, int32_t size) {
+int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, const char *value,
+                                     const char *replacement, int32_t size) {
 
     // concat index.dat filename
     const char *indexdat_filename = concat_path_filename(path, filename);
@@ -528,29 +526,21 @@ int32_t change_slide_id_in_indexdat(const char *path, const char *filename, cons
             }
         }
     }
+
+    free(buffer);
     file_close(fp);
+
     return 1;
 }
 
 // change the value for slide id in all dat files to the same as in slidedat
-int32_t change_slide_id_in_datfiles(const char *path, const char *filename, const char *value,
-                                    const char *replacement, const char *file_count, int32_t size) {
-
-    int lim = strtol(file_count, NULL, 10);
+int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, int32_t length,
+                                     const char *value, const char *replacement, int32_t size) {
 
     // iterate through every data file
-    for (int i = 0; i < lim; i++) {
-        const char *num = int32_to_str(i);
+    for (int i = 0; i < length; i++) {
 
-        // keep leading zeros
-        if (i < 10) {
-            num = concat_str("0", num);
-        }
-
-        const char *newFilename = concat_wildcard_string_string(filename, num);
-
-        // concat index.dat filename
-        const char *datadat_filename = concat_path_filename(path, newFilename);
+        const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
         file_t *fp = file_open(datadat_filename, "r+w");
 
@@ -574,9 +564,49 @@ int32_t change_slide_id_in_datfiles(const char *path, const char *filename, cons
                 }
             }
         }
+
+        free(buffer);
         file_close(fp);
     }
     return 1;
+}
+
+void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length,
+                                 const char *var) {
+
+    // iterate through every data file
+    for (int i = 0; i < length; i++) {
+
+        const char *datadat_filename = concat_path_filename(path, data_files[i]);
+
+        file_t *fp = file_open(datadat_filename, "r+w");
+
+        // if file does not exist terminate loop
+        if (fp == NULL) {
+            break;
+        }
+
+        // malloc buffer as big as slide version and slide id
+        char *buffer = (char *)malloc(MAX_SIZE_FOR_DATA_DAT);
+
+        // read file
+        if (file_read(buffer, MAX_SIZE_FOR_DATA_DAT, 1, fp) != 1) {
+            // check for ProfileName
+            if (contains(buffer, MRXS_PROFILENAME)) {
+                const char *value = get_string_between_delimiters(buffer, MRXS_PROFILENAME, "\"");
+                char *replacement = anonymize_string("X", strlen(value));
+                buffer = replace_str(buffer, value, replacement);
+            }
+            // overwrite value in data.dat file
+            file_seek(fp, 0, SEEK_SET);
+            if (file_write(buffer, MAX_SIZE_FOR_DATA_DAT, 1, fp) != 1) {
+                fprintf(stderr, "Error: Could not overwrite value in %s.\n", data_files[i]);
+            }
+        }
+
+        free(buffer);
+        file_close(fp);
+    }
 }
 
 int32_t wipe_data_in_index_file(const char *path, const char *index_filename,
@@ -695,6 +725,9 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID);
         anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID);
 
+        // remove metadata in data dat files
+        remove_metadata_in_data_dat(path, data_filenames, f_count, MRXS_PROFILENAME);
+
         // --- remove comments below in order to remove slide id data ---
         // value for slide id in slidedat needs to be the same as in first line of indexdat file and
         // all data.dat files
@@ -703,9 +736,8 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID);
         int32_t size =
             strlen(get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION)) + strlen(value) + 1;
-        change_slide_id_in_indexdat(path, INDEXDAT, value, replacement, size);
-        change_slide_id_in_datfiles(path, DATADAT, value, replacement,
-                                    get_value_from_ini_file(ini, DATAFILE, FILE_COUNT), size);
+        replace_slide_id_in_indexdat(path, index_filename, value, replacement, size);
+        replace_slide_id_in_datfiles(path, data_filenames, f_count, value, replacement, size);
         */
 
         if (write_ini_file(ini, path, SLIDEDAT) == -1) {
@@ -713,6 +745,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         }
     }
 
+    free(data_filenames);
     free(mirax_file);
     free(ini);
 
