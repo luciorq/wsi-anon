@@ -16,7 +16,7 @@ void rename_section_name_for_level_in_section(struct ini_file *ini_file, const c
                                               struct mirax_level *next_level);
 
 const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                              const char *key);
+                                              const char *key, const char *c);
 
 void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name,
                                     const char *key);
@@ -74,7 +74,7 @@ void test_delete_group_from_ini_file() {
 
 void test_anonymize_value_for_group_and_key() {
     struct ini_file *ini_file = mock_ini_file();
-    anonymize_value_for_group_and_key(ini_file, "Identifier", "TestKey1");
+    anonymize_value_for_group_and_key(ini_file, "Identifier", "TestKey1", "X");
     CU_ASSERT_STRING_EQUAL(ini_file->groups[0].entries[0].value, "XXXXXXXXXX");
     free(ini_file);
 }

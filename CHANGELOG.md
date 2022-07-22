@@ -4,7 +4,6 @@
 
 - Remove ScanDataLayer_WholeSlide and ScanDataLayer_SlidePreview
 - Remove more metadata
-- Bugfix for Mirax
 
 ## 0.3.6
 
