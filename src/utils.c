@@ -105,7 +105,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
     return result;
 }
 
-char *get_empty_string(const char *x, uint64_t length) {
+char *anonymize_string(const char *x, uint64_t length) {
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;
@@ -436,7 +436,7 @@ uint64_t _swap_uint64(uint64_t value) {
 
 // skip first and last character of String
 const char *skip_first_and_last_char(const char *value) {
-    char *trimmed = value;
+    char *trimmed = strdup(value);
     trimmed++;
     trimmed[strlen(trimmed) - 1] = '\0';
     return trimmed;
