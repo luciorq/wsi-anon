@@ -200,10 +200,12 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
                 if (entry != NULL) {
 
                     if (strcmp(entry->value, current_level->name) == 0 &&
-                        strcmp(group->entries[j + 4].value, next_level->name) == 0) {
+                        strcmp(group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET].value,
+                               next_level->name) == 0) {
                         group->entries[j].value = group->entries[j + 4].value; // change level name
                         group->entries[j + 1].value =
-                            group->entries[j + 4 + 1].value; // change section
+                            group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET + 1]
+                                .value; // change section
                     }
                 }
             }

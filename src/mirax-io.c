@@ -587,10 +587,10 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
         }
 
         // malloc buffer as big as slide version and slide id
-        char *buffer = (char *)malloc(MAX_SIZE_FOR_DATA_DAT);
+        char *buffer = (char *)malloc(MRXS_MAX_SIZE_DATA_DAT);
 
         // read file
-        if (file_read(buffer, MAX_SIZE_FOR_DATA_DAT, 1, fp) != 1) {
+        if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
             // check for ProfileName
             if (contains(buffer, MRXS_PROFILENAME)) {
                 const char *value = get_string_between_delimiters(buffer, MRXS_PROFILENAME, "\"");
@@ -599,7 +599,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
             }
             // overwrite value in data.dat file
             file_seek(fp, 0, SEEK_SET);
-            if (file_write(buffer, MAX_SIZE_FOR_DATA_DAT, 1, fp) != 1) {
+            if (file_write(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
                 fprintf(stderr, "Error: Could not overwrite value in %s.\n", data_files[i]);
             }
         }
