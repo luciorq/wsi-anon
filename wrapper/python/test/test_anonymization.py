@@ -55,7 +55,7 @@ def test_check_fileformat(wsi_filename, vendor):
     [
         ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
         ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
-        ("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"),
         ("/data/Ventana/OS-2.bif", "anon-ventana1", "/data/Ventana/anon-ventana1.bif"),
     ],
 )
@@ -66,17 +66,15 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
     result = anonymize_wsi(wsi_filename, new_label_name)
     assert result in result_label_name
 
-    if wsi_filename != "/data/MIRAX/Mirax2.2-1.mrxs":
-        slide = openslide.OpenSlide(result_label_name)
-        assert "label" not in slide.associated_images
-        assert "macro" not in slide.associated_images
+    slide = openslide.OpenSlide(result_label_name)
+    assert "label" not in slide.associated_images
+    assert "macro" not in slide.associated_images
 
-        if wsi_filename == "/data/Aperio/CMU-1.svs":
-            assert "XXXXX" in slide.properties["aperio.Filename"]
-            assert "XXXXX" in slide.properties["aperio.User"]
+    if wsi_filename == "/data/Aperio/CMU-1.svs":
+        assert "XXXXX" in slide.properties["aperio.Filename"]
+        assert "XXXXX" in slide.properties["aperio.User"]
+    slide.close()
 
-        slide.close()
-        
     cleanup(result_label_name)
 
 
@@ -84,7 +82,7 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
     "wsi_filename, new_label_name, result_label_name",
     [
         ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
-        ("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax2", "/data/MIRAX/anon-mirax2.mrxs"),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax2", "/data/MIRAX/anon-mirax2.mrxs"),
     ],
 )
 def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name, result_label_name):
@@ -94,11 +92,10 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name,
     result = anonymize_wsi(filename=wsi_filename, new_label_name=new_label_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
     assert result in result_label_name
 
-    if wsi_filename != "/data/MIRAX/Mirax2.2-1.mrxs":
-        slide = openslide.OpenSlide(result_label_name)
-        assert "label" not in slide.associated_images
-        assert "macro" in slide.associated_images
-        slide.close()
+    slide = openslide.OpenSlide(result_label_name)
+    assert "label" not in slide.associated_images
+    assert "macro" in slide.associated_images
+    slide.close()
 
     cleanup(result_label_name)
 
