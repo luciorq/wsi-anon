@@ -10,6 +10,8 @@
 #include <string.h>
 
 // mirax
+
+#define MAX_CHAR_IN_LINE 100
 #define MRXS_ROOT_OFFSET_NONHIER 41
 
 // tiff like
