@@ -16,7 +16,7 @@ int32_t get_size_to_substring(file_t *fp, char *substring) {
 
     // finds size
     char *ret = strstr(buffer, substring);
-    int32_t *size = ret - buffer;
+    int32_t size = ret - buffer;
 
     file_seek(fp, 0, SEEK_SET);
     free(buffer);
@@ -24,7 +24,7 @@ int32_t get_size_to_substring(file_t *fp, char *substring) {
     return size;
 }
 
-// searches for specific value in XML file
+// check if file contains specific value
 int32_t file_contains_value(file_t *fp, char *value) {
 
     file_seek(fp, 0, SEEK_END);
@@ -48,7 +48,7 @@ int32_t file_contains_value(file_t *fp, char *value) {
     return 0;
 }
 
-// checks isyntax file format
+// checks iSyntax file format
 int32_t is_isyntax(const char *filename) {
 
     const char *ext = get_filename_ext(filename);
@@ -79,46 +79,65 @@ int32_t is_isyntax(const char *filename) {
     }
 }
 
-// searches for attribute in XML Header replaces its value with equal amount of X's or 0
-char *wipe_xml_data(char *result, char *attribute) {
+// searches for attribute and replaces its value with equal amount of X's
+char *anonymize_value_of_attribute(char *buffer, char *attribute) {
 
-    const char *value = get_string_between_delimiters(result, attribute, "<Attribute");
-    const char *delimiter = get_string_between_delimiters(value, "PMSVR=", ">");
-    char *replace_with;
-
-    // check for datatype in XML Header
-    if (strcmp(delimiter, ISYNTAX_DELIMITER_STR) == 0) {
-        value = get_string_between_delimiters(value, concat_str(ISYNTAX_DELIMITER_STR, ">"),
-                                              ISYNTAX_DELIMITER2);
-        replace_with = "X";
-    } else if (strcmp(delimiter, ISYNTAX_DELIMITER_INT) == 0) {
-        value = get_string_between_delimiters(value, concat_str(ISYNTAX_DELIMITER_INT, ">"),
-                                              ISYNTAX_DELIMITER2);
-        replace_with = "0";
-    } else {
-        fprintf(stderr, "Cannot anonymize this datatype in XML Header");
-        return result;
-    }
+    const char *value = get_string_between_delimiters(buffer, attribute, ISYNTAX_ATT_OPEN);
+    // const char *delimiter = get_string_between_delimiters(value, ISYNTAX_ATT_PMSVR,
+    // ISYNTAX_CLOSING_SYMBOL); // ToDo: delete this if everything works fine
+    value = get_string_between_delimiters(
+        value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
 
     // check for empty String
     if (strcmp(value, "") != 0) {
+        char *replace_with = "X";
         char *replacement = get_empty_string(replace_with, strlen(value));
-        return replace_str(result, value, replacement);
+        return replace_str(buffer, value, replacement);
     }
 
-    return result;
+    return buffer;
 }
 
-// anonymizes metadata from isyntax file
-int32_t anonymize_isyntax_metadata(file_t *fp) {
+// returns value for an attribute
+const char *get_value_from_attribute(char *buffer, char *attribute) {
+    const char *value = get_string_between_delimiters(buffer, attribute, ISYNTAX_ATT_OPEN);
+    const char *delimiter =
+        get_string_between_delimiters(value, ISYNTAX_ATT_PMSVR, ISYNTAX_CLOSING_SYMBOL);
 
-    // get rough size for metadata
-    int32_t size = get_size_to_substring(fp, ISYNTAX_EOT);
-    char *buffer = (char *)malloc(size);
+    // check for datatype
+    if (strcmp(delimiter, ISYNTAX_DELIMITER_STR) == 0) {
+        return get_string_between_delimiters(
+            value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
+    } else if (strcmp(delimiter, ISYNTAX_DELIMITER_INT) == 0) {
+        return get_string_between_delimiters(
+            value, concat_str(ISYNTAX_DELIMITER_INT, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
+    } else {
+        fprintf(stderr, "Unable find value for attribute with this datatype");
+        return NULL;
+    }
+}
 
-    // file_seek(fp, 0, SEEK_SET);
+// replaces section of passed attribute with empty string
+char *wipe_section_of_attribute(char *buffer, char *attribute) {
+    // char *section = get_string_between_delimiters(buffer, attribute, concat_str(ISYNTAX_ATT_END,
+    // ISYNTAX_CLOSING_SYMBOL)); ToDo: delete this if lower works
+    const char *section = get_string_between_delimiters(
+        buffer, attribute, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
+    section = concat_str(attribute, section);
+    section = concat_str(section, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
+    char *replacement = get_empty_string(" ", strlen(section));
+    return replace_str(buffer, section, replacement);
+}
 
-    if (file_read(buffer, size, 1, fp) != 1) {
+// anonymizes metadata from iSyntax file
+int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
+
+    // gets only XML header
+    char *buffer = (char *)malloc(header_size);
+
+    file_seek(fp, 0, SEEK_SET);
+
+    if (file_read(buffer, header_size, 1, fp) != 1) {
         free(buffer);
         fprintf(stderr, "Error: Could not read iSyntax file.\n");
         return -1;
@@ -127,40 +146,47 @@ int32_t anonymize_isyntax_metadata(file_t *fp) {
     char *result = buffer;
     bool rewrite = false;
 
+    // Datetime attribute is substituted with minimum possible value
     if (contains(result, ISYNTAX_DATETIME_ATT)) {
-        result = wipe_xml_data(result, ISYNTAX_DATETIME_ATT);
+        const char *value = get_value_from_attribute(result, ISYNTAX_DATETIME_ATT);
+        result = replace_str(result, value, ISYNTAX_MIN_DATETIME);
         rewrite = true;
     }
 
+    // replaced with arbitrary value
     if (contains(result, ISYNTAX_SERIAL_ATT)) {
-        result = wipe_xml_data(result, ISYNTAX_SERIAL_ATT);
+        result = anonymize_value_of_attribute(result, ISYNTAX_SERIAL_ATT);
         rewrite = true;
     }
 
-    if (contains(result, ISYNTAX_RACK_ATT)) {
-        result = wipe_xml_data(result, ISYNTAX_RACK_ATT);
-        rewrite = true;
-    }
-
+    // wipes complete section of given attribute
     if (contains(result, ISYNTAX_SLOT_ATT)) {
-        result = wipe_xml_data(result, ISYNTAX_SLOT_ATT);
+        result = wipe_section_of_attribute(result, ISYNTAX_SLOT_ATT);
         rewrite = true;
     }
 
+    // wipes complete section of given attribute
+    if (contains(result, ISYNTAX_RACK_ATT)) {
+        result = wipe_section_of_attribute(result, ISYNTAX_RACK_ATT);
+        rewrite = true;
+    }
+
+    // replace with arbitrary value
     if (contains(result, ISYNTAX_OPERID_ATT)) {
-        result = wipe_xml_data(result, ISYNTAX_OPERID_ATT);
+        result = anonymize_value_of_attribute(result, ISYNTAX_OPERID_ATT);
         rewrite = true;
     }
 
+    // replace with arbitrary value
     if (contains(result, ISYNTAX_BARCODE_ATT)) {
-        result = wipe_xml_data(result, ISYNTAX_BARCODE_ATT);
+        result = anonymize_value_of_attribute(result, ISYNTAX_BARCODE_ATT);
         rewrite = true;
     }
 
-    // alters XML Header of iSyntax file
+    // alters iSyntax file
     if (rewrite) {
         file_seek(fp, 0, SEEK_SET);
-        if (!file_write(result, size, 1, fp)) {
+        if (!file_write(result, header_size, 1, fp)) {
             fprintf(stderr, "Error: changing XML Header failed.\n");
             free(buffer);
             return -1;
@@ -171,17 +197,18 @@ int32_t anonymize_isyntax_metadata(file_t *fp) {
     return 1;
 }
 
-// ToDo: remove macro/label image from file
-int32_t wipe_image_data(file_t *fp, char *image_type) {
+// remove label image and macro image
+int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
     // gets only the xml header
-    int32_t size = get_size_to_substring(fp, ISYNTAX_EOT);
-    char *buffer = (char *)malloc(size);
+    char *buffer = (char *)malloc(header_size);
 
-    if (file_read(buffer, size, 1, fp) != 1) {
+    file_seek(fp, 0, SEEK_SET);
+
+    if (file_read(buffer, header_size, 1, fp) != 1) {
         free(buffer);
         fprintf(stderr, "Error: Could not read iSyntax file.\n");
-        return 0;
+        return -1;
     }
 
     char *result = buffer;
@@ -190,22 +217,21 @@ int32_t wipe_image_data(file_t *fp, char *image_type) {
     if (contains(result, image_type)) {
 
         // get image data string
-        const char *image_data = get_string_between_delimiters(result, image_type, "Object>");
-        image_data = get_string_between_delimiters(image_data, ISYNTAX_IMAGE_DATA, "</Data");
+        const char *image_data = get_string_between_delimiters(result, image_type, ISYNTAX_OBJECT);
+        image_data = get_string_between_delimiters(image_data, ISYNTAX_IMAGE_DATA, ISYNTAX_DATA);
         image_data = get_string_between_delimiters(
-            image_data, concat_str(ISYNTAX_DELIMITER_STR, ">"), ISYNTAX_DELIMITER2);
+            image_data, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
 
         // decode base64 string for image data
         size_t decode_size[1];
         decode_size[0] = strlen(image_data);
-        unsigned char *decoded_data = b64_decode_ex(image_data, decode_size, &decode_size);
+        unsigned char *decoded_data = b64_decode_ex(image_data, *decode_size, &decode_size[0]);
 
-        // offset and length of bytes of width and height
+        // offset and length of bytes for width and height
         size_t pos = -1;
         size_t size_bytes_len = 0;
 
-        // check structure \xff\xc0\x00\x11\x08<width><height>\x03\x01.....\xff\xc4 for width and
-        // height
+        // check structure for width and height
         for (int i = 0; i < decode_size[0]; i++) {
 
             // check prefix of possible SOF section
@@ -252,38 +278,64 @@ int32_t wipe_image_data(file_t *fp, char *image_type) {
             }
         }
 
-        // the length of bytes of width and height are always the same => length % 2 == 0
-        if (pos == -1 || size_bytes_len % 2 != 0) {
-            printf(stderr, "Width and height of image can not be found");
-            return -1;
-        }
+        // initialize
+        int height;
+        int width;
 
-        // get width and height
+        // alloc width and height
         int div = size_bytes_len / 2;
-        unsigned char *width_str = (unsigned char *)malloc(sizeof(unsigned char) * div);
-        unsigned char *height_str = (unsigned char *)malloc(sizeof(unsigned char) * div);
+        unsigned char *width_arr = (unsigned char *)malloc(sizeof(unsigned char) * div);
+        unsigned char *height_arr = (unsigned char *)malloc(sizeof(unsigned char) * div);
 
-        for (int i = 0; i < div; i++) {
-            width_str[i] = (unsigned char *)decoded_data[pos + i];
-            height_str[i] = (unsigned char *)decoded_data[pos + div + i];
+        // if pos could not be found for either images or length of bytes are not equal, set width
+        // and height to 1 in order to still anonymize image
+        if (pos == -1 || size_bytes_len % 2 != 0) {
+            height = 1;
+            width = 1;
+        } else {
+
+            // set values
+            for (int i = 0; i < div; i++) {
+                width_arr[i] = decoded_data[pos + i];
+                height_arr[i] = decoded_data[pos + div + i];
+            }
+
+            // convert bytes into int
+            height = bytes_to_int(height_arr, div);
+            width = bytes_to_int(width_arr, div);
         }
 
-        // ToDo: create anonymized image
-        unsigned char *new_img = (unsigned char *)malloc(sizeof(decoded_data));
-        create_black_image(new_img, width_str, height_str);
+        // alloc with width and height and fill with 0 for a black image
+        unsigned char *black_image = (unsigned char *)malloc(width * height);
+        memset(black_image, 0, width * height);
 
-        // free memory
-        free(width_str);
-        free(height_str);
+        // create black jpg image
+        jpec_enc_t *e = jpec_enc_new(black_image, width, height);
+        int len;
+        const uint8_t *jpeg = jpec_enc_run(e, &len);
+
+        // encode new image data and check if string is longer than original string, replace old
+        // base64-encoded string afterwards
+        char *new_image_data = b64_encode(jpeg, strlen(image_data));
+        if (strlen(new_image_data) > strlen(image_data)) {
+            new_image_data[strlen(image_data)] = '\0';
+        }
+        result = replace_str(result, image_data, new_image_data);
+        rewrite = true;
+
+        // free memory and release encoder
+        free(width_arr);
+        free(height_arr);
         free(decoded_data);
-
-        return 1;
+        free(black_image);
+        free(new_image_data);
+        jpec_enc_del(e);
     }
 
-    // changes image data in XML Header of iSyntax file
+    // alter XML header
     if (rewrite) {
         file_seek(fp, 0, SEEK_SET);
-        if (!file_write(result, size, 1, fp)) {
+        if (!file_write(result, header_size, 1, fp)) {
             fprintf(stderr, "Error: changing XML Header failed.\n");
             free(buffer);
             return -1;
@@ -294,7 +346,7 @@ int32_t wipe_image_data(file_t *fp, char *image_type) {
     return 1;
 }
 
-// anonymize isyntax file format
+// anonymize iSyntax file
 int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
                        bool do_inplace) {
 
@@ -311,68 +363,27 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         return -1;
     }
 
-    // ToDo: remove label image
-    int32_t result = wipe_image_data(fp, "LABELIMAGE");
+    int32_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
 
-    if (!result) {
+    // remove label image
+    int32_t result = wipe_image_data(fp, header_size, "LABELIMAGE");
+
+    if (result == -1) {
         fprintf(stderr, "Error: Could not wipe label image from file.\n");
-        return -1;
     }
-    /*
-        if (!keep_macro_image) {
-            // ToDo: remove macro image
-            int32_t result = wipe_image_data(fp, "MACROIMAGE");
-        }
 
-        if (!result) {
-            fprintf(stderr, "Error: Could not wipe macro image from file.\n");
-            return -1;
-        }*/
+    // remove macro image
+    if (!keep_macro_image) {
+        result = wipe_image_data(fp, header_size, "MACROIMAGE");
+    }
 
-    anonymize_isyntax_metadata(fp);
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not wipe macro image from file.\n");
+    }
+
+    anonymize_isyntax_metadata(fp, header_size);
 
     // clean up
     file_close(fp);
     return 1;
-}
-
-// ToDo: Refactor
-
-static int current_pos;
-
-void create_black_image(unsigned char *new_image, unsigned char *width_str,
-                        unsigned char *height_str) {
-    add_soi(new_image);
-    add_app(new_image);
-    // add the rest here
-    add_eoi(new_image);
-}
-
-// add start of image
-static void add_soi(unsigned char *new_image) { add_segment(new_image, "\xff\xd8"); }
-
-// --- CONTINUE HERE ---
-
-// add application 0 default header
-static void add_app(unsigned char *new_image) {
-    add_segment(new_image, "\xff\xe0");
-    add_segment(new_image, "\x00\x10JFIF");
-    add_segment(new_image, "\x00\x01");
-    add_segment(new_image, "\x01\x01");
-    add_segment(new_image, "\x00\x48");
-    add_segment(new_image, "\x00\x48");
-    add_segment(new_image, "\x00\x00");
-}
-
-// add end of image
-static void add_eoi(unsigned char *new_image) { add_segment(new_image, "\xff\xd9"); }
-
-// add segment to buffer
-static void add_segment(unsigned char *new_image, unsigned char *data) {
-    int new_pos;
-    for (int i = 0; i < strlen(data); i++) {
-        new_image[current_pos + i] = data[i];
-        new_pos = current_pos + i;
-    }
-    current_pos = ++new_pos;
 }

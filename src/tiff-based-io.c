@@ -1012,7 +1012,7 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
 
 // searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
-    const char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
+    char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
     value = skip_first_and_last_char(value);
     char *replacement = get_empty_string(" ", strlen(value));
     return replace_str(result, value, replacement);

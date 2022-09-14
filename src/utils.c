@@ -241,6 +241,15 @@ const char *int32_to_str(int32_t integer) {
     return str;
 }
 
+/*
+const char *uint16_to_str(uint16_t integer) {
+    int length = snprintf(NULL, 0, "%d", integer);
+    char *str = (char *)malloc(length + 1);
+    snprintf(str, length + 1, "%d", integer);
+    return str;
+}
+*/
+
 int32_t number_of_digits(int32_t integer) {
     int32_t result = (integer < 0) ? 2 : 1;
     while ((integer /= 10) != 0) {
@@ -435,9 +444,20 @@ uint64_t _swap_uint64(uint64_t value) {
 }
 
 // skip first and last character of String
-const char *skip_first_and_last_char(const char *value) {
+char *skip_first_and_last_char(char *value) {
     char *trimmed = value;
     trimmed++;
     trimmed[strlen(trimmed) - 1] = '\0';
     return trimmed;
+}
+
+// convert bytes into int
+int bytes_to_int(unsigned char *buffer, int size) {
+    int ret = 0;
+    int shift = 0;
+    for (int i = size - 1; i >= 0; i--) {
+        ret |= (buffer[i]) << shift;
+        shift += 8;
+    }
+    return ret;
 }

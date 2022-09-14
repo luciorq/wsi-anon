@@ -5,7 +5,6 @@ STATIC_LIBRARY_TARGET = libwsianon.a
 SHARED_LIBRARY_TARGET = libwsianon.so
 SO_NAME = libwsianon
 TEST_TARGET = utests
-RESULT_FILE = Test-Wsi-Anon-Results.xml
 
 CC       = gcc
 CFLAGS   = -Wall -I. -O2
@@ -84,5 +83,4 @@ makedirs:
 clean:
 	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out
 	@rm -r $(OBJDIR) $(BINDIR)
-	@rm -f $(RESULT_FILE)
 	@echo "Cleanup complete!"

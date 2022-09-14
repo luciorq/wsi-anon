@@ -34,6 +34,8 @@ const char *get_filename_from_path(const char *path);
 
 const char *int32_to_str(int32_t integer);
 
+// const char *uint16_to_str(uint16_t integer);
+
 int32_t number_of_digits(int32_t integer);
 
 const char *add_square_brackets(const char *str);
@@ -61,8 +63,10 @@ uint32_t _swap_uint32(uint32_t value);
 
 uint64_t _swap_uint64(uint64_t value);
 
-const char *skip_first_and_last_char(const char *value);
+char *skip_first_and_last_char(char *value);
 
 int count_contains(const char *str1, const char *str2);
+
+int bytes_to_int(unsigned char *buffer, int size);
 
 #endif
