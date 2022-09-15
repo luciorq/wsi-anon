@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.7
+
+- Remove ScanDataLayer_WholeSlide and ScanDataLayer_SlidePreview
+- Remove more metadata
+
+## 0.3.6
+
+- Updated Readme
+
 ## 0.3.5
 
 - Added ventana anonymization

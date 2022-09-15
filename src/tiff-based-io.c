@@ -624,13 +624,13 @@ int32_t anonymize_aperio_image_description(file_t *fp, struct tiff_file *file) {
                 if (contains(result, APERIO_FILENAME_TAG)) {
                     const char *value =
                         get_string_between_delimiters(result, APERIO_FILENAME_TAG, "|");
-                    char *replacement = get_empty_string("X", strlen(value));
+                    char *replacement = anonymize_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
                 if (contains(result, APERIO_USER_TAG)) {
                     const char *value = get_string_between_delimiters(result, APERIO_USER_TAG, "|");
-                    char *replacement = get_empty_string("X", strlen(value));
+                    char *replacement = anonymize_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
@@ -1014,7 +1014,7 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
     char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
     value = skip_first_and_last_char(value);
-    char *replacement = get_empty_string(" ", strlen(value));
+    char *replacement = anonymize_string(" ", strlen(value));
     return replace_str(result, value, replacement);
 }
 
@@ -1066,7 +1066,7 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
                     for (int i = 0; i <= count; i++) {
                         const char *value =
                             get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
-                        char *replacement = get_empty_string(" ", strlen(value));
+                        char *replacement = anonymize_string(" ", strlen(value));
                         result = replace_str(result, value, replacement);
                     }
                     rewrite = true;
@@ -1075,7 +1075,7 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
                 if (contains(result, VENTANA_BUILDDATE2_ATT)) {
                     const char *value =
                         get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
-                    char *replacement = get_empty_string(" ", strlen(value));
+                    char *replacement = anonymize_string(" ", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }

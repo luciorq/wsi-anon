@@ -73,8 +73,8 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
     if wsi_filename == "/data/Aperio/CMU-1.svs":
         assert "XXXXX" in slide.properties["aperio.Filename"]
         assert "XXXXX" in slide.properties["aperio.User"]
-    
     slide.close()
+
     cleanup(result_label_name)
 
 
@@ -95,8 +95,8 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name,
     slide = openslide.OpenSlide(result_label_name)
     assert "label" not in slide.associated_images
     assert "macro" in slide.associated_images
-
     slide.close()
+
     cleanup(result_label_name)
 
 

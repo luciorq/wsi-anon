@@ -13,7 +13,7 @@ int32_t file_exists(const char *filename);
 
 char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix);
 
-char *get_empty_string(const char *x, uint64_t length);
+char *anonymize_string(const char *x, uint64_t length);
 
 char *replace_str(const char *original_str, const char *replace_str, const char *with_str);
 
