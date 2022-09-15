@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.8 
+
+- full isyntax support
+
 ## 0.3.7
 
 - Remove ScanDataLayer_WholeSlide and ScanDataLayer_SlidePreview
