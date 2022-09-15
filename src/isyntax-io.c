@@ -89,7 +89,7 @@ char *anonymize_value_of_attribute(char *buffer, char *attribute) {
     // check for empty String
     if (strcmp(value, "") != 0) {
         char *replace_with = "X";
-        char *replacement = get_empty_string(replace_with, strlen(value));
+        char *replacement = anonymize_string(replace_with, strlen(value));
         return replace_str(buffer, value, replacement);
     }
 
@@ -121,7 +121,7 @@ char *wipe_section_of_attribute(char *buffer, char *attribute) {
         buffer, attribute, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
     section = concat_str(attribute, section);
     section = concat_str(section, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
-    char *replacement = get_empty_string(" ", strlen(section));
+    char *replacement = anonymize_string(" ", strlen(section));
     return replace_str(buffer, section, replacement);
 }
 
