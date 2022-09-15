@@ -83,8 +83,6 @@ int32_t is_isyntax(const char *filename) {
 char *anonymize_value_of_attribute(char *buffer, char *attribute) {
 
     const char *value = get_string_between_delimiters(buffer, attribute, ISYNTAX_ATT_OPEN);
-    // const char *delimiter = get_string_between_delimiters(value, ISYNTAX_ATT_PMSVR,
-    // ISYNTAX_CLOSING_SYMBOL); // ToDo: delete this if everything works fine
     value = get_string_between_delimiters(
         value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
 
@@ -119,8 +117,6 @@ const char *get_value_from_attribute(char *buffer, char *attribute) {
 
 // replaces section of passed attribute with empty string
 char *wipe_section_of_attribute(char *buffer, char *attribute) {
-    // char *section = get_string_between_delimiters(buffer, attribute, concat_str(ISYNTAX_ATT_END,
-    // ISYNTAX_CLOSING_SYMBOL)); ToDo: delete this if lower works
     const char *section = get_string_between_delimiters(
         buffer, attribute, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
     section = concat_str(attribute, section);

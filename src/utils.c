@@ -241,15 +241,6 @@ const char *int32_to_str(int32_t integer) {
     return str;
 }
 
-/*
-const char *uint16_to_str(uint16_t integer) {
-    int length = snprintf(NULL, 0, "%d", integer);
-    char *str = (char *)malloc(length + 1);
-    snprintf(str, length + 1, "%d", integer);
-    return str;
-}
-*/
-
 int32_t number_of_digits(int32_t integer) {
     int32_t result = (integer < 0) ? 2 : 1;
     while ((integer /= 10) != 0) {
