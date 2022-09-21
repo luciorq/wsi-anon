@@ -31,10 +31,10 @@
 
 /** Structure used to hold and process an image 8x8 block */
 typedef struct jpec_block_t_ {
-    float dct[64]; /* DCT coefficients */
-    int quant[64]; /* Quantization coefficients */
-    int zz[64];    /* Zig-Zag coefficients */
-    int len;       /* Length of Zig-Zag coefficients */
+    float dct[64];     /* DCT coefficients */
+    int32_t quant[64]; /* Quantization coefficients */
+    int32_t zz[64];    /* Zig-Zag coefficients */
+    int32_t len;       /* Length of Zig-Zag coefficients */
 } jpec_block_t;
 
 /** Skeleton for an Huffman entropy coder */
@@ -54,11 +54,11 @@ struct jpec_enc_t_ {
     /** JPEG extensible byte buffer */
     jpec_buffer_t *buf;
     /** Compression parameters */
-    int qual;    /* JPEG quality factor */
-    int dqt[64]; /* scaled quantization matrix */
+    int32_t qual;    /* JPEG quality factor */
+    int32_t dqt[64]; /* scaled quantization matrix */
     /** Current 8x8 block */
-    int bmax;           /* maximum number of blocks (N) */
-    int bnum;           /* block number in 0..N-1 */
+    int32_t bmax;       /* maximum number of blocks (N) */
+    int32_t bnum;       /* block number in 0..N-1 */
     uint16_t bx;        /* block start X */
     uint16_t by;        /* block start Y */
     jpec_block_t block; /* block data */

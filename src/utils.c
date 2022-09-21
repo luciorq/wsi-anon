@@ -443,10 +443,10 @@ char *skip_first_and_last_char(char *value) {
 }
 
 // convert bytes into int
-int bytes_to_int(unsigned char *buffer, int size) {
-    int ret = 0;
-    int shift = 0;
-    for (int i = size - 1; i >= 0; i--) {
+int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
+    int32_t ret = 0;
+    int32_t shift = 0;
+    for (int32_t i = size - 1; i >= 0; i--) {
         ret |= (buffer[i]) << shift;
         shift += 8;
     }

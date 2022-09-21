@@ -59,7 +59,7 @@ jpec_enc_t *jpec_enc_new(const uint8_t *img, uint16_t w, uint16_t h);
 /*
  * `q` specifies the JPEG quality factor in 0..100
  */
-jpec_enc_t *jpec_enc_new2(const uint8_t *img, uint16_t w, uint16_t h, int q);
+jpec_enc_t *jpec_enc_new2(const uint8_t *img, uint16_t w, uint16_t h, int32_t q);
 
 /*
  * Release a JPEG encoder object
@@ -77,6 +77,6 @@ void jpec_enc_del(jpec_enc_t *e);
  * Note: the caller should take care to copy or save the JPEG blob before
  * calling `jpec_enc_del` since the blob will no longer be maintained after.
  */
-const uint8_t *jpec_enc_run(jpec_enc_t *e, int *len);
+const uint8_t *jpec_enc_run(jpec_enc_t *e, int32_t *len);
 
 #endif

@@ -35,7 +35,7 @@ int32_t file_contains_value(file_t *fp, char *value) {
     if (file_read(buffer, size, 1, fp) != 1) {
         free(buffer);
         fprintf(stderr, "Error: Could not read iSyntax file.\n");
-        return 0;
+        return -1;
     }
 
     // searches for value
@@ -45,7 +45,7 @@ int32_t file_contains_value(file_t *fp, char *value) {
     }
 
     free(buffer);
-    return 0;
+    return -1;
 }
 
 // checks iSyntax file format
@@ -205,7 +205,7 @@ int32_t *get_height_and_width(const char *image_data) {
     size_t size_bytes_len = 0;
 
     // check structure for width and height
-    for (int i = 0; i < decode_size[0]; i++) {
+    for (int32_t i = 0; i < decode_size[0]; i++) {
 
         // check prefix of possible SOF section
         if (decoded_data[i] == 255         // xff
@@ -218,13 +218,13 @@ int32_t *get_height_and_width(const char *image_data) {
             pos = i + 5;
 
             // check suffix
-            for (int j = pos; j < decode_size[0]; j++) {
+            for (int32_t j = pos; j < decode_size[0]; j++) {
                 if (decoded_data[j] == 3 &&     // x03
                     decoded_data[j + 1] == 1) { // x01
 
                     bool is_suffix = false;
 
-                    for (int z = j + 2; z < decode_size[0]; z++) {
+                    for (int32_t z = j + 2; z < decode_size[0]; z++) {
 
                         // if another /x03/x01 was found, it is not SOF section
                         if (decoded_data[z] == 3 &&     // x03
@@ -252,7 +252,7 @@ int32_t *get_height_and_width(const char *image_data) {
     }
 
     // alloc width and height
-    int div = size_bytes_len / 2;
+    int32_t div = size_bytes_len / 2;
     unsigned char *width_arr = (unsigned char *)malloc(sizeof(unsigned char) * div);
     unsigned char *height_arr = (unsigned char *)malloc(sizeof(unsigned char) * div);
 
@@ -267,7 +267,7 @@ int32_t *get_height_and_width(const char *image_data) {
     } else {
 
         // set values
-        for (int i = 0; i < div; i++) {
+        for (int32_t i = 0; i < div; i++) {
             width_arr[i] = decoded_data[pos + i];
             height_arr[i] = decoded_data[pos + div + i];
         }
@@ -326,6 +326,9 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         width = dim[1];
         free(dim);
         */
+
+        fprintf(stdout, "Width of %s: %d\n", image_type, width);
+        fprintf(stdout, "Height of %s: %d\n", image_type, height);
 
         // alloc with height and width and fill with 255 for a white image
         unsigned char *white_image = (unsigned char *)malloc(height * width);
@@ -394,10 +397,10 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
     // remove macro image
     if (!keep_macro_image) {
         result = wipe_image_data(fp, header_size, "MACROIMAGE");
-    }
 
-    if (result == -1) {
-        fprintf(stderr, "Error: Could not wipe macro image from file.\n");
+        if (result == -1) {
+            fprintf(stderr, "Error: Could not wipe macro image from file.\n");
+        }
     }
 
     anonymize_isyntax_metadata(fp, header_size);

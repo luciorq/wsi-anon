@@ -33,8 +33,8 @@
 /** Entropy coding data that hold state along blocks */
 typedef struct jpec_huff_state_t_ {
     int32_t buffer;     /* bits buffer */
-    int nbits;          /* number of bits remaining in buffer */
-    int dc;             /* DC coefficient from previous block (or 0) */
+    int32_t nbits;      /* number of bits remaining in buffer */
+    int32_t dc;         /* DC coefficient from previous block (or 0) */
     jpec_buffer_t *buf; /* JPEG global buffer */
 } jpec_huff_state_t;
 

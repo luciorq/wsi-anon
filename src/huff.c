@@ -27,7 +27,7 @@
 #ifdef WORD_BIT
 #define JPEC_INT_WIDTH WORD_BIT
 #else
-#define JPEC_INT_WIDTH (int)(sizeof(int) * CHAR_BIT)
+#define JPEC_INT_WIDTH (int32_t)(sizeof(int32_t) * CHAR_BIT)
 #endif
 
 #if __GNUC__
@@ -44,7 +44,7 @@
 
 /* Private function prototypes */
 static void jpec_huff_encode_block_impl(jpec_block_t *block, jpec_huff_state_t *s);
-static void jpec_huff_write_bits(jpec_huff_state_t *s, unsigned int bits, int n);
+static void jpec_huff_write_bits(jpec_huff_state_t *s, uint32_t bits, int32_t n);
 
 void jpec_huff_skel_init(jpec_huff_skel_t *skel) {
     assert(skel);
@@ -86,7 +86,7 @@ void jpec_huff_encode_block(jpec_huff_t *h, jpec_block_t *block, jpec_buffer_t *
 
 static void jpec_huff_encode_block_impl(jpec_block_t *block, jpec_huff_state_t *s) {
     assert(block && s);
-    int val, bits, nbits;
+    int32_t val, bits, nbits;
     /* DC coefficient encoding */
     if (block->len > 0) {
         val = block->zz[0] - s->dc;
@@ -103,10 +103,10 @@ static void jpec_huff_encode_block_impl(jpec_block_t *block, jpec_huff_state_t *
     JPEC_HUFF_NBITS(nbits, val);
     jpec_huff_write_bits(s, jpec_dc_code[nbits], jpec_dc_len[nbits]);
     if (nbits)
-        jpec_huff_write_bits(s, (unsigned int)bits, nbits);
+        jpec_huff_write_bits(s, (uint32_t)bits, nbits);
     /* AC coefficients encoding (w/ RLE of zeros) */
-    int nz = 0;
-    for (int i = 1; i < block->len; i++) {
+    int32_t nz = 0;
+    for (int32_t i = 1; i < block->len; i++) {
         if ((val = block->zz[i]) == 0)
             nz++;
         else {
@@ -120,10 +120,10 @@ static void jpec_huff_encode_block_impl(jpec_block_t *block, jpec_huff_state_t *
                 bits = ~val;
             }
             JPEC_HUFF_NBITS(nbits, val);
-            int j = (nz << 4) + nbits;
+            int32_t j = (nz << 4) + nbits;
             jpec_huff_write_bits(s, jpec_ac_code[j], jpec_ac_len[j]);
             if (nbits)
-                jpec_huff_write_bits(s, (unsigned int)bits, nbits);
+                jpec_huff_write_bits(s, (uint32_t)bits, nbits);
             nz = 0;
         }
     }
@@ -146,16 +146,16 @@ static void jpec_huff_encode_block_impl(jpec_block_t *block, jpec_huff_state_t *
  *   first transformed by bitwise complement(|initial value|)
  * - if an 0xFF byte is detected a 0x00 stuff byte is automatically written right after
  */
-static void jpec_huff_write_bits(jpec_huff_state_t *s, unsigned int bits, int n) {
+static void jpec_huff_write_bits(jpec_huff_state_t *s, uint32_t bits, int32_t n) {
     assert(s && n > 0 && n <= 16);
     int32_t mask = (((int32_t)1) << n) - 1;
     int32_t buffer = (int32_t)bits;
-    int nbits = s->nbits + n;
+    int32_t nbits = s->nbits + n;
     buffer &= mask;
     buffer <<= 24 - nbits;
     buffer |= s->buffer;
     while (nbits >= 8) {
-        int chunk = (int)((buffer >> 16) & 0xFF);
+        int32_t chunk = (int32_t)((buffer >> 16) & 0xFF);
         jpec_buffer_write_byte(s->buf, chunk);
         if (chunk == 0xFF)
             jpec_buffer_write_byte(s->buf, 0x00);

@@ -29,14 +29,14 @@
 /** Extensible byte buffer */
 typedef struct jpec_buffer_t_ {
     uint8_t *stream; /* byte buffer */
-    int len;         /* current length */
-    int siz;         /* maximum size */
+    int32_t len;     /* current length */
+    int32_t siz;     /* maximum size */
 } jpec_buffer_t;
 
 jpec_buffer_t *jpec_buffer_new(void);
-jpec_buffer_t *jpec_buffer_new2(int siz);
+jpec_buffer_t *jpec_buffer_new2(int32_t siz);
 void jpec_buffer_del(jpec_buffer_t *b);
-void jpec_buffer_write_byte(jpec_buffer_t *b, int val);
-void jpec_buffer_write_2bytes(jpec_buffer_t *b, int val);
+void jpec_buffer_write_byte(jpec_buffer_t *b, int32_t val);
+void jpec_buffer_write_2bytes(jpec_buffer_t *b, int32_t val);
 
 #endif

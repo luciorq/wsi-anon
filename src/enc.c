@@ -39,7 +39,7 @@ static void jpec_enc_write_dqt(jpec_enc_t *e);
 static void jpec_enc_write_sof0(jpec_enc_t *e);
 static void jpec_enc_write_dht(jpec_enc_t *e);
 static void jpec_enc_write_sos(jpec_enc_t *e);
-static int jpec_enc_next_block(jpec_enc_t *e);
+static int32_t jpec_enc_next_block(jpec_enc_t *e);
 static void jpec_enc_block_dct(jpec_enc_t *e);
 static void jpec_enc_block_quant(jpec_enc_t *e);
 static void jpec_enc_block_zz(jpec_enc_t *e);
@@ -48,7 +48,7 @@ jpec_enc_t *jpec_enc_new(const uint8_t *img, uint16_t w, uint16_t h) {
     return jpec_enc_new2(img, w, h, JPEG_ENC_DEF_QUAL);
 }
 
-jpec_enc_t *jpec_enc_new2(const uint8_t *img, uint16_t w, uint16_t h, int q) {
+jpec_enc_t *jpec_enc_new2(const uint8_t *img, uint16_t w, uint16_t h, int32_t q) {
     // assert(img && w > 0 && !(w & 0x7) && h > 0 && !(h & 0x7));
     jpec_enc_t *e = malloc(sizeof(*e));
     e->img = img;
@@ -60,7 +60,7 @@ jpec_enc_t *jpec_enc_new2(const uint8_t *img, uint16_t w, uint16_t h, int q) {
     e->bnum = -1;
     e->bx = -1;
     e->by = -1;
-    int bsiz = JPEC_ENC_HEAD_SIZ + e->bmax * JPEC_ENC_BLOCK_SIZ;
+    int32_t bsiz = JPEC_ENC_HEAD_SIZ + e->bmax * JPEC_ENC_BLOCK_SIZ;
     e->buf = jpec_buffer_new2(bsiz);
     e->hskel = malloc(sizeof(*e->hskel));
     return e;
@@ -74,7 +74,7 @@ void jpec_enc_del(jpec_enc_t *e) {
     free(e);
 }
 
-const uint8_t *jpec_enc_run(jpec_enc_t *e, int *len) {
+const uint8_t *jpec_enc_run(jpec_enc_t *e, int32_t *len) {
     assert(e && len);
     jpec_enc_open(e);
     while (jpec_enc_next_block(e)) {
@@ -93,8 +93,8 @@ static void jpec_enc_init_dqt(jpec_enc_t *e) {
     assert(e);
     float qualf = (float)e->qual;
     float scale = (e->qual < 50) ? (50 / qualf) : (2 - qualf / 50);
-    for (int i = 0; i < 64; i++) {
-        int a = (int)((float)jpec_qzr[i] * scale + 0.5);
+    for (int32_t i = 0; i < 64; i++) {
+        int32_t a = (int32_t)((float)jpec_qzr[i] * scale + 0.5);
         a = (a < 1) ? 1 : ((a > 255) ? 255 : a);
         e->dqt[i] = a;
     }
@@ -145,7 +145,7 @@ static void jpec_enc_write_dqt(jpec_enc_t *e) {
     jpec_buffer_write_2bytes(e->buf, 0xFFDB); /* DQT marker */
     jpec_buffer_write_2bytes(e->buf, 0x0043); /* segment length */
     jpec_buffer_write_byte(e->buf, 0x00);     /* table 0, 8-bit precision (0) */
-    for (int i = 0; i < 64; i++) {
+    for (int32_t i = 0; i < 64; i++) {
         jpec_buffer_write_byte(e->buf, e->dqt[jpec_zz[i]]);
     }
 }
@@ -168,19 +168,19 @@ static void jpec_enc_write_dht(jpec_enc_t *e) {
     jpec_buffer_write_2bytes(e->buf, 0xFFC4);               /* DHT marker */
     jpec_buffer_write_2bytes(e->buf, 19 + jpec_dc_nb_vals); /* segment length */
     jpec_buffer_write_byte(e->buf, 0x00); /* table 0 (DC), type 0 (0 = Y, 1 = UV) */
-    for (int i = 0; i < 16; i++) {
+    for (int32_t i = 0; i < 16; i++) {
         jpec_buffer_write_byte(e->buf, jpec_dc_nodes[i + 1]);
     }
-    for (int i = 0; i < jpec_dc_nb_vals; i++) {
+    for (int32_t i = 0; i < jpec_dc_nb_vals; i++) {
         jpec_buffer_write_byte(e->buf, jpec_dc_vals[i]);
     }
     jpec_buffer_write_2bytes(e->buf, 0xFFC4); /* DHT marker */
     jpec_buffer_write_2bytes(e->buf, 19 + jpec_ac_nb_vals);
     jpec_buffer_write_byte(e->buf, 0x10); /* table 1 (AC), type 0 (0 = Y, 1 = UV) */
-    for (int i = 0; i < 16; i++) {
+    for (int32_t i = 0; i < 16; i++) {
         jpec_buffer_write_byte(e->buf, jpec_ac_nodes[i + 1]);
     }
-    for (int i = 0; i < jpec_ac_nb_vals; i++) {
+    for (int32_t i = 0; i < jpec_ac_nb_vals; i++) {
         jpec_buffer_write_byte(e->buf, jpec_ac_vals[i]);
     }
 }
@@ -198,9 +198,9 @@ static void jpec_enc_write_sos(jpec_enc_t *e) {
     jpec_buffer_write_byte(e->buf, 0x00);
 }
 
-static int jpec_enc_next_block(jpec_enc_t *e) {
+static int32_t jpec_enc_next_block(jpec_enc_t *e) {
     assert(e);
-    int rv = (++e->bnum >= e->bmax) ? 0 : 1;
+    int32_t rv = (++e->bnum >= e->bmax) ? 0 : 1;
     if (rv) {
         e->bx = (e->bnum << 3) % e->w8;
         e->by = ((e->bnum << 3) / e->w8) << 3;
@@ -215,7 +215,7 @@ static void jpec_enc_block_dct(jpec_enc_t *e) {
            (((e->bx + col) < e->w) ? e->bx + col : e->w - 1)]
     const float *coeff = jpec_dct;
     float tmp[64];
-    for (int row = 0; row < 8; row++) {
+    for (int32_t row = 0; row < 8; row++) {
         /* NOTE: the shift by 256 allows resampling from [0 255] to [–128 127] */
         float s0 = (float)(JPEC_BLOCK(0, row) + JPEC_BLOCK(7, row) - 256);
         float s1 = (float)(JPEC_BLOCK(1, row) + JPEC_BLOCK(6, row) - 256);
@@ -236,7 +236,7 @@ static void jpec_enc_block_dct(jpec_enc_t *e) {
         tmp[8 * row + 6] = coeff[5] * (s0 - s3) + coeff[1] * (s2 - s1);
         tmp[8 * row + 7] = coeff[6] * d0 - coeff[4] * d1 + coeff[2] * d2 - coeff[0] * d3;
     }
-    for (int col = 0; col < 8; col++) {
+    for (int32_t col = 0; col < 8; col++) {
         float s0 = tmp[col] + tmp[56 + col];
         float s1 = tmp[8 + col] + tmp[48 + col];
         float s2 = tmp[16 + col] + tmp[40 + col];
@@ -261,15 +261,15 @@ static void jpec_enc_block_dct(jpec_enc_t *e) {
 
 static void jpec_enc_block_quant(jpec_enc_t *e) {
     assert(e && e->bnum >= 0);
-    for (int i = 0; i < 64; i++) {
-        e->block.quant[i] = (int)(e->block.dct[i] / e->dqt[i]);
+    for (int32_t i = 0; i < 64; i++) {
+        e->block.quant[i] = (int32_t)(e->block.dct[i] / e->dqt[i]);
     }
 }
 
 static void jpec_enc_block_zz(jpec_enc_t *e) {
     assert(e && e->bnum >= 0);
     e->block.len = 0;
-    for (int i = 0; i < 64; i++) {
+    for (int32_t i = 0; i < 64; i++) {
         if ((e->block.zz[i] = e->block.quant[jpec_zz[i]]))
             e->block.len = i + 1;
     }

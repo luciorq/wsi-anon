@@ -10,7 +10,6 @@
 #include <string.h>
 
 // mirax
-
 #define MAX_CHAR_IN_LINE 100
 #define MRXS_ROOT_OFFSET_NONHIER 41
 #define MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET 4

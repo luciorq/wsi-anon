@@ -28,7 +28,7 @@
 
 jpec_buffer_t *jpec_buffer_new(void) { return jpec_buffer_new2(-1); }
 
-jpec_buffer_t *jpec_buffer_new2(int siz) {
+jpec_buffer_t *jpec_buffer_new2(int32_t siz) {
     if (siz < 0)
         siz = 0;
     jpec_buffer_t *b = malloc(sizeof(*b));
@@ -45,10 +45,10 @@ void jpec_buffer_del(jpec_buffer_t *b) {
     free(b);
 }
 
-void jpec_buffer_write_byte(jpec_buffer_t *b, int val) {
+void jpec_buffer_write_byte(jpec_buffer_t *b, int32_t val) {
     assert(b);
     if (b->siz == b->len) {
-        int nsiz = (b->siz > 0) ? 2 * b->siz : JPEC_BUFFER_INIT_SIZ;
+        int32_t nsiz = (b->siz > 0) ? 2 * b->siz : JPEC_BUFFER_INIT_SIZ;
         void *tmp = realloc(b->stream, nsiz);
         b->stream = (uint8_t *)tmp;
         b->siz = nsiz;
@@ -56,7 +56,7 @@ void jpec_buffer_write_byte(jpec_buffer_t *b, int val) {
     b->stream[b->len++] = (uint8_t)val;
 }
 
-void jpec_buffer_write_2bytes(jpec_buffer_t *b, int val) {
+void jpec_buffer_write_2bytes(jpec_buffer_t *b, int32_t val) {
     assert(b);
     jpec_buffer_write_byte(b, (val >> 8) & 0xFF);
     jpec_buffer_write_byte(b, val & 0xFF);
