@@ -38,7 +38,7 @@ To build the shared library with command line interface simply run
 make
 ```
 
-This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored in `/bin/`.
+This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `/bin/`.
 
 To build the console application in debug mode type
 
