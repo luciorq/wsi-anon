@@ -327,9 +327,6 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         free(dim);
         */
 
-        fprintf(stdout, "Width of %s: %d\n", image_type, width);
-        fprintf(stdout, "Height of %s: %d\n", image_type, height);
-
         // alloc with height and width and fill with 255 for a white image
         unsigned char *white_image = (unsigned char *)malloc(height * width);
         memset(white_image, 255, height * width);
