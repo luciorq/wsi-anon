@@ -2,7 +2,7 @@
 
 ## Description
 
-A C library to anonymize Whole Slide Images in proprietary file formats. The library removes all sensitive data within the file structure including the filename itself, associated image data (as label and macro image) and metadata that is related to the slide acquisition and/or tissue. Associated image data is overwritten with blank image data and subsequently unlinked from the file structure. Unlinking can be disabled by a CLI / method parameter (for later pseudonymization). The related metadata is always removed from the file, usually containing identifiers or acquisition-related information as serial numbers, date and time, users, etc. A wrapper for JavaScript (WebAssembly) and python is provided.
+A C library to anonymize Whole Slide Images in proprietary file formats. The library removes all sensitive data within the file structure including the filename itself, associated image data (as label and macro image) and metadata that is related to the slide acquisition and/or tissue. Associated image data is overwritten with either blank or white image data and subsequently unlinked from the file structure if possible. Unlinking can be disabled by a CLI / method parameter (for later pseudonymization). The related metadata is always removed from the file, usually containing identifiers or acquisition-related information as serial numbers, date and time, users, etc. A wrapper for JavaScript (WebAssembly) and python is provided.
 
 Currently supported formats:
 
@@ -11,10 +11,10 @@ Currently supported formats:
 | Leica Aperio | AT20, GT450 | `*.svs` `*.tif` | - |
 | Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
 | 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
-| Roche Ventana | VS200, iScan Coreo | `*.bif` `*.bif` | - |
-| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` | experimental (see branch 'isyntax') |
+| Roche Ventana | VS200, iScan Coreo | `*.bif` | - |
+| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` | - |
 
-The library is implemented and tested unter Linux (Ubuntu 20.04). 
+The library is implemented and tested under Linux (Ubuntu 20.04). 
 
 ## Requirements
 
@@ -38,7 +38,7 @@ To build the shared library with command line interface simply run
 make
 ```
 
-This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored in `/bin/`.
+This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `/bin/`.
 
 To build the console application in debug mode type
 
@@ -68,7 +68,7 @@ Check for slide vendor:
 ./wsi-anon.out "/path/to/wsi.tif" -c
 ```
 
-Anonyimize slide:
+Anonymize slide:
 
 ```bash
 ./wsi-anon.out "/path/to/wsi.tif" [-OPTIONS]
@@ -76,7 +76,7 @@ Anonyimize slide:
 
 Type `-h` or `--help` for help. Further CLI parameters are:
 
-* `-n "label-name"`: File will be renamed to given the label name
+* `-n "label-name"`: File will be renamed to the given label name
 * `-u` : Disables the unlinking of associated image data (default: associated image will be unlinked)
 * `-i` : Enable in-place anonymization (default: copy of the file will be created)
 

@@ -9,9 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_CHAR_IN_LINE 100
-
 // mirax
+#define MAX_CHAR_IN_LINE 100
 #define MRXS_ROOT_OFFSET_NONHIER 41
 #define MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET 4
 #define MRXS_MAX_SIZE_DATA_DAT 1000
@@ -34,9 +33,11 @@
 
 #define COMPRESSION_LZW 5
 
+// aperio
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
 
+// ventana
 #define VENTANA_FILENAME_ATT "JP2FileName="
 #define VENTANA_UNITNUMBER_ATT "UnitNumber="
 #define VENTANA_USERNAME_ATT "UserName="
@@ -45,6 +46,26 @@
 #define VENTANA_BASENAME_ATT "BaseName="
 #define VENTANA_BUILDDATE1_ATT "BuildDate=\'"
 #define VENTANA_BUILDDATE2_ATT "BuildDate=\""
+
+// isyntax
+#define ISYNTAX_ROOTNODE "DPUfsImport"
+#define ISYNTAX_EOT "\r\n\004"
+#define ISYNTAX_DELIMITER_STR "\"IString\""
+#define ISYNTAX_DELIMITER_INT "\"IUInt16\""
+#define ISYNTAX_ATT_END "</Attribute"
+#define ISYNTAX_ATT_OPEN "<Attribute"
+#define ISYNTAX_OBJECT "Object>"
+#define ISYNTAX_DATA "</Data"
+#define ISYNTAX_CLOSING_SYMBOL ">"
+#define ISYNTAX_ATT_PMSVR "PMSVR="
+#define ISYNTAX_DATETIME_ATT "DICOM_ACQUISITION_DATETIME"
+#define ISYNTAX_SERIAL_ATT "DICOM_DEVICE_SERIAL_NUMBER"
+#define ISYNTAX_OPERID_ATT "PIIM_DP_SCANNER_OPERATOR_ID"
+#define ISYNTAX_BARCODE_ATT "PIM_DP_UFS_BARCODE"
+#define ISYNTAX_IMAGE_DATA "PIM_DP_IMAGE_DATA"
+#define ISYNTAX_SLOT_ATT "<Attribute Name=\"PIIM_DP_SCANNER_SLOT_NUMBER"
+#define ISYNTAX_RACK_ATT "<Attribute Name=\"PIIM_DP_SCANNER_RACK_NUMBER"
+#define ISYNTAX_MIN_DATETIME "19000101000000.000000"
 
 typedef enum {
     TIFF_NOTYPE = 0,
@@ -89,6 +110,7 @@ typedef enum file_format {
     hamamatsu_ndpi,
     histech_mirax,
     ventana,
+    philips_isyntax,
     unknown_format,
     invalid
 } file_format;

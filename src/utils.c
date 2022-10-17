@@ -435,9 +435,20 @@ uint64_t _swap_uint64(uint64_t value) {
 }
 
 // skip first and last character of String
-const char *skip_first_and_last_char(const char *value) {
-    char *trimmed = strdup(value);
+char *skip_first_and_last_char(char *value) {
+    char *trimmed = value;
     trimmed++;
     trimmed[strlen(trimmed) - 1] = '\0';
     return trimmed;
+}
+
+// convert bytes into int
+int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
+    int32_t ret = 0;
+    int32_t shift = 0;
+    for (int32_t i = size - 1; i >= 0; i--) {
+        ret |= (buffer[i]) << shift;
+        shift += 8;
+    }
+    return ret;
 }

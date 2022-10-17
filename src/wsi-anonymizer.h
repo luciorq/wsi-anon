@@ -2,6 +2,7 @@
 #define HEADER_WSI_ANONYMIZER_H
 
 #include "defines.h"
+#include "isyntax-io.h"
 #include "mirax-io.h"
 #include "tiff-based-io.h"
 

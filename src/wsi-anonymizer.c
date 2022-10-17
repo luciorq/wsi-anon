@@ -11,6 +11,8 @@ file_format check_file_format(const char *filename) {
             return histech_mirax;
         } else if (is_ventana(filename)) {
             return ventana;
+        } else if (is_isyntax(filename)) {
+            return philips_isyntax;
         } else {
             return unknown_format;
         }
@@ -39,9 +41,16 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
     }
     case ventana: {
         if (keep_macro_image) {
-            fprintf(stderr, "Error: Cannot keep macro image in ventana file.\n");
+            fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
         }
         result = handle_ventana(filename, new_label_name, disable_unlinking, do_inplace);
+        break;
+    }
+    case philips_isyntax: {
+        if (disable_unlinking) {
+            fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
+        }
+        result = handle_isyntax(filename, new_label_name, keep_macro_image, do_inplace);
         break;
     }
     case unknown_format: {
@@ -57,14 +66,14 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
 }
 
 int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name,
-                              bool keep_macro_image, bool disbale_unlinking) {
-    return anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disbale_unlinking,
+                              bool keep_macro_image, bool disable_unlinking) {
+    return anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disable_unlinking,
                                      true);
 }
 
 const char *anonymize_wsi(const char *filename, const char *new_label_name, bool keep_macro_image,
-                          bool disbale_unlinking, bool do_inplace) {
-    anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disbale_unlinking,
+                          bool disable_unlinking, bool do_inplace) {
+    anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disable_unlinking,
                               do_inplace);
     return filename;
 }

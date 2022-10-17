@@ -828,7 +828,7 @@ int32_t is_hamamatsu(const char *filename) {
     }
 
     // check if ndpi tiff tags are present
-    file_t *fp = file_open(filename, "r");
+    file_t *fp = file_open(filename, "r+");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
@@ -847,7 +847,7 @@ int32_t is_aperio(const char *filename) {
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+w");
+    fp = file_open(filename, "r+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -1012,7 +1012,7 @@ int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_
 
 // searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
-    const char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
+    char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
     value = skip_first_and_last_char(value);
     char *replacement = anonymize_string(" ", strlen(value));
     return replace_str(result, value, replacement);
