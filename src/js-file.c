@@ -32,7 +32,7 @@ EM_ASYNC_JS(void, set_chunk, (const void *buffer, size_t size, const char *filen
     anonStream.addChanges(targetBuffer, offset)
 });
 
-EM_ASYNC_JS(int, file_present_in_form, (const char *filename), {
+EM_ASYNC_JS(int32_t, file_present_in_form, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
     return AnonymizedStream.exists(jsFilename) ? 1 : 0;
 });
@@ -66,7 +66,7 @@ size_t file_read(void *buffer, size_t element_size, size_t element_count, file_t
     return element_count;
 }
 
-char *file_gets(char *buffer, int max_count, file_t *stream) {
+char *file_gets(char *buffer, int32_t max_count, file_t *stream) {
     if (stream->offset == stream->size) {
         return NULL;
     }
@@ -88,7 +88,7 @@ char *file_gets(char *buffer, int max_count, file_t *stream) {
     return buffer;
 }
 
-int file_getc(file_t *stream) {
+int32_t file_getc(file_t *stream) {
     char c;
     if (stream->offset == stream->size) {
         return EOF;
@@ -98,7 +98,7 @@ int file_getc(file_t *stream) {
     return c;
 }
 
-int file_seek(file_t *stream, long offset, int origin) {
+int32_t file_seek(file_t *stream, long offset, int32_t origin) {
     long new_offset = 0;
     if (origin == SEEK_SET) {
         new_offset = offset;
@@ -125,7 +125,7 @@ size_t file_write(const void *buffer, size_t size, size_t count, file_t *stream)
     return count;
 }
 
-int file_putc(int character, file_t *stream) {
+int32_t file_putc(int32_t character, file_t *stream) {
     // TODO: if file not writable, return 0 immediately
     char c = (char)character; // to be sure to avoid endianess problems
     set_chunk(&c, 1, stream->filename, stream->offset);
@@ -135,8 +135,8 @@ int file_putc(int character, file_t *stream) {
     return c;
 }
 
-int file_printf(file_t *stream, const char *format, const char *value) {
-    int buffer_size = snprintf(NULL, 0, format, value); // dry run to find out buffer size
+int32_t file_printf(file_t *stream, const char *format, const char *value) {
+    int32_t buffer_size = snprintf(NULL, 0, format, value); // dry run to find out buffer size
     char *buffer = (char *)malloc(buffer_size + 1);
     sprintf(buffer, format, value);
     set_chunk(buffer, buffer_size, stream->filename, stream->offset);
@@ -148,7 +148,7 @@ int file_printf(file_t *stream, const char *format, const char *value) {
 
 long file_tell(file_t *stream) { return stream->offset; }
 
-int file_close(file_t *stream) {
+int32_t file_close(file_t *stream) {
     free(stream->mode);
     free(stream->filename);
     free(stream);

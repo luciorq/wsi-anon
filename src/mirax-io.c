@@ -132,7 +132,7 @@ struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *l
         struct mirax_layer *layer = layers[i];
         // printf("layer name %s\n", layer->layer_name);
         if (strcmp(layer->layer_name, layer_name) == 0) {
-            for (int j = 0; j < layer->level_count; j++) {
+            for (int32_t j = 0; j < layer->level_count; j++) {
                 struct mirax_level *level = layer->levels[j];
                 // printf("level name %s\n", level->name);
                 if (strcmp(level->name, level_name) == 0) {
@@ -422,7 +422,7 @@ int32_t delete_level_from_mirax_file(struct mirax_file *mirax_file,
     for (int i = 0; i < mirax_file->count_layers; i++) {
         int32_t level_id = -1;
         struct mirax_layer *layer = mirax_file->layers[i];
-        for (int j = 0; j < layer->level_count; j++) {
+        for (in32_tt j = 0; j < layer->level_count; j++) {
             struct mirax_level *level = layer->levels[j];
             if (level_to_delete->id == level->id) {
                 level_id = j;
@@ -538,7 +538,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
                                      const char *value, const char *replacement, int32_t size) {
 
     // iterate through every data file
-    for (int i = 0; i < length; i++) {
+    for (int32_t i = 0; i < length; i++) {
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
@@ -575,7 +575,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
                                  const char *var) {
 
     // iterate through every data file
-    for (int i = 0; i < length; i++) {
+    for (int32_t i = 0; i < length; i++) {
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
@@ -748,7 +748,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     return result;
 }
 
-int is_mirax(const char *filename) {
+int32_t is_mirax(const char *filename) {
     const char *ext = get_filename_ext(filename);
 
     if (strcmp(ext, MRXS_EXT) == 0) {

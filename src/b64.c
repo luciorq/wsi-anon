@@ -30,7 +30,7 @@
 #include "b64.h"
 
 // The number of buffers we need
-int bufc = 0;
+int32_t bufc = 0;
 
 unsigned char *b64_buf_malloc() {
     unsigned char *buf = b64_malloc(B64_BUFFER_SIZE);

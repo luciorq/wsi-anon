@@ -63,7 +63,7 @@ uint64_t _swap_uint64(uint64_t value);
 
 char *skip_first_and_last_char(char *value);
 
-int count_contains(const char *str1, const char *str2);
+int32_t count_contains(const char *str1, const char *str2);
 
 int32_t bytes_to_int(unsigned char *buffer, int32_t size);
 

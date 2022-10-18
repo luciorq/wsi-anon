@@ -186,7 +186,7 @@ const char *get_string_between_delimiters(const char *buffer, const char *delimi
 
 void remove_leading_spaces(char *str) {
     char *p = str;
-    int l = strlen(p);
+    int32_t l = strlen(p);
 
     while (isspace(p[l - 1]))
         p[--l] = 0;
@@ -235,7 +235,7 @@ const char *get_filename_from_path(const char *path) {
 }
 
 const char *int32_to_str(int32_t integer) {
-    int length = snprintf(NULL, 0, "%d", integer);
+    int32_t length = snprintf(NULL, 0, "%d", integer);
     char *str = (char *)malloc(length + 1);
     snprintf(str, length + 1, "%d", integer);
     return str;
@@ -273,7 +273,7 @@ const char *add_equals_sign(const char *str1, const char *str2) {
 
 // function to check if str1 contains str2
 bool contains(const char *str1, const char *str2) {
-    int i = 0, j = 0;
+    int32_t i = 0, j = 0;
 
     while (str1[i] != '\0') {
         if (str1[i] == str2[j]) {
@@ -292,8 +292,8 @@ bool contains(const char *str1, const char *str2) {
 }
 
 // function to check how many times str1 contains str2
-int count_contains(const char *str1, const char *str2) {
-    int i = 0, j = 0, count = 0;
+int32_t count_contains(const char *str1, const char *str2) {
+    int32_t i = 0, j = 0, count = 0;
 
     while (str1[i] != '\0') {
         if (str1[i] == str2[j]) {
@@ -411,7 +411,7 @@ int32_t copy_directory(const char *src, const char *dest) {
 // determine wether the operating system
 // is big or little endian
 bool is_system_big_endian() {
-    int n = 1;
+    int32_t n = 1;
     if (*(char *)&n == 1) {
         return true;
     }

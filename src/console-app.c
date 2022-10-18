@@ -17,7 +17,7 @@ void print_help_message() {
         "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
 
-int main(int argc, char *argv[]) {
+int32_t main(int32_t argc, char *argv[]) {
     bool only_check = false;
     bool keep_macro_image = false;
     bool disable_unlinking = false;
