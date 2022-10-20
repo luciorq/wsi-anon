@@ -32,13 +32,15 @@ Development (Testing and code checks):
 
 ### Native Target
 
+#### Under Linux
+
 To build the shared library with command line interface simply run
 
 ```bash
 make
 ```
 
-This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `/bin/`.
+This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `/bin/`. Note that this will use the default Makefile.
 
 To build the console application in debug mode type
 
@@ -47,6 +49,14 @@ make console-app-debug
 ```
 
 and run with `gdb -args wsi-anon-dbg.out "/path/to/wsi.tif"` afterwards.
+
+#### Under Windows
+
+To build the shared library under windows with command line interface simply run
+
+```bash
+mingw32-make -f MakefileWin.mk
+```
 
 ### Web Assembly Target
 
