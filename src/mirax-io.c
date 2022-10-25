@@ -355,13 +355,6 @@ const char *duplicate_mirax_filedata(const char *filename, const char *new_label
     }
     const char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
 
-    if (file_exists(new_filename)) {
-        fprintf(stderr, "Error: File with stated filename [%s] already exists.\
-            Remove file or set label name.\n",
-                new_filename);
-        return NULL;
-    }
-
     int32_t copy_result = copy_file_v2(filename, new_filename);
     // we copy the file in our current directory
     if (copy_result != 0) {
@@ -640,6 +633,13 @@ int32_t wipe_delete_unlink(const char *path, struct ini_file *ini, const char *i
         unlink_level(ini, level, mirax_file);
     }
     return 1;
+}
+
+char *strndup(const char *s1, size_t n) {
+    char *copy = (char *)malloc(n + 1);
+    memcpy(copy, s1, n);
+    copy[n] = '\0';
+    return copy;
 }
 
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,

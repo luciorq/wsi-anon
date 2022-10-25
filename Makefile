@@ -10,7 +10,6 @@ CC       = gcc
 CFLAGS   = -Wall -I. -O2
 CFLAGS_DEBUG = -g -ggdb -O0 -Wall
 
-LINKER   = gcc
 LFLAGS   = -Wall -I.
 
 EMCC 	 = emcc
@@ -49,7 +48,7 @@ console-app: $(BINDIR)/$(CONSOLE_TARGET)
 	@echo "Building console app "$<
 
 $(BINDIR)/$(CONSOLE_TARGET): makedirs $(OBJECTS)
-	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@$(CC) $(OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
@@ -67,7 +66,7 @@ tests: makedirs
 console-app-debug: makedirs $(BINDIR)/$(CONSOLE_DBG_TARGET)
 
 $(BINDIR)/$(CONSOLE_DBG_TARGET): makedirs $(OBJECTS_DBG)
-	@$(LINKER) $(OBJECTS_DBG) $(LFLAGS) -o $@
+	@$(CC) $(OBJECTS_DBG) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
 $(OBJECTS_DBG): $(OBJDIR)/debug/%.o : $(SRCDIR)/%.c

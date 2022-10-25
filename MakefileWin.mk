@@ -1,24 +1,54 @@
 #
-# Test Makefile to run under Windows
+# Makefile to run under Windows
 #
 
-GCC = gcc
+# directories
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
 
+# final target
+CONSOLE_TARGET := console-app
+
+# list files
+SOURCEFILES = $(filter-out $(SRC_DIR)/js-file.c $(SRC_DIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRC_DIR)/*.c))
+OBJECTFILES := $(SOURCEFILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+# flags
+GCC = gcc
 C_FLAG = -c
 O_FLAG = -o
+F_FLAG = -f
+R_FLAG = -r
+L_FLAGS   = -Wall -I.
+RM_DIR = rd /s /q
+RM = rm
 
-SRCDIR = src
+$(CONSOLE_TARGET): $(BIN_DIR)/$(CONSOLE_TARGET)
 
-SOURCES = $(wildcard $(SRCDIR)/*.c)
+$(BIN_DIR)/$(CONSOLE_TARGET): makedirs $(OBJECTFILES)
+	@$(GCC) $(OBJECTFILES) $(L_FLAGS) $(O_FLAG) $@
+	@echo Linking complete!
 
-console-app:	console-app.o wsi-anonymizer.o
-				$(GCC) $(O_FLAG) console-app.o wsi-anonymizer.o
+$(OBJECTFILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
+	@$(GCC) $(C_FLAG) $< $(O_FLAG) $@
+	@echo Compiling $< ...
 
-console-app.o:	src/console-app.c
-				$(GCC) $(C_FLAG) src/console-app.c
+makedirs: 
+	@if exist $(OBJ_DIR) $(RM_DIR) $(OBJ_DIR)
+	@if exist $(BIN_DIR) $(RM_DIR) $(BIN_DIR)
+	@mkdir $(OBJ_DIR)
+	@mkdir $(BIN_DIR)
 
-wsi-anonymizer.o:	src/wsi-anonymizer.c src/wsi-anonymizer.h
-					$(GCC) $(C_FLAG) src/wsi-anonymizer.c
+.PHONY: clean
 
 clean:
-	rm -f console-app.o wsi-anonymizer.o
+	@$(RM_DIR) $(OBJ_DIR)
+	@$(RM_DIR) $(BIN_DIR)
+	@echo Cleanup complete!
+
+# Done:
+# - corrected tabulator
+# - support anonymization of mirax, aperio
+# - force overwriting on windows
+# - correct makefile for windows

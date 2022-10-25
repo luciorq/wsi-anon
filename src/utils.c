@@ -354,8 +354,12 @@ int32_t copy_file_v2(const char *src, const char *dest) {
     snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #elif _WIN32
-    // we create the copy command for win
-    snprintf(command, sizeof command, "xcopy \"%s\" \"%s\"%c", src, dest, '\0');
+    // we create the copy command for win32
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
+#elif _WIN64
+    // we create the copy command for win64
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #else
     // todo: implement for mac
@@ -399,8 +403,12 @@ int32_t copy_directory(const char *src, const char *dest) {
     snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #elif _WIN32
-    // we create the copy command for win
-    snprintf(command, sizeof command, "xcopy \"%s\" \"%s\" /s /e%c", src, dest, '\0');
+    // we create the copy command for win32
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\" /s /e%c", src, dest, '\0');
+    return system(command);
+#elif _WIN64
+    // we create the copy command for win64
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\" /s /e%c", src, dest, '\0');
     return system(command);
 #else
     // todo: implement for mac

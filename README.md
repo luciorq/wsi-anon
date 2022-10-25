@@ -52,7 +52,7 @@ and run with `gdb -args wsi-anon-dbg.out "/path/to/wsi.tif"` afterwards.
 
 #### Under Windows
 
-To build the shared library under windows with command line interface simply run
+To build an executable file under windows run
 
 ```bash
 mingw32-make -f MakefileWin.mk
