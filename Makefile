@@ -1,3 +1,7 @@
+#
+# Default Makefile
+#
+
 CONSOLE_TARGET   = wsi-anon.out
 WASM_TARGET = wsi-anon.js
 CONSOLE_DBG_TARGET = wsi-anon-dbg.out

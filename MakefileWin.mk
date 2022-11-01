@@ -1,11 +1,11 @@
 #
-# Makefile to run under Windows
+# Makefile Windows
 #
 
 # directories
 SRC_DIR = src
 OBJ_DIR = obj
-BIN_DIR = bin
+EXE_DIR = exe
 
 # final target
 CONSOLE_TARGET := console-app
@@ -24,9 +24,9 @@ L_FLAGS   = -Wall -I.
 RM_DIR = rd /s /q
 RM = rm
 
-$(CONSOLE_TARGET): $(BIN_DIR)/$(CONSOLE_TARGET)
+$(CONSOLE_TARGET): $(EXE_DIR)/$(CONSOLE_TARGET)
 
-$(BIN_DIR)/$(CONSOLE_TARGET): makedirs $(OBJECTFILES)
+$(EXE_DIR)/$(CONSOLE_TARGET): makedirs $(OBJECTFILES)
 	@$(GCC) $(OBJECTFILES) $(L_FLAGS) $(O_FLAG) $@
 	@echo Linking complete!
 
@@ -36,19 +36,13 @@ $(OBJECTFILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 
 makedirs: 
 	@if exist $(OBJ_DIR) $(RM_DIR) $(OBJ_DIR)
-	@if exist $(BIN_DIR) $(RM_DIR) $(BIN_DIR)
+	@if exist $(EXE_DIR) $(RM_DIR) $(EXE_DIR)
 	@mkdir $(OBJ_DIR)
-	@mkdir $(BIN_DIR)
+	@mkdir $(EXE_DIR)
 
 .PHONY: clean
 
 clean:
 	@$(RM_DIR) $(OBJ_DIR)
-	@$(RM_DIR) $(BIN_DIR)
+	@$(RM_DIR) $(EXE_DIR)
 	@echo Cleanup complete!
-
-# Done:
-# - corrected tabulator
-# - support anonymization of mirax, aperio
-# - force overwriting on windows
-# - correct makefile for windows

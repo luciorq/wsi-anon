@@ -138,16 +138,16 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(file_t *fp, int64_t *dir_offset,
-                                           int64_t *in_pointer_offset,
+struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
+                                           uint64_t *in_pointer_offset,
                                            struct tiff_directory *first_directory, bool big_tiff,
                                            bool ndpi, bool big_endian) {
-    int64_t offset = *dir_offset;
+    uint64_t offset = *dir_offset;
     *dir_offset = 0;
 
     // seek to directory offset
     if (file_seek(fp, offset, SEEK_SET) != 0) {
-        fprintf(stderr, "Error: seeking to offset failed\n");
+        fprintf(stderr, "Error: seeking to offset failed\n"); // HIER 1
         return NULL;
     }
 
@@ -200,7 +200,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, int64_t *dir_offset,
             fix_byte_order(&entry->offset, sizeof(entry->offset), 1, big_endian);
         } else {
             // non big tiff offset only reserves 4 bytes
-            int32_t offset32;
+            uint32_t offset32;
             memcpy(&offset32, value, 4);
             fix_byte_order(&offset32, sizeof(offset32), 1, big_endian);
             entry->offset = offset32;
@@ -227,7 +227,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, int64_t *dir_offset,
     }
 
     // get the directory offset of the successor
-    int64_t next_dir_offset = file_tell(fp) + 8;
+    uint64_t next_dir_offset = file_tell(fp) + 8;
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
@@ -272,15 +272,15 @@ int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
 struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_endian) {
     // get directory offset; file stream pointer must be located just
     // before the directory offset
-    int64_t in_pointer_offset = file_tell(fp);
-    int64_t diroff = read_uint(fp, 4, big_endian);
+    uint64_t in_pointer_offset = file_tell(fp);
+    uint64_t diroff = read_uint(fp, 4, big_endian);
     // reading the initial directory
     struct tiff_directory *prev_dir = NULL;
-    struct tiff_directory *dir =
-        read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
+    struct tiff_directory *dir = read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir,
+                                                     big_tiff, ndpi, big_endian); // HIER AUSGELÖST
 
     if (dir == NULL) {
-        fprintf(stderr, "Error: Failed reading directory.\n");
+        fprintf(stderr, "Error: Failed reading directory.\n"); // HIER 2
         return NULL;
     }
 
@@ -293,7 +293,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
 
     // when the directory offset is 0 we reached the end of the tiff file
     while (diroff != 0) {
-        int64_t current_in_pointer_offset = file_tell(fp) - 8;
+        uint64_t current_in_pointer_offset = file_tell(fp) - 8;
         struct tiff_directory *current_dir = read_tiff_directory(
             fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
@@ -505,7 +505,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     }
 
     file_t *fp;
-    fp = file_open(*filename, "r+");
+    fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;
@@ -524,7 +524,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     file = read_tiff_file(fp, big_tiff, true, big_endian);
 
     // find the macro directory
-    int dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
+    int32_t dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
     if (dir_count == -1) {
         fprintf(stderr, "Error: No macro directory.\n");
         free_tiff_file(file);
@@ -706,7 +706,7 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
     // macro image for gt450 needs to be treated differently because it is JPEG encoded.
     // therefore we need to convert it to LZW compression
     struct tiff_directory dir = file->directories[directory];
-    for (int i = 0; i < dir.count; i++) {
+    for (int32_t i = 0; i < dir.count; i++) {
         struct tiff_entry entry = dir.entries[i];
         if (entry.tag == TIFFTAG_COMPRESSION) {
             if (file_seek(fp, entry.start + 12, SEEK_SET)) {
@@ -734,7 +734,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     file_t *fp;
-    fp = file_open(*filename, "r+");
+    fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;
@@ -819,7 +819,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 }
 
 int32_t is_hamamatsu(const char *filename) {
-    int result = 0;
+    int32_t result = 0;
     const char *ext = get_filename_ext(filename);
 
     // check for valid file extension
@@ -828,7 +828,7 @@ int32_t is_hamamatsu(const char *filename) {
     }
 
     // check if ndpi tiff tags are present
-    file_t *fp = file_open(filename, "r+");
+    file_t *fp = file_open(filename, "rb+");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
@@ -847,7 +847,7 @@ int32_t is_aperio(const char *filename) {
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+");
+    fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -894,7 +894,7 @@ int32_t is_ventana(const char *filename) {
         return result;
     }
 
-    file_t *fp = file_open(filename, "r+");
+    file_t *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -996,8 +996,8 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
     return 0;
 }
 
-int wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_t directory,
-                                      bool big_endian, bool disable_unlinking) {
+int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_t directory,
+                                          bool big_endian, bool disable_unlinking) {
 
     struct tiff_directory dir = file->directories[directory];
 
@@ -1062,8 +1062,8 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
 
                 // checks if attribute occurs more than once in directory
                 if (contains(result, VENTANA_BUILDDATE1_ATT)) {
-                    int count = count_contains(result, VENTANA_BUILDDATE1_ATT);
-                    for (int i = 0; i <= count; i++) {
+                    int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
+                    for (int32_t i = 0; i <= count; i++) {
                         const char *value =
                             get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
                         char *replacement = anonymize_string(" ", strlen(value));
@@ -1118,7 +1118,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
         *filename = duplicate_file(*filename, new_label_name, is_bif ? DOT_BIF : DOT_TIF);
     }
 
-    file_t *fp = file_open(*filename, "r+");
+    file_t *fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;

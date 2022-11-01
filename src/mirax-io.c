@@ -132,7 +132,7 @@ struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *l
         struct mirax_layer *layer = layers[i];
         // printf("layer name %s\n", layer->layer_name);
         if (strcmp(layer->layer_name, layer_name) == 0) {
-            for (int j = 0; j < layer->level_count; j++) {
+            for (int32_t j = 0; j < layer->level_count; j++) {
                 struct mirax_level *level = layer->levels[j];
                 // printf("level name %s\n", level->name);
                 if (strcmp(level->name, level_name) == 0) {
@@ -166,7 +166,7 @@ bool assert_value(file_t *fp, int32_t value) {
 // read file number, position and size frrom index dat
 int32_t *read_data_location(const char *filename, int32_t record, int32_t **position,
                             int32_t **size) {
-    file_t *fp = file_open(filename, "r");
+    file_t *fp = file_open(filename, "r+w");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open file stream.\n");
@@ -412,10 +412,10 @@ struct mirax_layer *delete_level_by_id(struct mirax_layer *layer, int32_t level_
 int32_t delete_level_from_mirax_file(struct mirax_file *mirax_file,
                                      struct mirax_level *level_to_delete) {
     // find the level id that we want to delete
-    for (int i = 0; i < mirax_file->count_layers; i++) {
+    for (int32_t i = 0; i < mirax_file->count_layers; i++) {
         int32_t level_id = -1;
         struct mirax_layer *layer = mirax_file->layers[i];
-        for (int j = 0; j < layer->level_count; j++) {
+        for (int32_t j = 0; j < layer->level_count; j++) {
             struct mirax_level *level = layer->levels[j];
             if (level_to_delete->id == level->id) {
                 level_id = j;
@@ -479,7 +479,7 @@ void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
 
     int32_t layer_id = level_to_delete->layer_id;
 
-    for (int i = 0; i < mirax_file->layers[layer_id]->level_count; i++) {
+    for (int32_t i = 0; i < mirax_file->layers[layer_id]->level_count; i++) {
         if (strcmp(mirax_file->layers[layer_id]->levels[i]->name, level_to_delete->name) == 0) {
             // printf("%d\n", i);
             restructure_levels_in_file(ini, i, layer_id, mirax_file);
@@ -531,7 +531,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
                                      const char *value, const char *replacement, int32_t size) {
 
     // iterate through every data file
-    for (int i = 0; i < length; i++) {
+    for (int32_t i = 0; i < length; i++) {
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
@@ -568,7 +568,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
                                  const char *var) {
 
     // iterate through every data file
-    for (int i = 0; i < length; i++) {
+    for (int32_t i = 0; i < length; i++) {
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
@@ -718,6 +718,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         }
 
         // remove metadata in slidedata ini
+        printf("Removing metadata in Slidedat.ini...\n");
         anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, "X");
         anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, "X");
         anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, "X");
@@ -748,7 +749,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     return result;
 }
 
-int is_mirax(const char *filename) {
+int32_t is_mirax(const char *filename) {
     const char *ext = get_filename_ext(filename);
 
     if (strcmp(ext, MRXS_EXT) == 0) {

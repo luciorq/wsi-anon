@@ -58,7 +58,7 @@ int32_t is_isyntax(const char *filename) {
         return 0;
     } else {
         int32_t result = 0;
-        file_t *fp = file_open(filename, "r");
+        file_t *fp = file_open(filename, "rb+");
 
         // if file could not be opened
         if (fp == NULL) {
@@ -375,7 +375,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, DOT_ISYNTAX);
     }
 
-    file_t *fp = file_open(*filename, "r+");
+    file_t *fp = file_open(*filename, "rb+");
 
     // if file could not be opened
     if (fp == NULL) {

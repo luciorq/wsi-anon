@@ -74,7 +74,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
     groups[count_groups].start_line = line;
 
     // populate the ini groups with associated entries
-    for (int i = 0; i < count_groups; i++) {
+    for (int32_t i = 0; i < count_groups; i++) {
         struct ini_group current_group = groups[i];
         // printf("-group: [%s]\n", current_group.group_identifier);
         struct ini_group next_group = groups[i + 1];
@@ -190,10 +190,10 @@ void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer
 // modify structure of groups in ini_file
 void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *current_level,
                                 struct mirax_level *next_level) {
-    for (int i = 0; i < ini->group_count; i++) {
+    for (int32_t i = 0; i < ini->group_count; i++) {
         struct ini_group *group = &ini->groups[i];
         if (strcmp(group->group_identifier, "HIERARCHICAL") == 0) {
-            for (int j = 0; j < group->entry_count; j++) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
 
                 struct ini_entry *entry = &group->entries[j];
 
@@ -215,10 +215,10 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
 
 const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
                                               const char *key, const char *c) {
-    for (int i = 0; i < ini_file->group_count; i++) {
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int j = 0; j < group->entry_count; j++) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if (strcmp(entry->key, key) == 0) {
                     const char *value = anonymize_string(c, strlen((*entry).value));
@@ -254,10 +254,10 @@ struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, int32_t
 void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name,
                                     const char *key) {
     int32_t c_group = -1, c_entry = -1;
-    for (int i = 0; i < ini_file->group_count; i++) {
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int j = 0; j < group->entry_count; j++) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if (strcmp(entry->key, key) == 0) {
                     c_group = i;
@@ -282,10 +282,10 @@ void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group
 // decrement a count value as entry value by a given group and entry key
 void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
                                        const char *key) {
-    for (int i = 0; i < ini_file->group_count; i++) {
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int j = 0; j < group->entry_count; j++) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if (strcmp(entry->key, key) == 0) {
                     int32_t new_count;
@@ -310,12 +310,12 @@ int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *
         return -1;
     }
 
-    for (int i = 0; i < ini_file->group_count; i++) {
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group group = ini_file->groups[i];
         const char *group_line = add_square_brackets(group.group_identifier);
         file_printf(fp, "%s\n", group_line);
 
-        for (int j = 0; j < group.entry_count; j++) {
+        for (int32_t j = 0; j < group.entry_count; j++) {
             struct ini_entry entry = group.entries[j];
             const char *entry_line = add_equals_sign(entry.key, entry.value);
             file_printf(fp, "%s\n", entry_line);

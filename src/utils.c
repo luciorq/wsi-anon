@@ -426,16 +426,16 @@ bool is_system_big_endian() {
     return false;
 }
 
-// swap bytes of unsigned interger 16 bytes
+// swap bytes of unsigned integer 16 bits
 uint16_t _swap_uint16(uint16_t value) { return (value << 8) | (value >> 8); }
 
-// swap bytes of unsigned interger 32 bytes
+// swap bytes of unsigned integer 32 bits
 uint32_t _swap_uint32(uint32_t value) {
     value = ((value << 8) & 0xFF00FF00) | ((value >> 8) & 0xFF00FF);
     return (value << 16) | (value >> 16);
 }
 
-// swap bytes of unsigned interger 32 bytes
+// swap bytes of unsigned integer 64 bits
 uint64_t _swap_uint64(uint64_t value) {
     value = ((value << 8) & 0xFF00FF00FF00FF00ULL) | ((value >> 8) & 0x00FF00FF00FF00FFULL);
     value = ((value << 16) & 0xFFFF0000FFFF0000ULL) | ((value >> 16) & 0x0000FFFF0000FFFFULL);
