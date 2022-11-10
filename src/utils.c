@@ -367,35 +367,6 @@ int32_t copy_file_v2(const char *src, const char *dest) {
 #endif
 }
 
-int32_t copy_file(const char *src, const char *dest) {
-    file_t *source, *target;
-
-    source = file_open(src, "r");
-
-    if (source == NULL) {
-        fprintf(stderr, "Could not open source file.\n");
-        return -1;
-    }
-
-    target = file_open(dest, "w");
-
-    if (target == NULL) {
-        file_close(source);
-        fprintf(stderr, "Could not open destination file.\n");
-        return -1;
-    }
-
-    char ch;
-    while ((ch = file_getc(source)) != EOF) {
-        file_putc(ch, target);
-    }
-
-    file_close(source);
-    file_close(target);
-
-    return 0;
-}
-
 int32_t copy_directory(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 15];
 #ifdef __linux__

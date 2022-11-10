@@ -58,6 +58,8 @@ To build an executable file under windows run
 mingw32-make -f MakefileWin.mk
 ```
 
+and run with `exe\console-app.exe \path\to\wsi.tif` afterwards.
+
 ### Web Assembly Target
 
 The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. **This is currently experimental.**

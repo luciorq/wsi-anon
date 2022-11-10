@@ -147,7 +147,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 
     // seek to directory offset
     if (file_seek(fp, offset, SEEK_SET) != 0) {
-        fprintf(stderr, "Error: seeking to offset failed\n"); // HIER 1
+        fprintf(stderr, "Error: seeking to offset failed\n");
         return NULL;
     }
 
@@ -276,11 +276,11 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     uint64_t diroff = read_uint(fp, 4, big_endian);
     // reading the initial directory
     struct tiff_directory *prev_dir = NULL;
-    struct tiff_directory *dir = read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir,
-                                                     big_tiff, ndpi, big_endian); // HIER AUSGELÖST
+    struct tiff_directory *dir =
+        read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
     if (dir == NULL) {
-        fprintf(stderr, "Error: Failed reading directory.\n"); // HIER 2
+        fprintf(stderr, "Error: Failed reading directory.\n");
         return NULL;
     }
 
@@ -1092,8 +1092,11 @@ int32_t anonymize_ventana_metadata(file_t *fp, struct tiff_file *file) {
 
                 // alters XML data of XMP tag
                 if (rewrite) {
+                    strcpy(buffer, result);
                     file_seek(fp, entry.offset, SEEK_SET);
-                    if (!file_write(result, entry_size, entry.count, fp)) {
+                    if (!file_write(buffer, entry_size, entry.count,
+                                    fp)) { // HERE:  file write returns something different under
+                                           // windows than under linux
                         fprintf(stderr, "Error: changing XML Data in XMP Tag failed.\n");
                         return -1;
                     }

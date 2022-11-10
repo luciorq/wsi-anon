@@ -97,7 +97,7 @@ int32_t file_getc(file_t *stream) {
     return c;
 }
 
-int32_t file_seek(file_t *stream, long offset, int32_t origin) {
+int64_t file_seek(file_t *stream, int64_t offset, int32_t origin) {
     long new_offset = 0;
     if (origin == SEEK_SET) {
         new_offset = offset;
@@ -145,7 +145,7 @@ int32_t file_printf(file_t *stream, const char *format, const char *value) {
     return buffer_size;
 }
 
-uint64_t file_tell(file_t *stream) { return stream->offset; }
+int64_t file_tell(file_t *stream) { return stream->offset; }
 
 int32_t file_close(file_t *stream) {
     free(stream->mode);
