@@ -8,7 +8,7 @@ OBJ_DIR = obj
 EXE_DIR = exe
 
 # final target
-CONSOLE_TARGET := console-app
+CONSOLE_TARGET := wsi-anon
 
 # list files
 SOURCEFILES = $(filter-out $(SRC_DIR)/js-file.c $(SRC_DIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRC_DIR)/*.c))
@@ -24,7 +24,7 @@ L_FLAGS   = -Wall -I.
 RM_DIR = rd /s /q
 RM = rm
 
-$(CONSOLE_TARGET): $(EXE_DIR)/$(CONSOLE_TARGET)
+console-app: $(EXE_DIR)/$(CONSOLE_TARGET)
 
 $(EXE_DIR)/$(CONSOLE_TARGET): makedirs $(OBJECTFILES)
 	@$(GCC) $(OBJECTFILES) $(L_FLAGS) $(O_FLAG) $@

@@ -58,7 +58,7 @@ To build an executable file under windows run
 mingw32-make -f MakefileWin.mk
 ```
 
-and run with `exe\console-app.exe \path\to\wsi.tif` afterwards.
+and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
 
 ### Web Assembly Target
 
