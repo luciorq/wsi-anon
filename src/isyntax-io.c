@@ -329,7 +329,8 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         */
 
         // alloc with height and width and fill with 255 for a white image
-        unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
+        unsigned char *white_image =
+            (unsigned char *)malloc((height * width) * sizeof(unsigned char));
         memset(white_image, 255, height * width);
 
         // create white jpg image
@@ -339,7 +340,6 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
         // encode new image data and check if string is longer than original string, replace old
         // base64-encoded string afterwards
-        //char *new_image_data = b64_encode(jpeg, strlen(image_data));
         char *new_image_data = b64_encode(jpeg, len);
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';

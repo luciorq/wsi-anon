@@ -16,6 +16,10 @@ Currently supported formats:
 
 The library is implemented and tested under Linux (Ubuntu 20.04). 
 
+## Publications
+
+The design and implementation is described in a technical note (currently as a preprint): [Anonymization of Whole Slide Images in Histopathology for Research and Education](https://arxiv.org/abs/2211.06103)
+
 ## Requirements
 
 * install `build-essential`
