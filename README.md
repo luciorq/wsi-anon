@@ -23,6 +23,7 @@ The design and implementation is described in a technical note (currently as a p
 ## Requirements
 
 * install `build-essential`
+* install `Mingw32` (only required when running under windows)
 
 WebAssembly:
 * install `emscripten` (only required for Web Assembly target)

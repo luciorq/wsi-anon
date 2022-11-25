@@ -355,6 +355,10 @@ const char *duplicate_mirax_filedata(const char *filename, const char *new_label
     }
     const char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
 
+    if (file_exists(new_filename)) {
+        return NULL;
+    }
+
     int32_t copy_result = copy_file_v2(filename, new_filename);
     // we copy the file in our current directory
     if (copy_result != 0) {
@@ -651,7 +655,8 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         path = duplicate_mirax_filedata(*filename, new_label_name, DOT_MRXS_EXT);
 
         if (path == NULL || filename == NULL) {
-            fprintf(stderr, "Error: File already exists.\n");
+            fprintf(stderr, "Error: File with stated filename already exists. Remove file or set "
+                            "label name.\n");
             return -1;
         }
         *filename = path;
