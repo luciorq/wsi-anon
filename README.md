@@ -23,6 +23,7 @@ The design and implementation is described in a technical note (currently as a p
 ## Requirements
 
 * install `build-essential`
+* install `Mingw32` (only required when running under windows)
 
 WebAssembly:
 * install `emscripten` (only required for Web Assembly target)
@@ -36,13 +37,15 @@ Development (Testing and code checks):
 
 ### Native Target
 
+#### Under Linux
+
 To build the shared library with command line interface simply run
 
 ```bash
 make
 ```
 
-This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `/bin/`.
+This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `/bin/`. Note that this will use the default Makefile.
 
 To build the console application in debug mode type
 
@@ -51,6 +54,16 @@ make console-app-debug
 ```
 
 and run with `gdb -args wsi-anon-dbg.out "/path/to/wsi.tif"` afterwards.
+
+#### Under Windows
+
+To build an executable file under windows run
+
+```bash
+mingw32-make -f MakefileWin.mk
+```
+
+and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
 
 ### Web Assembly Target
 

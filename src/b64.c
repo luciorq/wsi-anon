@@ -30,7 +30,7 @@
 #include "b64.h"
 
 // The number of buffers we need
-int bufc = 0;
+int32_t bufc = 0;
 
 unsigned char *b64_buf_malloc() {
     unsigned char *buf = b64_malloc(B64_BUFFER_SIZE);
@@ -177,7 +177,7 @@ unsigned char *b64_decode_ex(const char *src, size_t len, size_t *decsize) {
 }
 
 unsigned char *b64_encode(const unsigned char *src, size_t len) {
-    int32_t byte_length = 0;
+    int8_t byte_length = 0;
     unsigned char *encoded_buffer = NULL;
     int8_t num_of_chars_to_enc = 3;
     int8_t sections = 4;

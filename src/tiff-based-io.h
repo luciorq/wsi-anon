@@ -3,6 +3,7 @@
 
 #include "defines.h"
 #include "utils.h"
+#include <inttypes.h>
 
 #define min(a, b)                                                                                  \
     ({                                                                                             \

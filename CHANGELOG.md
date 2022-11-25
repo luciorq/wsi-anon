@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.9
+
+- implement windows support for all data formats
+
 ## 0.3.8 
 
 - full isyntax support
