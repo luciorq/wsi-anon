@@ -60,7 +60,7 @@ const char *concat_wildcard_string_string(const char *wildcard_str, const char *
 // retrieve the file structure of the mirax file from the
 // Slidedat.ini file
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count) {
-    // initialize mirrax file and array of associated layers
+    // initialize mirax file and array of associated layers
     struct mirax_file *mirax_file = (struct mirax_file *)malloc(sizeof(struct mirax_file));
 
     struct mirax_layer **layers =
@@ -166,7 +166,7 @@ bool assert_value(file_t *fp, int32_t value) {
 // read file number, position and size frrom index dat
 int32_t *read_data_location(const char *filename, int32_t record, int32_t **position,
                             int32_t **size) {
-    file_t *fp = file_open(filename, "r");
+    file_t *fp = file_open(filename, "r+w");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open file stream.\n");
@@ -356,9 +356,6 @@ const char *duplicate_mirax_filedata(const char *filename, const char *new_label
     const char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
 
     if (file_exists(new_filename)) {
-        fprintf(stderr, "Error: File with stated filename [%s] already exists.\
-            Remove file or set label name.\n",
-                new_filename);
         return NULL;
     }
 
@@ -419,10 +416,10 @@ struct mirax_layer *delete_level_by_id(struct mirax_layer *layer, int32_t level_
 int32_t delete_level_from_mirax_file(struct mirax_file *mirax_file,
                                      struct mirax_level *level_to_delete) {
     // find the level id that we want to delete
-    for (int i = 0; i < mirax_file->count_layers; i++) {
+    for (int32_t i = 0; i < mirax_file->count_layers; i++) {
         int32_t level_id = -1;
         struct mirax_layer *layer = mirax_file->layers[i];
-        for (in32_tt j = 0; j < layer->level_count; j++) {
+        for (int32_t j = 0; j < layer->level_count; j++) {
             struct mirax_level *level = layer->levels[j];
             if (level_to_delete->id == level->id) {
                 level_id = j;
@@ -486,7 +483,7 @@ void unlink_level(struct ini_file *ini, struct mirax_level *level_to_delete,
 
     int32_t layer_id = level_to_delete->layer_id;
 
-    for (int i = 0; i < mirax_file->layers[layer_id]->level_count; i++) {
+    for (int32_t i = 0; i < mirax_file->layers[layer_id]->level_count; i++) {
         if (strcmp(mirax_file->layers[layer_id]->levels[i]->name, level_to_delete->name) == 0) {
             // printf("%d\n", i);
             restructure_levels_in_file(ini, i, layer_id, mirax_file);
@@ -642,7 +639,19 @@ int32_t wipe_delete_unlink(const char *path, struct ini_file *ini, const char *i
     return 1;
 }
 
+char *strndup(const char *s1, size_t n) {
+    char *copy = (char *)malloc(n + 1);
+    memcpy(copy, s1, n);
+    copy[n] = '\0';
+    return copy;
+}
+
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool do_inplace) {
+    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
+}
+
+int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image,
                      bool disable_unlinking, bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
     const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
@@ -651,7 +660,8 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         path = duplicate_mirax_filedata(*filename, new_label_name, DOT_MRXS_EXT);
 
         if (path == NULL || filename == NULL) {
-            fprintf(stderr, "Error: File already exists.\n");
+            fprintf(stderr, "Error: File with stated filename already exists. Remove file or set "
+                            "label name.\n");
             return -1;
         }
         *filename = path;
@@ -718,6 +728,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         }
 
         // remove metadata in slidedata ini
+        printf("Removing metadata in Slidedat.ini...\n");
         anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, "X");
         anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, "X");
         anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, "X");
@@ -748,7 +759,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     return result;
 }
 
-int32_t is_mirax(const char *filename) {
+int32_t is_format(const char *filename) {
     const char *ext = get_filename_ext(filename);
 
     if (strcmp(ext, MRXS_EXT) == 0) {

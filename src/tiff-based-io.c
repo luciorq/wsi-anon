@@ -138,11 +138,11 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(file_t *fp, int64_t *dir_offset,
-                                           int64_t *in_pointer_offset,
+struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
+                                           uint64_t *in_pointer_offset,
                                            struct tiff_directory *first_directory, bool big_tiff,
                                            bool ndpi, bool big_endian) {
-    int64_t offset = *dir_offset;
+    uint64_t offset = *dir_offset;
     *dir_offset = 0;
 
     // seek to directory offset
@@ -200,7 +200,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, int64_t *dir_offset,
             fix_byte_order(&entry->offset, sizeof(entry->offset), 1, big_endian);
         } else {
             // non big tiff offset only reserves 4 bytes
-            int32_t offset32;
+            uint32_t offset32;
             memcpy(&offset32, value, 4);
             fix_byte_order(&offset32, sizeof(offset32), 1, big_endian);
             entry->offset = offset32;
@@ -227,7 +227,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, int64_t *dir_offset,
     }
 
     // get the directory offset of the successor
-    int64_t next_dir_offset = file_tell(fp) + 8;
+    uint64_t next_dir_offset = file_tell(fp) + 8;
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
@@ -272,8 +272,8 @@ int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
 struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_endian) {
     // get directory offset; file stream pointer must be located just
     // before the directory offset
-    int64_t in_pointer_offset = file_tell(fp);
-    int64_t diroff = read_uint(fp, 4, big_endian);
+    uint64_t in_pointer_offset = file_tell(fp);
+    uint64_t diroff = read_uint(fp, 4, big_endian);
     // reading the initial directory
     struct tiff_directory *prev_dir = NULL;
     struct tiff_directory *dir =
@@ -293,7 +293,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
 
     // when the directory offset is 0 we reached the end of the tiff file
     while (diroff != 0) {
-        int64_t current_in_pointer_offset = file_tell(fp) - 8;
+        uint64_t current_in_pointer_offset = file_tell(fp) - 8;
         struct tiff_directory *current_dir = read_tiff_directory(
             fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 

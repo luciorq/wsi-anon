@@ -354,42 +354,17 @@ int32_t copy_file_v2(const char *src, const char *dest) {
     snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #elif _WIN32
-    // we create the copy command for win
-    snprintf(command, sizeof command, "xcopy \"%s\" \"%s\"%c", src, dest, '\0');
+    // we create the copy command for win32
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
+#elif _WIN64
+    // we create the copy command for win64
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #else
     // todo: implement for mac
     return -1;
 #endif
-}
-
-int32_t copy_file(const char *src, const char *dest) {
-    file_t *source, *target;
-
-    source = file_open(src, "r");
-
-    if (source == NULL) {
-        fprintf(stderr, "Could not open source file.\n");
-        return -1;
-    }
-
-    target = file_open(dest, "w");
-
-    if (target == NULL) {
-        file_close(source);
-        fprintf(stderr, "Could not open destination file.\n");
-        return -1;
-    }
-
-    char ch;
-    while ((ch = file_getc(source)) != EOF) {
-        file_putc(ch, target);
-    }
-
-    file_close(source);
-    file_close(target);
-
-    return 0;
 }
 
 int32_t copy_directory(const char *src, const char *dest) {
@@ -399,8 +374,12 @@ int32_t copy_directory(const char *src, const char *dest) {
     snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #elif _WIN32
-    // we create the copy command for win
-    snprintf(command, sizeof command, "xcopy \"%s\" \"%s\" /s /e%c", src, dest, '\0');
+    // we create the copy command for win32
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\" /s /e%c", src, dest, '\0');
+    return system(command);
+#elif _WIN64
+    // we create the copy command for win64
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\" /s /e%c", src, dest, '\0');
     return system(command);
 #else
     // todo: implement for mac
@@ -418,16 +397,16 @@ bool is_system_big_endian() {
     return false;
 }
 
-// swap bytes of unsigned interger 16 bytes
+// swap bytes of unsigned integer 16 bits
 uint16_t _swap_uint16(uint16_t value) { return (value << 8) | (value >> 8); }
 
-// swap bytes of unsigned interger 32 bytes
+// swap bytes of unsigned integer 32 bits
 uint32_t _swap_uint32(uint32_t value) {
     value = ((value << 8) & 0xFF00FF00) | ((value >> 8) & 0xFF00FF);
     return (value << 16) | (value >> 16);
 }
 
-// swap bytes of unsigned interger 32 bytes
+// swap bytes of unsigned integer 64 bits
 uint64_t _swap_uint64(uint64_t value) {
     value = ((value << 8) & 0xFF00FF00FF00FF00ULL) | ((value >> 8) & 0x00FF00FF00FF00FFULL);
     value = ((value << 16) & 0xFFFF0000FFFF0000ULL) | ((value >> 16) & 0x0000FFFF0000FFFFULL);

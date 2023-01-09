@@ -44,7 +44,6 @@ int32_t is_format(const char *filename) {
     return (result == 1);
 }
 
-// ToDo: check how pass struct tiff_file *file to this function or reference it
 // removes all metadata
 int32_t remove_metadata(file_t *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
@@ -112,6 +111,11 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
         }
     }
     return 0;
+}
+
+int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool do_inplace) {
+    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
 }
 
 // anonymizes aperio file

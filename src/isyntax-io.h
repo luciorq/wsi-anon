@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "jpec.h"
 #include "utils.h"
+#include "controller.h"
 
 static const char ISYNTAX_EXT[] = "isyntax";
 static const char DOT_ISYNTAX[] = ".isyntax";
@@ -9,8 +10,6 @@ static const char DOT_ISYNTAX[] = ".isyntax";
 int32_t get_size_to_substring(file_t *fp, char *substring);
 
 int32_t file_contains_value(file_t *fp, char *value);
-
-int32_t is_isyntax(const char *filename);
 
 char *anonymize_value_of_attribute(char *buffer, char *attribute);
 

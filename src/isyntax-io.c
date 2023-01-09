@@ -49,7 +49,7 @@ int32_t file_contains_value(file_t *fp, char *value) {
 }
 
 // checks iSyntax file format
-int32_t is_isyntax(const char *filename) {
+int32_t is_format(const char *filename) {
 
     const char *ext = get_filename_ext(filename);
 
@@ -58,7 +58,7 @@ int32_t is_isyntax(const char *filename) {
         return 0;
     } else {
         int32_t result = 0;
-        file_t *fp = file_open(filename, "r");
+        file_t *fp = file_open(filename, "rb+");
 
         // if file could not be opened
         if (fp == NULL) {
@@ -181,8 +181,9 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 
     // alters iSyntax file
     if (rewrite) {
+        strcpy(buffer, result);
         file_seek(fp, 0, SEEK_SET);
-        if (!file_write(result, header_size, 1, fp)) {
+        if (!file_write(buffer, header_size, 1, fp)) {
             fprintf(stderr, "Error: changing XML Header failed.\n");
             free(buffer);
             return -1;
@@ -328,7 +329,8 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         */
 
         // alloc with height and width and fill with 255 for a white image
-        unsigned char *white_image = (unsigned char *)malloc(height * width);
+        unsigned char *white_image =
+            (unsigned char *)malloc((height * width) * sizeof(unsigned char));
         memset(white_image, 255, height * width);
 
         // create white jpg image
@@ -338,7 +340,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
         // encode new image data and check if string is longer than original string, replace old
         // base64-encoded string afterwards
-        char *new_image_data = b64_encode(jpeg, strlen(image_data));
+        char *new_image_data = b64_encode(jpeg, len);
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';
         }
@@ -353,8 +355,9 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
     // alter XML header
     if (rewrite) {
+        strcpy(buffer, result);
         file_seek(fp, 0, SEEK_SET);
-        if (!file_write(result, header_size, 1, fp)) {
+        if (!file_write(buffer, header_size, 1, fp)) {
             fprintf(stderr, "Error: changing XML Header failed.\n");
             free(buffer);
             return -1;
@@ -363,6 +366,11 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
     free(buffer);
     return 1;
+}
+
+int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool do_inplace) {
+    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
 }
 
 // anonymize iSyntax file
@@ -375,7 +383,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, DOT_ISYNTAX);
     }
 
-    file_t *fp = file_open(*filename, "r+");
+    file_t *fp = file_open(*filename, "rb+");
 
     // if file could not be opened
     if (fp == NULL) {

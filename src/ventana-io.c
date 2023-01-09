@@ -223,6 +223,11 @@ int32_t remove_metadata(file_t *fp, struct tiff_file *file) {
     return 1;
 }
 
+int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool do_inplace) {
+    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
+}
+
 // anonymizes ventana file
 int32_t handle_format(const char **filename, const char *new_label_name, bool disable_unlinking,
                       bool do_inplace) {

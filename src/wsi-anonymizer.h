@@ -5,6 +5,7 @@
 #include "isyntax-io.h"
 #include "mirax-io.h"
 #include "tiff-based-io.h"
+#include "controller.h"
 
 extern file_format check_file_format(const char *filename);
 
