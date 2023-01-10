@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.10
+
+- updated README.md
+
 ## 0.3.9
 
 - implement windows support for all data formats
