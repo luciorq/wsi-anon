@@ -4,8 +4,16 @@ static const char *VENDOR_STRINGS[] = {"Aperio",  "Hamamatsu",        "3DHistech
                                        "Ventana", "Philips’ iSyntax", "Unknown",
                                        "Invalid"};
 
+char *get_app_name() {
+#ifdef __linux__
+    return "bin/wsi-anon.out";
+#else
+    return "exe\\wsi-anon.exe";
+#endif
+}
+
 void print_help_message() {
-    fprintf(stderr, "Usage: ./wsi-anon [FILE] [-OPTIONS]\n\n");
+    fprintf(stderr, "Usage: %s [FILE] [-OPTIONS]\n\n", get_app_name());
     fprintf(stderr, "OPTIONS:\n");
     fprintf(stderr, "-c     Only check file for vendor format\n");
     fprintf(stderr, "-n     Specify pseudo label name (e.g. -n \"labelname\")\n");
