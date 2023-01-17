@@ -1,5 +1,13 @@
+#include "controller.h"
+#include "tiff-based-io.h"
+//#include "ventana-io.h"
+
+int32_t is_format(const char *filename){
+    return is_ventana(*filename);
+}
+
 // checks if file is in ventana format
-int32_t is_format(const char *filename) {
+int32_t is_ventana(const char *filename) {
     int32_t result = 0;
     const char *ext = get_filename_ext(filename);
 
@@ -223,13 +231,13 @@ int32_t remove_metadata(file_t *fp, struct tiff_file *file) {
     return 1;
 }
 
-int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image,
+int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                        bool do_inplace) {
-    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
+    return handle_ventana(**filename, *new_label_name, disable_unlinking, do_inplace);
 }
 
 // anonymizes ventana file
-int32_t handle_format(const char **filename, const char *new_label_name, bool disable_unlinking,
+int32_t handle_ventana(const char **filename, const char *new_label_name, bool disable_unlinking,
                       bool do_inplace) {
 
     fprintf(stdout, "Anonymize Ventana WSI...\n");

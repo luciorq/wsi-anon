@@ -1,14 +1,5 @@
 #include "tiff-based-io.h"
 
-static const char DOT_SVS[] = ".svs";
-static const char SVS[] = "svs";
-static const char TIF[] = "tif";
-static const char DOT_TIF[] = ".tif";
-static const char DOT_NDPI[] = ".ndpi";
-static const char NDPI[] = "ndpi";
-static const char BIF[] = "bif";
-static const char DOT_BIF[] = ".bif";
-
 // initialize directory array for a given tiff file
 void init_tiff_file(struct tiff_file *file, size_t init_size) {
     size_t alloc_size = init_size * sizeof(struct tiff_directory);

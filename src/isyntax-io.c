@@ -1,4 +1,13 @@
+//#include "isyntax-io.h"
+#include "b64.h"
+#include "defines.h"
+#include "jpec.h"
+#include "utils.h"
+#include "controller.h"
 #include "isyntax-io.h"
+
+static const char ISYNTAX_EXT[] = "isyntax";
+static const char DOT_ISYNTAX[] = ".isyntax";
 
 // find size up to substring
 int32_t get_size_to_substring(file_t *fp, char *substring) {
@@ -48,8 +57,12 @@ int32_t file_contains_value(file_t *fp, char *value) {
     return -1;
 }
 
+int32_t is_format(const char *filename){
+    return is_isyntax(*filename);
+}
+
 // checks iSyntax file format
-int32_t is_format(const char *filename) {
+int32_t is_isyntax(const char *filename) {
 
     const char *ext = get_filename_ext(filename);
 
@@ -368,9 +381,9 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
     return 1;
 }
 
-int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
+int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                        bool do_inplace) {
-    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
+    return handle_isyntax(**filename, *new_label_name, keep_macro_image, do_inplace);
 }
 
 // anonymize iSyntax file

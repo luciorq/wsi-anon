@@ -8,6 +8,6 @@
 #include "controller.h"
 
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                     bool disbale_unlinking, bool do_inplace);
+                     bool disable_unlinking, bool do_inplace);
 
 #endif

@@ -646,12 +646,12 @@ char *strndup(const char *s1, size_t n) {
     return copy;
 }
 
-int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
+int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                        bool do_inplace) {
-    return handle_format(**filename, *new_label_name, keep_macro_image, do_inplace);
+    return handle_mirax(**filename, *new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
-int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image,
+int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
                      bool disable_unlinking, bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
     const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
@@ -759,7 +759,11 @@ int32_t handle_format(const char **filename, const char *new_label_name, bool ke
     return result;
 }
 
-int32_t is_format(const char *filename) {
+int32_t is_format(const char *filename){
+    return is_mirax(*filename);
+}
+
+int32_t is_mirax(const char *filename) {
     const char *ext = get_filename_ext(filename);
 
     if (strcmp(ext, MRXS_EXT) == 0) {
