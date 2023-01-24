@@ -51,12 +51,6 @@ const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, in
     return result_string;
 }
 
-const char *concat_wildcard_string_string(const char *wildcard_str, const char *replacement) {
-    char *result_string = (char *)malloc(strlen(wildcard_str) + strlen(replacement) + 1);
-    sprintf(result_string, wildcard_str, replacement);
-    return result_string;
-}
-
 // retrieve the file structure of the mirax file from the
 // Slidedat.ini file
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count) {
@@ -316,7 +310,6 @@ int32_t delete_record_from_index_file(const char *filename, int32_t record, int3
     return 0;
 }
 
-// TODO: CHECK IF THIS WORKS UNDER WINDOWS!!
 // duplicate and rename the mirax file file.mrxs and
 // the associated folder with the image data
 // return new path name of image data folder
@@ -411,36 +404,6 @@ struct mirax_layer *delete_level_by_id(struct mirax_layer *layer, int32_t level_
 
     free(layer);
     return temp;
-}
-
-int32_t delete_level_from_mirax_file(struct mirax_file *mirax_file,
-                                     struct mirax_level *level_to_delete) {
-    // find the level id that we want to delete
-    for (int32_t i = 0; i < mirax_file->count_layers; i++) {
-        int32_t level_id = -1;
-        struct mirax_layer *layer = mirax_file->layers[i];
-        for (int32_t j = 0; j < layer->level_count; j++) {
-            struct mirax_level *level = layer->levels[j];
-            if (level_to_delete->id == level->id) {
-                level_id = j;
-                break;
-            }
-        }
-
-        if (level_id != -1) {
-            // remove the level entry and exchange the mirax layer in the array
-            struct mirax_layer *new_layer =
-                (struct mirax_layer *)malloc(sizeof(struct mirax_layer));
-            new_layer = delete_level_by_id(layer, level_id);
-
-            if (new_layer != NULL) {
-                mirax_file->layers[i] = new_layer;
-                mirax_file->all_records_count--;
-                return 0;
-            }
-        }
-    }
-    return -1;
 }
 
 void rename_mirax_file_levels(struct mirax_file *mirax_file, int32_t layer,
@@ -646,9 +609,9 @@ char *strndup(const char *s1, size_t n) {
     return copy;
 }
 
-int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+inline int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                        bool do_inplace) {
-    return handle_mirax(**filename, *new_label_name, keep_macro_image, disable_unlinking, do_inplace);
+    return handle_mirax(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
@@ -759,8 +722,8 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     return result;
 }
 
-int32_t is_format(const char *filename){
-    return is_mirax(*filename);
+inline int32_t is_format(const char *filename){
+    return is_mirax(filename);
 }
 
 int32_t is_mirax(const char *filename) {

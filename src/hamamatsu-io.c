@@ -1,13 +1,11 @@
-//#include "hamamatsu-io.h"
-#include "controller.h"
-#include "tiff-based-io.h"
+#include "hamamatsu-io.h"
 
-int32_t is_format(const char *filename){
-    return is_hamamatsu(*filename);
+inline int32_t is_format(const char *filename){
+    return is_hamamatsu(filename);
 }
 
 // checks if the file is hamamatsu
-int32_t is_hamamatsu(const char *filename) {
+int32_t is_hamamatsu(const char *filename){
     int32_t result = 0;
     const char *ext = get_filename_ext(filename);
 
@@ -67,9 +65,9 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
     return -1;
 }
 
-int32_t handle_format(const char **filename, const char *new_label_name,
+inline int32_t handle_format(const char **filename, const char *new_label_name,
                                   bool keep_macro_image, bool disable_unlinking, bool do_inplace){
-    return handle_hamamatsu(**filename, *new_label_name, disable_unlinking, do_inplace);
+    return handle_hamamatsu(filename, new_label_name, disable_unlinking, do_inplace);
 }
 
 // anonymizes hamamatsu file

@@ -1,9 +1,7 @@
-#include "controller.h"
-#include "tiff-based-io.h"
-//#include "ventana-io.h"
+#include "ventana-io.h"
 
-int32_t is_format(const char *filename){
-    return is_ventana(*filename);
+inline int32_t is_format(const char *filename){
+    return is_ventana(filename);
 }
 
 // checks if file is in ventana format
@@ -144,9 +142,8 @@ char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
     return replace_str(result, value, replacement);
 }
 
-// ToDo: check how pass struct tiff_file *file to this function or reference it
 // anonymizes metadata in XMP Tags of ventana file
-int32_t remove_metadata(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
 
         struct tiff_directory dir = file->directories[i];
@@ -231,9 +228,9 @@ int32_t remove_metadata(file_t *fp, struct tiff_file *file) {
     return 1;
 }
 
-int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+inline int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                        bool do_inplace) {
-    return handle_ventana(**filename, *new_label_name, disable_unlinking, do_inplace);
+    return handle_ventana(filename, new_label_name, disable_unlinking, do_inplace);
 }
 
 // anonymizes ventana file
@@ -284,7 +281,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool d
         return -1;
     }
 
-    remove_metadata(fp, file);
+    remove_metadata_in_ventana(fp, file);
 
     // clean up
     free_tiff_file(file);

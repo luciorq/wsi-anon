@@ -1,13 +1,14 @@
 #ifndef HEADER_WSI_ANONYMIZER_H
 #define HEADER_WSI_ANONYMIZER_H
 
-#include "controller.h"
 #include "defines.h"
 #include "isyntax-io.h"
 #include "mirax-io.h"
-#include "tiff-based-io.h"
+#include "ventana-io.h"
+#include "hamamatsu-io.h"
+#include "aperio-io.h"
 
-extern file_format check_file_format(const char *filename);
+extern int8_t check_file_format(const char *filename);
 
 extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name,
                                      bool keep_macro_image, bool disable_unlinking);

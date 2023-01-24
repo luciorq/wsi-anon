@@ -6,7 +6,8 @@
  * ToDo:
  * - add your format to VENDOR_STRINGS array in console-app.c 
  * - add your format to enum file_format in defines.h
- * - implement the following functions describes as below
+ * - implement the following functions as described as below
+ * - declare all additional functions in a new header file with the same name as your source file
  *
  */
 
@@ -14,11 +15,10 @@
 #include <stdbool.h>
 
 // checks if the file format at hand is actually the expected file format
-int32_t is_format(const char *filename);
+inline int32_t is_format(const char *filename);
 
 // implements the anonymization that is called within the handle_<YOUR_FORMAT>() function
-int32_t handle_format(const char **filename, const char *new_label_name,
-                                  bool keep_macro_image, bool disable_unlinking, bool do_inplace);
+inline int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking, bool do_inplace);
 
 /*
 ToDo:
@@ -30,11 +30,8 @@ ToDo:
 - check if metadata in hamamatsu is actually removed
 --------------test this out------------
 
-- refactor check_file_header() 
---> to return height and width of image
---> metadata (how?? what??)
-
-
---> Header file does not seem to work, try out macros
-
+- see link for self inclusion + macros for dynamically calling a function 
+- https://stackoverflow.com/questions/22701342/c-dynamic-function-call
+- int (*array[])(void) = {test1, test2, test3}; 
+    - test1, test2, test3 sind Funktionen
 */

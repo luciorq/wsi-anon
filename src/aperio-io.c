@@ -1,9 +1,7 @@
-//#include "aperio-io.h"
-#include "controller.h"
-#include "tiff-based-io.h"
+#include "aperio-io.h"
 
-int32_t is_format(const char *filename){
-    return is_aperio(*filename);
+inline int32_t is_format(const char *filename){
+    return is_aperio(filename);
 }
 
 // checks if file is aperio
@@ -53,7 +51,7 @@ int32_t is_aperio(const char *filename) {
 }
 
 // removes all metadata
-int32_t remove_metadata(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -121,9 +119,8 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
     return 0;
 }
 
-int32_t handle_format(const char **filename, const char *new_label_name,  bool keep_macro_image, bool disable_unlinking,
-                       bool do_inplace) {
-    return handle_aperio(**filename, *new_label_name, keep_macro_image, disable_unlinking, do_inplace);
+inline int32_t handle_format(const char **filename, const char *new_label_name,  bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
+    return handle_aperio(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
 // anonymizes aperio file
@@ -208,7 +205,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
     }
 
-    remove_metadata(fp, file);
+    remove_metadata_in_aperio(fp, file);
 
     if (!disable_unlinking) {
         unlink_directory(fp, file, label_dir, false);
