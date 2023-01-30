@@ -1,7 +1,5 @@
 #include "hamamatsu-io.h"
 
-inline int32_t is_format(const char *filename) { return is_hamamatsu(filename); }
-
 // checks if the file is hamamatsu
 int32_t is_hamamatsu(const char *filename) {
     int32_t result = 0;
@@ -61,12 +59,6 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
         }
     }
     return -1;
-}
-
-inline int32_t handle_format(const char **filename, const char *new_label_name,
-                             bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    return handle_hamamatsu(filename, new_label_name, keep_macro_image, disable_unlinking,
-                            do_inplace);
 }
 
 // anonymizes hamamatsu file

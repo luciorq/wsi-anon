@@ -1,7 +1,6 @@
 #ifndef HEADER_MIRAX_IO_H
 #define HEADER_MIRAX_IO_H
 
-#include "controller.h"
 #include "defines.h"
 #include "ini-parser.h"
 #include "tiff-based-io.h"

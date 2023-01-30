@@ -51,8 +51,6 @@ int32_t file_contains_value(file_t *fp, char *value) {
     return -1;
 }
 
-inline int32_t is_format(const char *filename) { return is_isyntax(filename); }
-
 // checks iSyntax file format
 int32_t is_isyntax(const char *filename) {
 
@@ -371,13 +369,6 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
     free(buffer);
     return 1;
-}
-
-inline int32_t handle_format(const char **filename, const char *new_label_name,
-                             bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-
-    return handle_isyntax(filename, new_label_name, keep_macro_image, disable_unlinking,
-                          do_inplace);
 }
 
 // anonymize iSyntax file

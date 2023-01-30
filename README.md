@@ -124,7 +124,7 @@ Anonymization is not done during creation of the instance, because there are WSI
 
 ### Add a Format
 
-In order to extend this library by another format please look at the `controller.h` header file and follow the steps as described there.
+In order to extend this library by another format, please check the `plugin.h` header file and follow the steps as described.
 
 ### Code Formatting
 

@@ -6,6 +6,7 @@
 #include "hamamatsu-io.h"
 #include "isyntax-io.h"
 #include "mirax-io.h"
+#include "plugin.h"
 #include "ventana-io.h"
 
 static const char *VENDOR_STRINGS[] = {"Aperio",  "Hamamatsu",        "3DHistech (Mirax)",

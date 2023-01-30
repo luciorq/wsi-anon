@@ -67,6 +67,10 @@
 #define ISYNTAX_RACK_ATT "<Attribute Name=\"PIIM_DP_SCANNER_RACK_NUMBER"
 #define ISYNTAX_MIN_DATETIME "19000101000000.000000"
 
+// hamamatsu
+#define NDPI_FORMAT_FLAG 65420
+#define NDPI_SOURCELENS 65421
+
 typedef enum {
     TIFF_NOTYPE = 0,
     TIFF_BYTE = 1,
@@ -100,10 +104,6 @@ typedef enum {
 
 #define MACRO "macro"
 #define LABEL "label"
-
-// hamamatsu
-#define NDPI_FORMAT_FLAG 65420
-#define NDPI_SOURCELENS 65421
 
 struct ini_entry {
     const char *key;

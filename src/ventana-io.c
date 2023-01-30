@@ -1,7 +1,5 @@
 #include "ventana-io.h"
 
-inline int32_t is_format(const char *filename) { return is_ventana(filename); }
-
 // checks if file is in ventana format
 int32_t is_ventana(const char *filename) {
     int32_t result = 0;
@@ -224,12 +222,6 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
         }
     }
     return 1;
-}
-
-inline int32_t handle_format(const char **filename, const char *new_label_name,
-                             bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    return handle_ventana(filename, new_label_name, keep_macro_image, disable_unlinking,
-                          do_inplace);
 }
 
 // anonymizes ventana file

@@ -1,7 +1,5 @@
 #include "aperio-io.h"
 
-inline int32_t is_format(const char *filename) { return is_aperio(filename); }
-
 // checks if file is aperio
 int32_t is_aperio(const char *filename) {
     int32_t result = 0;
@@ -115,11 +113,6 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
         }
     }
     return 0;
-}
-
-inline int32_t handle_format(const char **filename, const char *new_label_name,
-                             bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    return handle_aperio(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
 // anonymizes aperio file
