@@ -35,24 +35,32 @@ uint32_t get_size_of_value(uint16_t type, uint64_t *count);
 
 uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset);
 
-struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset, struct tiff_directory *first_directory, bool big_tiff, bool ndpi, bool big_endian);
+struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
+                                           uint64_t *in_pointer_offset,
+                                           struct tiff_directory *first_directory, bool big_tiff,
+                                           bool ndpi, bool big_endian);
 
 int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff);
 
 struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_endian);
 
-uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian, int32_t *length);
+uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+                              bool big_endian, int32_t *length);
 
-int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian, const char *prefix, const char *suffix);
+int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
+                       const char *prefix, const char *suffix);
 
 int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi);
 
 int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const char *dir_name);
 
-int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag, const char *contains_value);
+int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
+                           const char *contains_value);
 
-int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32_t tag, const char *value);
+int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32_t tag,
+                                       const char *value);
 
-const char *duplicate_file(const char *filename, const char *new_label_name, const char *file_extension);
+const char *duplicate_file(const char *filename, const char *new_label_name,
+                           const char *file_extension);
 
 #endif

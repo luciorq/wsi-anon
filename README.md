@@ -122,6 +122,10 @@ Anonymization is not done during creation of the instance, because there are WSI
 
 ## Development
 
+### Add a Format
+
+In order to extend this library by another format please look at the `controller.h` header file and follow the steps as described there.
+
 ### Code Formatting
 
 Format the code before committing. Install `clang-format-10` and run

@@ -609,8 +609,8 @@ char *strndup(const char *s1, size_t n) {
     return copy;
 }
 
-inline int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                       bool do_inplace) {
+inline int32_t handle_format(const char **filename, const char *new_label_name,
+                             bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
     return handle_mirax(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
@@ -722,9 +722,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     return result;
 }
 
-inline int32_t is_format(const char *filename){
-    return is_mirax(filename);
-}
+inline int32_t is_format(const char *filename) { return is_mirax(filename); }
 
 int32_t is_mirax(const char *filename) {
     const char *ext = get_filename_ext(filename);

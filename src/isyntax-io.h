@@ -1,13 +1,14 @@
 #include "b64.h"
+#include "controller.h"
 #include "defines.h"
 #include "jpec.h"
 #include "utils.h"
-#include "controller.h"
 
 // main functions
 int32_t is_isyntax(const char *filename);
 
-int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image, bool do_inplace);
+int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool do_inplace);
 
 // additional functions
 int32_t get_size_to_substring(file_t *fp, char *substring);

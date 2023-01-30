@@ -1,9 +1,5 @@
 #include "wsi-anonymizer.h"
 
-static const char *VENDOR_STRINGS[] = {"Aperio",  "Hamamatsu",        "3DHistech (Mirax)",
-                                       "Ventana", "Philips’ iSyntax", "Unknown",
-                                       "Invalid"};
-
 void print_help_message() {
     fprintf(stderr, "Usage: ./wsi-anon [FILE] [-OPTIONS]\n\n");
     fprintf(stderr, "OPTIONS:\n");
@@ -77,7 +73,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
     if (only_check) {
         if (filename != NULL) {
-            file_format format = check_file_format(filename);
+            int8_t format = check_file_format(filename);
             fprintf(stdout, "Vendor: [%s]\n", VENDOR_STRINGS[format]);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
