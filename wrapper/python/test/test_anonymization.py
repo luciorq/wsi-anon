@@ -46,7 +46,7 @@ def wait_between_tests():
     ],
 )
 def test_check_fileformat(wsi_filename, vendor):
-    file_format = check_file_format(wsi_filename) # ToDo: adjust this
+    file_format = check_file_format(wsi_filename)
     assert file_format == vendor
 
 

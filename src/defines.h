@@ -105,18 +105,6 @@ typedef enum {
 #define NDPI_FORMAT_FLAG 65420
 #define NDPI_SOURCELENS 65421
 
-/*
-typedef enum file_format {
-    aperio_svs,
-    hamamatsu_ndpi,
-    histech_mirax,
-    ventana,
-    philips_isyntax,
-    unknown_format,
-    invalid
-} file_format;
-*/
-
 struct ini_entry {
     const char *key;
     const char *value;

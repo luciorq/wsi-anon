@@ -1,9 +1,10 @@
 /*
  *
- * Include this header file in your source file named <YOUR_FORMAT>-io.c and implement
- * the given functions in order to execute anonymization
+ * Include this header file in your source and header files in order to execute anonymization on
+ another format
  *
  * ToDo:
+ * - include your new header file in wsi-anonymizer.h
  * - add your format to the VENDOR_STRINGS array in wsi-anonymizer.h right before the 'Unknown'
  entry
  * - implement the following functions as described below (see source files of other formats)
@@ -22,9 +23,3 @@ inline int32_t is_format(const char *filename);
 // implements the anonymization that is called within the handle_<YOUR_FORMAT>() function
 inline int32_t handle_format(const char **filename, const char *new_label_name,
                              bool keep_macro_image, bool disable_unlinking, bool do_inplace);
-
-/*
-ToDo:
-- check for both windows and ubuntu
-- remove warnings when compiling
-*/
