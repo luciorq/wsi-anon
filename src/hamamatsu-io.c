@@ -65,12 +65,18 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
 
 inline int32_t handle_format(const char **filename, const char *new_label_name,
                              bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    return handle_hamamatsu(filename, new_label_name, disable_unlinking, do_inplace);
+    return handle_hamamatsu(filename, new_label_name, keep_macro_image, disable_unlinking,
+                            do_inplace);
 }
 
 // anonymizes hamamatsu file
-int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool disable_unlinking,
-                         bool do_inplace) {
+int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool keep_macro_image,
+                         bool disable_unlinking, bool do_inplace) {
+
+    if (!keep_macro_image) {
+        fprintf(stderr, "Error: macro image will be wiped if found.\n");
+    }
+
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
     if (!do_inplace) {
         *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);

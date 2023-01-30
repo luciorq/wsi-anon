@@ -375,15 +375,18 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
 inline int32_t handle_format(const char **filename, const char *new_label_name,
                              bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    if (disable_unlinking) {
-        fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
-    }
-    return handle_isyntax(filename, new_label_name, keep_macro_image, do_inplace);
+
+    return handle_isyntax(filename, new_label_name, keep_macro_image, disable_unlinking,
+                          do_inplace);
 }
 
 // anonymize iSyntax file
 int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool do_inplace) {
+                       bool disable_unlinking, bool do_inplace) {
+
+    if (disable_unlinking) {
+        fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
+    }
 
     fprintf(stdout, "Anonymize iSyntax WSI...\n");
 

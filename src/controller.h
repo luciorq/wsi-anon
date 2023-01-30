@@ -25,9 +25,6 @@ inline int32_t handle_format(const char **filename, const char *new_label_name,
 
 /*
 ToDo:
-- check for hamamatsu format
-- check for other file formats
-- check for all flags
 - check for both windows and ubuntu
 - remove warnings when compiling
 */

@@ -8,7 +8,7 @@
 int32_t is_isyntax(const char *filename);
 
 int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool do_inplace);
+                       bool disable_unlinking, bool do_inplace);
 
 // additional functions
 int32_t get_size_to_substring(file_t *fp, char *substring);

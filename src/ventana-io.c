@@ -228,15 +228,17 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
 inline int32_t handle_format(const char **filename, const char *new_label_name,
                              bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    if (keep_macro_image) {
-        fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
-    }
-    return handle_ventana(filename, new_label_name, disable_unlinking, do_inplace);
+    return handle_ventana(filename, new_label_name, keep_macro_image, disable_unlinking,
+                          do_inplace);
 }
 
 // anonymizes ventana file
-int32_t handle_ventana(const char **filename, const char *new_label_name, bool disable_unlinking,
-                       bool do_inplace) {
+int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image,
+                       bool disable_unlinking, bool do_inplace) {
+
+    if (keep_macro_image) {
+        fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
+    }
 
     fprintf(stdout, "Anonymize Ventana WSI...\n");
 
