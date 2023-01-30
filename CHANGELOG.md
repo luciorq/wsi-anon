@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.11
+
+- refactor code
+- separate source files by format
+- implement expandable format approach
+
+## 0.3.10
+
+- updated README.md
+
 ## 0.3.9
 
 - implement windows support for all data formats
