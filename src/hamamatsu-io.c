@@ -73,8 +73,8 @@ inline int32_t handle_format(const char **filename, const char *new_label_name,
 int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool keep_macro_image,
                          bool disable_unlinking, bool do_inplace) {
 
-    if (!keep_macro_image) {
-        fprintf(stderr, "Error: macro image will be wiped if found.\n");
+    if (keep_macro_image) {
+        fprintf(stderr, "Error: Macro image will be wiped if found.\n");
     }
 
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
