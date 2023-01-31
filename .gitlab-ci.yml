@@ -31,7 +31,7 @@ test-wsi-anon:
       - Test-Wsi-Anon-Results.xml
 
 test-integration:
-  image: registry.gitlab.com/empaia/integration/test-runner
+  image: registry.gitlab.com/empaia/integration/ci-docker-images/test-runner
   tags:
     - empaia-docker
     - testdata
