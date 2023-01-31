@@ -44,6 +44,9 @@ int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff);
 
 struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_endian);
 
+int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
+                       const char *prefix, const char *suffix);
+
 uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
                               bool big_endian, int32_t *length);
 

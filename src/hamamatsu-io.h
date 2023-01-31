@@ -8,6 +8,3 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
 // additinonal functions
 int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian);
-
-int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
-                       const char *prefix, const char *suffix);
