@@ -45,8 +45,6 @@ To build the shared library with command line interface simply run
 make
 ```
 
-and run with `bin/wsi-anon.out /path/to/wsi.tif` afterwards.
-
 This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `bin/`. Note that this will use the default Makefile.
 
 To build the console application in debug mode type
@@ -55,7 +53,7 @@ To build the console application in debug mode type
 make console-app-debug
 ```
 
-and run with `gdb -args bin/wsi-anon-dbg.out /path/to/wsi.tif` afterwards.
+and run with `gdb -args bin/wsi-anon-dbg.out /PATH/TO/SLIDE` afterwards.
 
 #### Under Windows
 
@@ -69,8 +67,6 @@ set PATH=C:\mingw\bin;%PATH%
 mingw32-make -f MakefileWin.mk
 ```
 
-and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
-
 ### Web Assembly Target
 
 The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. **This is currently experimental.**
@@ -83,22 +79,39 @@ This produces an ES6 module `./bin/wsi-anon.mjs` with embedded, base64 encoded w
 
 ## Run
 
-### Console Application
+### Console Application 
 
-Check for slide vendor:
-
-```bash
-./wsi-anon.out "/path/to/wsi.tif" -c
-```
+#### Under Linux
 
 Anonymize slide:
 
 ```bash
-./wsi-anon.out "/path/to/wsi.tif" [-OPTIONS]
+bin/wsi-anon.out "/PATH/TO/SLIDE" [-OPTIONS]
 ```
+
+#### Under Windows
+
+Anonymize slide:
+
+```bash
+exe\wsi-anon.out "\PATH\TO\SLIDE" [-OPTIONS]
+```
+
+Anonymize directory of slides:
+
+Navigate to the `scripts` folder and execute:
+
+```bash
+anonymize_dir.bat "C:\PATH\TO\SLIDE"
+```
+
+The files will be named anonymized_YOURFILENAME and will be found in the same directory as your slides. Note that part of the original name is still included in the file name. Please make sure that there are no spaces in your path to your `wsi-anon.exe` and to your slide directory. Language of operating system must be english!
+
+### OPTIONS
 
 Type `-h` or `--help` for help. Further CLI parameters are:
 
+* `-c`: Check for slide vendor
 * `-n "label-name"`: File will be renamed to the given label name
 * `-u` : Disables the unlinking of associated image data (default: associated image will be unlinked)
 * `-i` : Enable in-place anonymization (default: copy of the file will be created)
