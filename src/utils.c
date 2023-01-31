@@ -431,3 +431,83 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
     }
     return ret;
 }
+
+// find size up to substring in file
+int32_t get_size_to_substring(file_t *fp, char *substring) {
+
+    file_seek(fp, 0, SEEK_END);
+    long file_length = file_tell(fp);
+    char *buffer = (char *)malloc(file_length);
+    file_seek(fp, 0, SEEK_SET);
+
+    if (file_read(buffer, file_length, 1, fp) != 1) {
+        free(buffer);
+        fprintf(stderr, "Error: Could not read file.\n");
+        return -1;
+    }
+
+    // finds size
+    char *ret = strstr(buffer, substring);
+    int32_t size = ret - buffer;
+
+    file_seek(fp, 0, SEEK_SET);
+    free(buffer);
+
+    return size;
+}
+
+// check if file contains specific value
+int32_t file_contains_value(file_t *fp, char *value) {
+
+    file_seek(fp, 0, SEEK_END);
+    long size = file_tell(fp);
+    char *buffer = (char *)malloc(size);
+    file_seek(fp, 0, SEEK_SET);
+
+    if (file_read(buffer, size, 1, fp) != 1) {
+        free(buffer);
+        fprintf(stderr, "Error: Could not read file.\n");
+        return -1;
+    }
+
+    // searches for value
+    if (contains(buffer, value)) {
+        free(buffer);
+        return 1;
+    }
+
+    free(buffer);
+    return -1;
+}
+
+const char *concat_wildcard_string_int32(const char *str, int32_t integer) {
+    char *result_string = (char *)malloc(strlen(str) + number_of_digits(integer) + 1);
+    sprintf(result_string, str, integer);
+    return result_string;
+}
+
+const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, int32_t integer2) {
+    char *result_string =
+        (char *)malloc(strlen(str) + number_of_digits(integer1) + number_of_digits(integer2) + 1);
+    sprintf(result_string, str, integer1, integer2);
+    return result_string;
+}
+
+// read a signed integer 32 from file stream
+int32_t *read_int32(file_t *fp) {
+    int32_t *buffer = (int32_t *)malloc(sizeof(int32_t));
+
+    if (file_read(buffer, sizeof(*buffer), 1, fp) != 1) {
+        free(buffer);
+        return NULL;
+    }
+
+    return buffer;
+}
+
+// assert a int32_t has a certain value
+// used to skip pointer position on stream
+bool assert_value(file_t *fp, int32_t value) {
+    int32_t *v_to_check = read_int32(fp);
+    return *v_to_check == value;
+}

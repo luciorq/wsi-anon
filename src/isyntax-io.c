@@ -3,54 +3,6 @@
 static const char ISYNTAX_EXT[] = "isyntax";
 static const char DOT_ISYNTAX[] = ".isyntax";
 
-// find size up to substring
-int32_t get_size_to_substring(file_t *fp, char *substring) {
-
-    file_seek(fp, 0, SEEK_END);
-    long file_length = file_tell(fp);
-    char *buffer = (char *)malloc(file_length);
-    file_seek(fp, 0, SEEK_SET);
-
-    if (file_read(buffer, file_length, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read iSyntax file.\n");
-        return -1;
-    }
-
-    // finds size
-    char *ret = strstr(buffer, substring);
-    int32_t size = ret - buffer;
-
-    file_seek(fp, 0, SEEK_SET);
-    free(buffer);
-
-    return size;
-}
-
-// check if file contains specific value
-int32_t file_contains_value(file_t *fp, char *value) {
-
-    file_seek(fp, 0, SEEK_END);
-    long size = file_tell(fp);
-    char *buffer = (char *)malloc(size);
-    file_seek(fp, 0, SEEK_SET);
-
-    if (file_read(buffer, size, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read iSyntax file.\n");
-        return -1;
-    }
-
-    // searches for value
-    if (contains(buffer, value)) {
-        free(buffer);
-        return 1;
-    }
-
-    free(buffer);
-    return -1;
-}
-
 // checks iSyntax file format
 int32_t is_isyntax(const char *filename) {
 

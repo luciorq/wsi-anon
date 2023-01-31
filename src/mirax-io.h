@@ -4,7 +4,6 @@
 #include "defines.h"
 #include "ini-parser.h"
 #include "tiff-based-io.h"
-#include "utils.h"
 
 // main functions
 int32_t is_mirax(const char *filename);
@@ -13,18 +12,10 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
                      bool disable_unlinking, bool do_inplace);
 
 // additional functions
-const char *concat_wildcard_string_int32(const char *str, int32_t integer);
-
-const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, int32_t integer2);
-
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count);
 
 struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *layer_name,
                                       const char *level_name);
-
-int32_t *read_int32(file_t *fp);
-
-bool assert_value(file_t *fp, int32_t value);
 
 int32_t *read_data_location(const char *filename, int32_t record, int32_t **position,
                             int32_t **size);

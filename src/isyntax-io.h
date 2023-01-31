@@ -10,10 +10,6 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
                        bool disable_unlinking, bool do_inplace);
 
 // additional functions
-int32_t get_size_to_substring(file_t *fp, char *substring);
-
-int32_t file_contains_value(file_t *fp, char *value);
-
 char *anonymize_value_of_attribute(char *buffer, char *attribute);
 
 const char *get_value_from_attribute(char *buffer, char *attribute);

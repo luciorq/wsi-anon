@@ -38,19 +38,6 @@ static const char *SLIDE_WSI = "ScanDataLayer_WholeSlide";
 // preview image
 static const char *SLIDE_PREVIEW = "ScanDataLayer_SlidePreview";
 
-const char *concat_wildcard_string_int32(const char *str, int32_t integer) {
-    char *result_string = (char *)malloc(strlen(str) + number_of_digits(integer) + 1);
-    sprintf(result_string, str, integer);
-    return result_string;
-}
-
-const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, int32_t integer2) {
-    char *result_string =
-        (char *)malloc(strlen(str) + number_of_digits(integer1) + number_of_digits(integer2) + 1);
-    sprintf(result_string, str, integer1, integer2);
-    return result_string;
-}
-
 // retrieve the file structure of the mirax file from the
 // Slidedat.ini file
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count) {
@@ -136,25 +123,6 @@ struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *l
         }
     }
     return NULL;
-}
-
-// read a signed integer 32 from file stream
-int32_t *read_int32(file_t *fp) {
-    int32_t *buffer = (int32_t *)malloc(sizeof(int32_t));
-
-    if (file_read(buffer, sizeof(*buffer), 1, fp) != 1) {
-        free(buffer);
-        return NULL;
-    }
-
-    return buffer;
-}
-
-// assert a int32_t has a certain value
-// used to skip pointer position on stream
-bool assert_value(file_t *fp, int32_t value) {
-    int32_t *v_to_check = read_int32(fp);
-    return *v_to_check == value;
 }
 
 // read file number, position and size frrom index dat
