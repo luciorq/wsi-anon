@@ -5,14 +5,8 @@
 #include "utils.h"
 #include <inttypes.h>
 
-static const char DOT_SVS[] = ".svs";
-static const char SVS[] = "svs";
 static const char TIF[] = "tif";
 static const char DOT_TIF[] = ".tif";
-static const char DOT_NDPI[] = ".ndpi";
-static const char NDPI[] = "ndpi";
-static const char BIF[] = "bif";
-static const char DOT_BIF[] = ".bif";
 
 #define min(a, b)                                                                                  \
     ({                                                                                             \

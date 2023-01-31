@@ -8,7 +8,7 @@ int32_t (*handle_format_functions[])(const char **filename, const char *new_labe
                                      bool do_inplace) = {
     &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax};
 
-int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(VENDOR_STRINGS[0]);
+int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
 
 int8_t check_file_format(const char *filename) {
 

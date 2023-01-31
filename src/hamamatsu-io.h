@@ -1,5 +1,8 @@
 #include "tiff-based-io.h"
 
+static const char DOT_NDPI[] = ".ndpi";
+static const char NDPI[] = "ndpi";
+
 // main functions
 int32_t is_hamamatsu(const char *filename);
 

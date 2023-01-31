@@ -1,5 +1,8 @@
 #include "tiff-based-io.h"
 
+static const char DOT_SVS[] = ".svs";
+static const char SVS[] = "svs";
+
 // main functions
 int32_t is_aperio(const char *filename);
 

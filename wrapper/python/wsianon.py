@@ -25,7 +25,6 @@ def check_file_format(filename):
     c_filename = filename.encode('utf-8')
 
     result = _wsi_anonymizer.check_file_format(ctypes.c_char_p(c_filename))
-    print(Vendor(result))
     return Vendor(result)
 
 def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unlinking=False, do_inplace=False):

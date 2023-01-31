@@ -1,5 +1,8 @@
 #include "tiff-based-io.h"
 
+static const char BIF[] = "bif";
+static const char DOT_BIF[] = ".bif";
+
 // main functions
 int32_t is_ventana(const char *filename);
 
