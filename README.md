@@ -88,6 +88,15 @@ Anonymize slide:
 ```bash
 bin/wsi-anon.out "/PATH/TO/SLIDE" [-OPTIONS]
 ```
+Anonymize directory of slides:
+
+Navigate to the `scripts` folder and execute:
+
+```bash
+./anonymize_dir.sh "C:/PATH/TO/SLIDE"
+```
+
+The files will be named anonymized_YOURFILENAME and will be found in the same directory as your slides. Note that part of the original name is still included in the file name.
 
 #### Under Windows
 
