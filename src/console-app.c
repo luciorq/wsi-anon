@@ -1,9 +1,5 @@
 #include "wsi-anonymizer.h"
 
-static const char *VENDOR_STRINGS[] = {"Aperio",  "Hamamatsu",        "3DHistech (Mirax)",
-                                       "Ventana", "Philips’ iSyntax", "Unknown",
-                                       "Invalid"};
-
 char *get_app_name() {
 #ifdef __linux__
     return "bin/wsi-anon.out";
@@ -25,7 +21,7 @@ void print_help_message() {
         "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
 
-int main(int argc, char *argv[]) {
+int32_t main(int32_t argc, char *argv[]) {
     bool only_check = false;
     bool keep_macro_image = false;
     bool disable_unlinking = false;
@@ -85,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     if (only_check) {
         if (filename != NULL) {
-            file_format format = check_file_format(filename);
+            int8_t format = check_file_format(filename);
             fprintf(stdout, "Vendor: [%s]\n", VENDOR_STRINGS[format]);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");

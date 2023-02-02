@@ -179,7 +179,7 @@ int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_
 // modify structure of levels in mirax_file
 void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer, int32_t layer_id,
                                 struct mirax_file *mirax_file) {
-    for (int i = level_pos_in_layer; i < mirax_file->layers[layer_id]->level_count - 1; i++) {
+    for (int32_t i = level_pos_in_layer; i < mirax_file->layers[layer_id]->level_count - 1; i++) {
         restructure_groups_in_file(ini, mirax_file->layers[layer_id]->levels[i],
                                    mirax_file->layers[layer_id]->levels[i + 1]);
         mirax_file->layers[layer_id]->levels[i]->name =

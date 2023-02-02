@@ -1,68 +1,48 @@
 #include "wsi-anonymizer.h"
 
-file_format check_file_format(const char *filename) {
-    fprintf(stdout, "Checking file format...\n");
+int32_t (*is_format_functions[])(const char *filename) = {&is_aperio, &is_hamamatsu, &is_mirax,
+                                                          &is_ventana, &is_isyntax};
+
+int32_t (*handle_format_functions[])(const char **filename, const char *new_label_name,
+                                     bool keep_macro_image, bool disable_unlinking,
+                                     bool do_inplace) = {
+    &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax};
+
+int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
+
+int8_t check_file_format(const char *filename) {
+
     if (file_exists(filename) == 1) {
-        if (is_aperio(filename)) {
-            return aperio_svs;
-        } else if (is_hamamatsu(filename)) {
-            return hamamatsu_ndpi;
-        } else if (is_mirax(filename)) {
-            return histech_mirax;
-        } else if (is_ventana(filename)) {
-            return ventana;
-        } else if (is_isyntax(filename)) {
-            return philips_isyntax;
-        } else {
-            return unknown_format;
+        for (int8_t i = 0; i < num_of_formats - 2; i++) {
+            if (is_format_functions[i](filename)) {
+                return i;
+            }
         }
+        // unknown format
+        return num_of_formats - 2;
     } else {
-        return invalid;
+        // invalid format
+        return num_of_formats - 1;
     }
 }
 
 int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_name,
                                   bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
     int32_t result = -1;
-    switch (check_file_format(*filename)) {
-    case aperio_svs: {
-        result = handle_aperio(filename, new_label_name, keep_macro_image, disable_unlinking,
-                               do_inplace);
-        break;
-    }
-    case hamamatsu_ndpi: {
-        result = handle_hamamatsu(filename, new_label_name, disable_unlinking, do_inplace);
-        break;
-    }
-    case histech_mirax: {
-        result =
-            handle_mirax(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
-        break;
-    }
-    case ventana: {
-        if (keep_macro_image) {
-            fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
-        }
-        result = handle_ventana(filename, new_label_name, disable_unlinking, do_inplace);
-        break;
-    }
-    case philips_isyntax: {
-        if (disable_unlinking) {
-            fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
-        }
-        result = handle_isyntax(filename, new_label_name, keep_macro_image, do_inplace);
-        break;
-    }
-    case unknown_format: {
-        fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
-        break;
-    }
-    case invalid: {
+
+    int8_t result_check_format = check_file_format(*filename);
+
+    if (result_check_format == num_of_formats - 1) {
         fprintf(stderr, "Error: File does not exist or is invalid.\n");
-        break;
+        return result;
+    } else if (result_check_format == num_of_formats - 2) {
+        fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
+        return result;
+    } else {
+        result = handle_format_functions[result_check_format](
+            filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
+        return result;
     }
-    }
-    return result;
 }
 
 int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name,

@@ -1,52 +1,7 @@
 #include "isyntax-io.h"
 
-// find size up to substring
-int32_t get_size_to_substring(file_t *fp, char *substring) {
-
-    file_seek(fp, 0, SEEK_END);
-    long file_length = file_tell(fp);
-    char *buffer = (char *)malloc(file_length);
-    file_seek(fp, 0, SEEK_SET);
-
-    if (file_read(buffer, file_length, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read iSyntax file.\n");
-        return -1;
-    }
-
-    // finds size
-    char *ret = strstr(buffer, substring);
-    int32_t size = ret - buffer;
-
-    file_seek(fp, 0, SEEK_SET);
-    free(buffer);
-
-    return size;
-}
-
-// check if file contains specific value
-int32_t file_contains_value(file_t *fp, char *value) {
-
-    file_seek(fp, 0, SEEK_END);
-    long size = file_tell(fp);
-    char *buffer = (char *)malloc(size);
-    file_seek(fp, 0, SEEK_SET);
-
-    if (file_read(buffer, size, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read iSyntax file.\n");
-        return -1;
-    }
-
-    // searches for value
-    if (contains(buffer, value)) {
-        free(buffer);
-        return 1;
-    }
-
-    free(buffer);
-    return -1;
-}
+static const char ISYNTAX_EXT[] = "isyntax";
+static const char DOT_ISYNTAX[] = ".isyntax";
 
 // checks iSyntax file format
 int32_t is_isyntax(const char *filename) {
@@ -370,7 +325,11 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
 // anonymize iSyntax file
 int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool do_inplace) {
+                       bool disable_unlinking, bool do_inplace) {
+
+    if (disable_unlinking) {
+        fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
+    }
 
     fprintf(stdout, "Anonymize iSyntax WSI...\n");
 
