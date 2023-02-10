@@ -121,7 +121,7 @@ uint32_t get_size_of_value(uint16_t type, uint64_t *count) {
 
 uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
     // we need to fix the ndpi offset to prevent the pointer from overflowing
-    uint64_t new_offset = (directory_offset & ~(uint64_t)UINT64_MAX) | (offset & UINT32_MAX);
+    uint64_t new_offset = (directory_offset & ~(uint64_t)UINT32_MAX) | (offset & UINT32_MAX);
     if (new_offset >= directory_offset) {
         new_offset = min(new_offset - UINT32_MAX - 1, new_offset);
     }
@@ -178,15 +178,47 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
             return NULL;
         }
 
+        if (count > SIZE_MAX / value_size) {
+            fprintf(stderr, "Error: value count too large\n");
+            return NULL;
+        }
+
         // read entry value to array
-        uint8_t value[big_tiff ? 8 : 4];
-        if (file_read(value, sizeof(value), 1, fp) != 1) {
+        uint8_t value[(big_tiff || ndpi) ? 8 : 4];
+        uint8_t read_size = big_tiff ? 8 : 4;
+        if (file_read(value, read_size, 1, fp) != 1) {
             fprintf(stderr, "Error: reading value to array failed\n");
             return NULL;
         }
 
-        if (big_tiff) {
-            // big tiff offset pointer reserves 8 bytes
+        bool is_value = (value_size * count <= read_size);
+
+
+        if (ndpi) {
+            if (file_seek(fp, offset+(12L*entry_count)+(4L*i)+10L, SEEK_SET) != 0) {
+                fprintf(stderr, "Error: cannot seek to value/offset extension\n");
+                return NULL;
+            }
+            if (file_read(value + 4, 4, 1, fp) != 1) {
+                fprintf(stderr, "Error: cannot read value/offset extension\n");
+                return NULL;
+            }
+            if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
+                value_size = 8;
+                entry->type = TIFF_LONG8;
+            }
+            if (file_seek(fp, offset+(12L*(i+1))+2L, SEEK_SET) != 0) {
+                fprintf(stderr, "Error: seeking back to IFD start failed\n");
+                return NULL;
+            }
+        }
+
+        if (is_value) {
+            fix_byte_order(value, value_size, count, big_endian);
+        }
+
+        if (big_tiff || ndpi) {
+            // big tiff or ndpi offset pointer reserves 8 bytes
             memcpy(&entry->offset, value, 8);
             fix_byte_order(&entry->offset, sizeof(entry->offset), 1, big_endian);
         } else {
@@ -196,24 +228,29 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
             fix_byte_order(&offset32, sizeof(offset32), 1, big_endian);
             entry->offset = offset32;
         }
-        if (ndpi) {
-            struct tiff_entry *first_entry_of_dir = NULL;
-            if (first_directory) {
-                // retrieve the first entry of the first directory
-                for (uint64_t j = 0; j < first_directory->count; j++) {
-                    if (first_directory->entries[j].tag == tag) {
-                        first_entry_of_dir = &first_directory->entries[j];
-                        break;
-                    }
-                }
-            }
 
-            // fix the ndpi offset if we are in the first directory
-            // or the offsets diverge
-            if (!first_entry_of_dir || first_entry_of_dir->offset != entry->offset) {
-                entry->offset = fix_ndpi_offset(offset, entry->offset);
-            }
-        }
+        // if (ndpi) {
+        //     struct tiff_entry *first_entry_of_dir = NULL;
+        //     if (first_directory) {
+        //         // retrieve the first entry of the first directory
+        //         for (uint64_t j = 0; j < first_directory->count; j++) {
+        //             if (first_directory->entries[j].tag == tag) {
+        //                 first_entry_of_dir = &first_directory->entries[j];
+        //                 break;
+        //             }
+        //         }
+        //     }
+
+        //     // fix the ndpi offset if we are in the first directory
+        //     // or the offsets diverge
+        //     if (!first_entry_of_dir || first_entry_of_dir->offset != entry->offset) {
+        //         fprintf(stdout, "Fix dir offset for first entry of dir\n");
+        //         fprintf(stdout, "Directory offset: %ld\n", offset);
+        //         fprintf(stdout, "Entry offset: %ld\n", entry->offset);
+        //         entry->offset = fix_ndpi_offset(offset, entry->offset);
+        //         fprintf(stdout, "Fixed offset: %ld\n", entry->offset);
+        //     }
+        // }
         entries[i] = *entry;
     }
 
@@ -320,7 +357,13 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     }
 
     for (int32_t i = 0; i < size_offsets; i++) {
-        file_seek(fp, strip_offsets[i], SEEK_SET);
+        fprintf(stdout, "Strip offset [%i]: %ld\n", i, strip_offsets[i]);
+        fprintf(stdout, "Strip lengths [%i]: %ld\n", i, strip_lengths[i]);
+
+        // convert to int64 and overflow by 0x100000000 
+        uint64_t overflowed_offset = 4294967296 + strip_offsets[i];
+        fprintf(stdout, "Overflowed offset [%i]: %lld\n", i, overflowed_offset);
+        file_seek(fp, overflowed_offset, SEEK_SET);
 
         if (prefix != NULL) {
             // we check the head of the directory offset for a given
@@ -330,10 +373,17 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             char *buf = (char *)malloc(prefix_len + 1);
             buf[prefix_len] = '\0';
 
+            uint32_t offset = file_tell(fp);
+            fprintf(stdout, "offset %ld\n", offset);
+
             if (file_read(buf, prefix_len, 1, fp) != 1) {
                 fprintf(stderr, "Error: Could not read strip prefix.\n");
                 free(buf);
                 return -1;
+            }
+
+            for (int j = 0; j < prefix_len; j++) {
+                fprintf(stdout, "buffer %i file: %d\n", j, buf[j]);
             }
 
             if (strcmp(prefix, buf) != 0) {
