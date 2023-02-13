@@ -337,7 +337,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
     for (int32_t i = 0; i < size_offsets; i++) {
         // FIX ndpi offset: convert to int64 and overflow by UINT32_MAX and high bits of ndpi dir
-        // TODO: high bit shoult be 1 but is 0
+        // TODO: what happens if ndpi_high_bits is empty? (in case ndpi < 4gb?) do we need to distinguish between these cases?
         uint64_t overflowed_offset = (uint64_t)UINT32_MAX + dir->ndpi_high_bits;
         overflowed_offset += (uint64_t)strip_offsets[i];
         file_seek(fp, overflowed_offset, SEEK_SET);
