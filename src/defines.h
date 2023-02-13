@@ -158,6 +158,7 @@ struct tiff_directory {
     uint64_t in_pointer_offset;
     uint64_t out_pointer_offset;
     uint64_t number;
+    uint32_t ndpi_high_bits;
 };
 
 struct tiff_file {

@@ -195,7 +195,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 
 
         if (ndpi) {
-            if (file_seek(fp, offset+(12L*entry_count)+(4L*i)+10L, SEEK_SET) != 0) {
+            if (file_seek(fp, offset+(12L*entry_count)+(4L*i)+6L, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to value/offset extension\n");
                 return NULL;
             }
@@ -204,8 +204,9 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
                 return NULL;
             }
             if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
-                value_size = 8;
-                entry->type = TIFF_LONG8;
+                uint32_t result;
+                memcpy(&result, value + 4, sizeof(result));
+                tiff_dir->ndpi_high_bits = result;
             }
             if (file_seek(fp, offset+(12L*(i+1))+2L, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: seeking back to IFD start failed\n");
@@ -229,28 +230,6 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
             entry->offset = offset32;
         }
 
-        // if (ndpi) {
-        //     struct tiff_entry *first_entry_of_dir = NULL;
-        //     if (first_directory) {
-        //         // retrieve the first entry of the first directory
-        //         for (uint64_t j = 0; j < first_directory->count; j++) {
-        //             if (first_directory->entries[j].tag == tag) {
-        //                 first_entry_of_dir = &first_directory->entries[j];
-        //                 break;
-        //             }
-        //         }
-        //     }
-
-        //     // fix the ndpi offset if we are in the first directory
-        //     // or the offsets diverge
-        //     if (!first_entry_of_dir || first_entry_of_dir->offset != entry->offset) {
-        //         fprintf(stdout, "Fix dir offset for first entry of dir\n");
-        //         fprintf(stdout, "Directory offset: %ld\n", offset);
-        //         fprintf(stdout, "Entry offset: %ld\n", entry->offset);
-        //         entry->offset = fix_ndpi_offset(offset, entry->offset);
-        //         fprintf(stdout, "Fixed offset: %ld\n", entry->offset);
-        //     }
-        // }
         entries[i] = *entry;
     }
 
@@ -357,16 +336,10 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     }
 
     for (int32_t i = 0; i < size_offsets; i++) {
-        fprintf(stdout, "Strip offset [%i]: %ld\n", i, strip_offsets[i]);
-        fprintf(stdout, "Strip lengths [%i]: %ld\n", i, strip_lengths[i]);
-
-        // convert to int64 and overflow by 0x100000000 
-        uint64_t overflowed_offset = (uint64_t)UINT32_MAX + 1;
-        fprintf(stdout, "Overflowed offset (MAX) [%i]: %lld\n", i, overflowed_offset);
+        // FIX ndpi offset: convert to int64 and overflow by UINT32_MAX and high bits of ndpi dir
+        // TODO: high bit shoult be 1 but is 0
+        uint64_t overflowed_offset = (uint64_t)UINT32_MAX + dir->ndpi_high_bits;
         overflowed_offset += (uint64_t)strip_offsets[i];
-        fprintf(stdout, "Overflowed offset (mod) [%i]: %lld\n", i, overflowed_offset);
-        //uint64_t overflowed_offset = 4294967296 + strip_offsets[i];
-        //fprintf(stdout, "Overflowed offset [%i]: %lld\n", i, overflowed_offset);
         file_seek(fp, overflowed_offset, SEEK_SET);
 
         if (prefix != NULL) {
@@ -378,16 +351,11 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             buf[prefix_len] = '\0';
 
             uint32_t offset = file_tell(fp);
-            fprintf(stdout, "offset %ld\n", offset);
 
             if (file_read(buf, prefix_len, 1, fp) != 1) {
                 fprintf(stderr, "Error: Could not read strip prefix.\n");
                 free(buf);
                 return -1;
-            }
-
-            for (int j = 0; j < prefix_len; j++) {
-                fprintf(stdout, "buffer %i file: %d\n", j, buf[j]);
             }
 
             if (strcmp(prefix, buf) != 0) {
