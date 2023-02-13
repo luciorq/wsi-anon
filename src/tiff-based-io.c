@@ -361,8 +361,12 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
         fprintf(stdout, "Strip lengths [%i]: %ld\n", i, strip_lengths[i]);
 
         // convert to int64 and overflow by 0x100000000 
-        uint64_t overflowed_offset = 4294967296 + strip_offsets[i];
-        fprintf(stdout, "Overflowed offset [%i]: %lld\n", i, overflowed_offset);
+        uint64_t overflowed_offset = (uint64_t)UINT32_MAX + 1;
+        fprintf(stdout, "Overflowed offset (MAX) [%i]: %lld\n", i, overflowed_offset);
+        overflowed_offset += (uint64_t)strip_offsets[i];
+        fprintf(stdout, "Overflowed offset (mod) [%i]: %lld\n", i, overflowed_offset);
+        //uint64_t overflowed_offset = 4294967296 + strip_offsets[i];
+        //fprintf(stdout, "Overflowed offset [%i]: %lld\n", i, overflowed_offset);
         file_seek(fp, overflowed_offset, SEEK_SET);
 
         if (prefix != NULL) {
