@@ -355,8 +355,6 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             char *buf = (char *)malloc(prefix_len + 1);
             buf[prefix_len] = '\0';
 
-            uint32_t offset = file_tell(fp);
-
             if (file_read(buf, prefix_len, 1, fp) != 1) {
                 fprintf(stderr, "Error: Could not read strip prefix.\n");
                 free(buf);
