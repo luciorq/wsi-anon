@@ -193,9 +193,8 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 
         bool is_value = (value_size * count <= read_size);
 
-
         if (ndpi) {
-            if (file_seek(fp, offset+(12L*entry_count)+(4L*i)+6L, SEEK_SET) != 0) {
+            if (file_seek(fp, offset + (12L * entry_count) + (4L * i) + 6L, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to value/offset extension\n");
                 return NULL;
             }
@@ -208,7 +207,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
                 memcpy(&result, value + 4, sizeof(result));
                 tiff_dir->ndpi_high_bits = result;
             }
-            if (file_seek(fp, offset+(12L*(i+1))+2L, SEEK_SET) != 0) {
+            if (file_seek(fp, offset + (12L * (i + 1)) + 2L, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: seeking back to IFD start failed\n");
                 return NULL;
             }
@@ -336,11 +335,17 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     }
 
     for (int32_t i = 0; i < size_offsets; i++) {
-        // FIX ndpi offset: convert to int64 and overflow by UINT32_MAX and high bits of ndpi dir
-        // TODO: what happens if ndpi_high_bits is empty? (in case ndpi < 4gb?) do we need to distinguish between these cases?
-        uint64_t overflowed_offset = (uint64_t)UINT32_MAX + dir->ndpi_high_bits;
-        overflowed_offset += (uint64_t)strip_offsets[i];
-        file_seek(fp, overflowed_offset, SEEK_SET);
+
+        uint64_t new_offset = strip_offsets[i];
+
+        // Fix NDPI offset in case file is larger than 4GB
+        // convert to uint64, add high bits of ndpi dir to UINT32_MAX
+        // add the strip offset to this in order to get the actual offset
+        if (dir->ndpi_high_bits) {
+            new_offset = ((uint64_t)UINT32_MAX + dir->ndpi_high_bits) + (uint64_t)strip_offsets[i];
+        }
+
+        file_seek(fp, new_offset, SEEK_SET);
 
         if (prefix != NULL) {
             // we check the head of the directory offset for a given
