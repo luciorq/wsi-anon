@@ -10,13 +10,21 @@ int32_t is_hamamatsu(const char *filename) {
         return result;
     }
 
+    // open file
+    // ToDo: fopen internally uses _lseek() instead of _lseeki64() thats why it is not able to
+    // handle files equal to or larger than 4GB
+    file_t *fp = file_open(filename, "r+"); // ---- error here for >=4GB ----
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open tiff file.\n");
+        return result;
+    }
+
     // check if ndpi tiff tags are present
-    file_t *fp = file_open(filename, "r+");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
-    file_close(fp);
 
+    file_close(fp);
     return (result == 0);
 }
 
@@ -86,6 +94,12 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     // read the file structure
     struct tiff_file *file;
     file = read_tiff_file(fp, big_tiff, true, big_endian);
+    if (file == NULL) {
+        fprintf(stderr, "Error: Could not read tiff file.\n");
+        file_close(fp);
+        return -1;
+    }
+
     // find the macro directory
     int32_t dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
     if (dir_count == -1) {

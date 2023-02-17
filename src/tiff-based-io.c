@@ -138,7 +138,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 
     // seek to directory offset
     if (file_seek(fp, offset, SEEK_SET) != 0) {
-        fprintf(stderr, "Error: seeking to offset failed\n");
+        fprintf(stderr, "Error: seeking to offset failed.\n");
         return NULL;
     }
 
@@ -157,7 +157,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
         struct tiff_entry *entry = (struct tiff_entry *)malloc(sizeof(struct tiff_entry));
 
         if (entry == NULL) {
-            fprintf(stderr, "Error: could not allocate memory for entry\n");
+            fprintf(stderr, "Error: could not allocate memory for entry.\n");
             return NULL;
         }
 
@@ -174,12 +174,13 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
 
         if (!value_size) {
-            fprintf(stderr, "Error: calculating value size failed\n");
+            fprintf(stderr, "Error: calculating value size failed.\n"); // ToDo: 1. error here in
+                                                                        // Windows for files <4GB
             return NULL;
         }
 
         if (count > SIZE_MAX / value_size) {
-            fprintf(stderr, "Error: value count too large\n");
+            fprintf(stderr, "Error: value count too large.\n");
             return NULL;
         }
 
@@ -187,7 +188,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
         uint8_t value[(big_tiff || ndpi) ? 8 : 4];
         uint8_t read_size = big_tiff ? 8 : 4;
         if (file_read(value, read_size, 1, fp) != 1) {
-            fprintf(stderr, "Error: reading value to array failed\n");
+            fprintf(stderr, "Error: reading value to array failed.\n");
             return NULL;
         }
 
@@ -195,11 +196,11 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 
         if (ndpi) {
             if (file_seek(fp, offset + (12L * entry_count) + (4L * i) + 6L, SEEK_SET) != 0) {
-                fprintf(stderr, "Error: cannot seek to value/offset extension\n");
+                fprintf(stderr, "Error: cannot seek to value/offset extension.\n");
                 return NULL;
             }
             if (file_read(value + 4, 4, 1, fp) != 1) {
-                fprintf(stderr, "Error: cannot read value/offset extension\n");
+                fprintf(stderr, "Error: cannot read value/offset extension.\n");
                 return NULL;
             }
             if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
@@ -208,7 +209,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
                 tiff_dir->ndpi_high_bits = result;
             }
             if (file_seek(fp, offset + (12L * (i + 1)) + 2L, SEEK_SET) != 0) {
-                fprintf(stderr, "Error: seeking back to IFD start failed\n");
+                fprintf(stderr, "Error: seeking back to IFD start failed.\n");
                 return NULL;
             }
         }
@@ -286,7 +287,9 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
         read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
     if (dir == NULL) {
-        fprintf(stderr, "Error: Failed reading directory.\n");
+        fprintf(
+            stderr,
+            "Error: Failed reading directory.\n"); // ToDo: 2. error here in Windows for files <4GB
         return NULL;
     }
 

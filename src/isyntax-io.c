@@ -17,6 +17,7 @@ int32_t is_isyntax(const char *filename) {
 
         // if file could not be opened
         if (fp == NULL) {
+            fprintf(stderr, "Error: Could not open iSyntax file.\n");
             return result;
         }
 
@@ -65,7 +66,7 @@ const char *get_value_from_attribute(char *buffer, char *attribute) {
         return get_string_between_delimiters(
             value, concat_str(ISYNTAX_DELIMITER_INT, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
     } else {
-        fprintf(stderr, "Unable find value for attribute with this datatype");
+        fprintf(stderr, "Unable find value for attribute with this datatype.");
         return NULL;
     }
 }
@@ -341,6 +342,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
     // if file could not be opened
     if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open iSyntax file.\n");
         return -1;
     }
 

@@ -16,7 +16,6 @@ int32_t is_ventana(const char *filename) {
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
-        file_close(fp);
         return result;
     }
 
@@ -244,6 +243,11 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
 
     file_t *fp = file_open(*filename, "r+");
 
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open tiff file.\n");
+        return -1;
+    }
+
     bool big_tiff = false;
     bool big_endian = false;
     int32_t result = check_file_header(fp, &big_endian, &big_tiff);
@@ -258,6 +262,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
 
     if (file == NULL) {
         fprintf(stderr, "Error: Could not read tiff file.\n");
+        file_close(fp);
         return -1;
     }
 
