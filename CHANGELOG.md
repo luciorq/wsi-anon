@@ -1,10 +1,5 @@
 # Changelog
 
-## 0.3.12
-
-* temporary disabled mirax unlinking due to bug for some format versions
-!! FIX AS SOON AS POSSIBLE !!
-
 ## 0.3.11
 
 - refactor code
