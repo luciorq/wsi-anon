@@ -640,9 +640,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
                           SLIDE_PREVIEW);
 
     // unlink directory
-    // TEMPORARY DISABLED: This is potentially introducing a bug to the anonymization of some mirax
-    // files
-    if (true /* !disable_unlinking */) {
+    if (!disable_unlinking) {
 
         // unlink whole slide, preview and label images
         wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_WSI);
