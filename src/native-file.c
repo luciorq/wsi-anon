@@ -65,7 +65,10 @@ int64_t file_tell(file_t *stream) {
 }
 
 int32_t file_close(file_t *stream) {
-    int32_t result = fclose(stream->fp);
-    free(stream);
+    int32_t result = -1;
+    if (stream != NULL) {
+        result = fclose(stream->fp);
+        free(stream);
+    }
     return result;
 }

@@ -434,7 +434,6 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
 
 // find size up to substring in file
 int32_t get_size_to_substring(file_t *fp, char *substring) {
-
     file_seek(fp, 0, SEEK_END);
     long file_length = file_tell(fp);
     char *buffer = (char *)malloc(file_length);
@@ -458,7 +457,6 @@ int32_t get_size_to_substring(file_t *fp, char *substring) {
 
 // check if file contains specific value
 int32_t file_contains_value(file_t *fp, char *value) {
-
     file_seek(fp, 0, SEEK_END);
     long size = file_tell(fp);
     char *buffer = (char *)malloc(size);

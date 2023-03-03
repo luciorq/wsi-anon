@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.13
+
+* fix for failing parsing of slidedat.ini (mirax)
+
 ## 0.3.12
 
 * temporary disabled mirax unlinking due to bug for some format versions

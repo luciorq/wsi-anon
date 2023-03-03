@@ -39,7 +39,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
     // concat slidedat filename
     const char *slidedat_filname = concat_path_filename(path, ini_filename);
 
-    file_t *fp = file_open(slidedat_filname, "r");
+    file_t *fp = file_open(slidedat_filname, "r+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not read ini file.\n");
@@ -48,31 +48,30 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
 
     // determine the amount of ini groups
     int32_t count_groups = get_groups_count(fp);
-    // printf("Count groups[%i]\n", count_groups);
-    // we return to the file start
+    //printf("Count groups[%i]\n", count_groups);
     file_seek(fp, 0, SEEK_SET);
 
     // initialize line buffer
-    char *buffer = (char *)malloc(MAX_CHAR_IN_LINE);
+    char buffer[MAX_CHAR_IN_LINE];
 
     // initialize ini groups
     struct ini_group *groups = (struct ini_group *)malloc(count_groups * sizeof(struct ini_group));
     int32_t line = 0, group_count = 0;
 
     while (file_gets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
-        if (strstr(buffer, "[") != NULL && strstr(buffer, "]") != NULL) {
-            // create new group and populate
+        if (buffer != NULL && strstr(buffer, "[") != NULL && strstr(buffer, "]") != NULL) {
+            //printf("Group name: [%s]\n", buffer);
+            // create and populate new group
             struct ini_group *temp_group = (struct ini_group *)malloc(sizeof(struct ini_group));
-            const char *group_id = get_string_between_delimiters(buffer, "[", "]");
-            temp_group->group_identifier = group_id;
+            temp_group->group_identifier = get_string_between_delimiters(buffer, "[", "]");
             temp_group->start_line = line;
-            // add group to array
             groups[group_count] = *temp_group;
             group_count++;
         }
         line++;
     }
-    // set last group start line to end of file
+
+    //set last group start line to end of file
     groups[count_groups].start_line = line;
 
     // populate the ini groups with associated entries
@@ -91,45 +90,43 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         // read lines related to the current group
         int32_t line_count = 0, entry_count = 0;
         while (file_gets(buffer, MAX_CHAR_IN_LINE, fp) != NULL) {
+            //printf("Buffer in group entries %s\n", buffer);
             line_count++;
-            // skip useless lines
-            if (line_count <= current_group.start_line + 1) {
+            if (!contains(buffer, "=") || line_count <= current_group.start_line + 1) {
+                // skip non relevant lines
                 continue;
             } else if (count_groups != i + 1 && line_count > next_group.start_line) {
+                // stop criterea
                 break;
-            }
-
-            // parse entry
+            } 
             struct ini_entry *temp_entry = (struct ini_entry *)malloc(sizeof(struct ini_entry));
-            if (!contains(buffer, "=")) {
-                continue;
-            }
             char **splitted_entry = str_split(buffer, '=');
 
-            // remove whitspace
             char *key = splitted_entry[0];
             remove_leading_spaces(key);
             temp_entry->key = key;
-            // remove tab
-            char *value = str_split(splitted_entry[1], '\r')[0];
+
+            char *value = str_split(splitted_entry[1], '\r')[0]; // remove tab
             remove_leading_spaces(value);
             temp_entry->value = value;
+
             entries[entry_count] = *temp_entry;
             entry_count++;
 
-            // printf("--entry: [%s / %s]\n", key, value);
+            //printf("--entry: [%s / %s]\n", key, value);
         }
         groups[i].entries = entries;
         groups[i].entry_count = entry_count;
     }
 
-    free(buffer);
+    // Investigate: closing the stream results in a corrupt file handle (corrupted size vs. prev_size)
+    // Anyway, as the application is short running and the file stream is in read mode only, this shouldn't lead to any UB
+    //file_close(fp);
 
     struct ini_file *ini_file = (struct ini_file *)malloc(sizeof(struct ini_file));
     ini_file->group_count = group_count;
     ini_file->groups = groups;
 
-    file_close(fp);
     return ini_file;
 }
 
