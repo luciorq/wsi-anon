@@ -383,7 +383,7 @@ uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t ta
                 }
 
                 if (file_seek(fp, new_offset, SEEK_SET)) {
-                    fprintf(stderr, "Error: Failed to seek to offset %lu.\n", entry.offset);
+                    fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
                     continue;
                 }
                 if (file_read(v_buffer, entry_size, entry.count, fp) < 1) {
@@ -479,15 +479,18 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image tag %d.\n", tag);
+                    free(buffer);
                     return -1;
                 }
                 // check if tag value contains given string
                 if (contains(buffer, contains_value)) {
+                    free(buffer);
                     return 1;
                 }
+                free(buffer);
             }
         }
     }
@@ -505,16 +508,19 @@ int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image tag %d.\n", tag);
+                    free(buffer);
                     return -1;
                 }
 
                 // check if value contains expected value and return directory
                 if (contains(buffer, value)) {
+                    free(buffer);
                     return i;
                 }
+                free(buffer);
             }
         }
     }

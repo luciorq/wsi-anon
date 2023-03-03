@@ -366,5 +366,5 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
     // clean up
     file_close(fp);
-    return 1;
+    return 0;
 }
