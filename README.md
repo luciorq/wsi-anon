@@ -26,7 +26,7 @@ The design and implementation is described in a technical note (currently as a p
 * install `MinGW-w64`, e.g. from [Winlibs](https://winlibs.com/) (only required when running under windows)
 
 WebAssembly:
-* install `emscripten`, e.g. from [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) (only required for Web Assembly target)
+* install `emscripten`, e.g. from [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) (at least v. 1.39.15, only required for Web Assembly target)
 
 Development (Testing and code checks):
 * install `clang-format-10`

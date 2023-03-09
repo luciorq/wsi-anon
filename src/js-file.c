@@ -3,6 +3,7 @@
 #include <emscripten.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 struct file_s {
     char *filename;
@@ -38,7 +39,8 @@ EM_ASYNC_JS(int32_t, file_present_in_form, (const char *filename), {
 
 EM_ASYNC_JS(size_t, file_size, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
-    const anonStream = AnonymizedStream.retrieve(jsFilename);
+    const anonStream = AnonymizedStream.retrieve(jsFilename);          
+    console.log(anonStream.size);                               // actual size: 5012468754 but returns 717501458
     return anonStream.size;
 });
 

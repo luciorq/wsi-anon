@@ -7,6 +7,14 @@ import AnonymizedStream from './bin/wsi-anon.js';
 async function onAnonymizeWsi() {
   const files = document.getElementById("file-input").files;
   const chunkSize = 10 * 1000*1000;
+
+  // only for MIRAX files
+  // ToDo: investigate how I can find the files in the mirax directory under their relative path and not the name it was uploaded
+  const dir = document.getElementById("dir-input").files;
+  if (typeof dir[0] !== 'undefined'){}
+    console.log(dir)
+  }
+
   const anonStream = AnonymizedStream.create(files[0], chunkSize)
   console.log("running anonymization ...");
   try {
@@ -22,7 +30,11 @@ window.globalThis.onAnonymizeWsi = onAnonymizeWsi;
 <title>wsi-anon WASM example</title>
 </head>
 <body>
-<input id="file-input" type="file"></input>
+<h2>WSI-Anon WASM</h2>
+<input id="file-input" type="file" accept=".svs,.mrxs,.ndpi,.tif,.bif,.isyntax"></input>
+<p>(Accepted file formats: '.svs', '.mrxs', '.ndpi', '.tif', '.bif', '.isyntax')</br></br></br></p>
+<input id="dir-input" type="file" webkitdirectory></input>
+<p>(ONLY if a '.mrxs' file was passed, please select the corresponding directory)</br></br></br></p>
 <button onclick="onAnonymizeWsi()">Anonymize WSI</button>
 <p>Open the console to see the result!</p>
 </body>
