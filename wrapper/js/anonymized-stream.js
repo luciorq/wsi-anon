@@ -58,7 +58,7 @@ export default class AnonymizedStream {
 
   // ReadableStreamDefaultReader compliant API to be used in upload client
 
-  read () {
+  async read () {
     if (this._start === this.size) {
       const value = undefined
       const done = true

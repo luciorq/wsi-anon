@@ -40,7 +40,8 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
                         // to get the expected value
                         uint64_t new_start = temp_entry.start + 8;
                         if (file_seek(fp, new_start, SEEK_SET)) {
-                            fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
+                            fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n",
+                                    new_start);
                             return -1;
                         }
                         if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
