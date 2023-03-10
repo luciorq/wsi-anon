@@ -6,41 +6,68 @@ import AnonymizedStream from './bin/wsi-anon.js';
 
 async function onAnonymizeWsi() {
   const files = document.getElementById("file-input").files;
-  const chunkSize = 10 * 1000*1000;
-
-  // only for MIRAX
   const dir = document.getElementById("dir-input").files;
+  const chunkSize = 10 * 1000*1000;
   var anonStream;
-  if (typeof dir[0] !== 'undefined'){
+
+  // check if file was passed
+  if (typeof files[0] !== 'undefined'){
+    anonStream = AnonymizedStream.create(files[0], chunkSize);
+    runAnonymization(anonStream);
+  }
+  // check if directory was passed, only for MIRAX files
+  else if (typeof dir[0] !== 'undefined'){
     anonStream = AnonymizedStream.create(dir[0], chunkSize);
     for(let i = 1; i < dir.length; i++){
-      AnonymizedStream.create(dir[i], chunkSize, dir[0].name.split('.')[0]);
+        AnonymizedStream.create(dir[i], chunkSize, dir[0].name.split('.')[0]);
     }
+    runAnonymization(anonStream);
   }
+  else{
+    alert( "No file/directory selected!");
+  }
+}
 
-  console.log("running anonymization ...");
+async function runAnonymization(anonStream){
+  console.log("Running anonymization...");
   try {
     await anonStream.anonymize();
-    console.log("done, stream can now be uploaded");
+    console.log("Done, stream can now be uploaded.");
   } catch (error) {
     alert(error);
   }
 }
 
+// ToDo: currently only does this for MIRAX slidedat.ini file (directories) --> extend functionality
 async function downloadWSI(){
-  if( !("showSaveFilePicker" in self) ) {
-    throw new Error( "unsupported browser" );
+  // check for browser support
+  if(!("showSaveFilePicker" in self) ) {
+    abort("Unsupported browser");
   }
-  const handle = await showSaveFilePicker();
-  const filestream = await handle.createWritable();
-  const writer = await filestream.getWriter();
-  var files = document.getElementById("dir-input").files;
-  var retrievedFile = AnonymizedStream.retrieve(files[files.length-1].name, files[0].name.split('.')[0])
-  console.log(files[files.length-1].name)
-  console.log(files[0].name.split('.')[0])
-  console.log(retrievedFile)
-  retrievedFile.read().then((value, done) => writer.write(value));  // ToDo: make sure that the object is properly written to a file before writer is closed 
-  writer.close();
+
+  // check if files were anonymized
+  const files = document.getElementById("dir-input").files;
+  if (typeof files[0] !== 'undefined'){
+    // create stream and writer
+    const handle = await showSaveFilePicker();
+    const filestream = await handle.createWritable();
+    const writer = await filestream.getWriter();
+    const files = document.getElementById("dir-input").files;
+    const stream = AnonymizedStream.retrieve(files[files.length-1].name, files[0].name.split('.')[0])
+
+    // write stream to file
+    while(true){
+      let result = await stream.read();
+      if (result.done){
+        break;
+      }
+      writer.write(result.value);
+    }
+    writer.close();
+  }
+  else{
+    alert( "No files anonymized! Please anonymize files before downloading.");
+  }
 }
 
 window.globalThis.onAnonymizeWsi = onAnonymizeWsi;

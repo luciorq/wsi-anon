@@ -41,8 +41,8 @@ EM_ASYNC_JS(int32_t, file_present_in_form, (const char *filename), {
 EM_ASYNC_JS(size_t, file_size, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
     const anonStream = AnonymizedStream.retrieve(jsFilename);
-    // console.log(anonStream.size);    // ToDo: get actual size of file for >4GB
-    return anonStream.size;
+    // console.log(anonStream.size);
+    return anonStream.size; // ToDo: return tuple or string
 });
 
 file_t *file_open(const char *filename, const char *mode) {
