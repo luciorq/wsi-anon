@@ -75,15 +75,13 @@ and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
 
 **This is currently experimental.**
 
-The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications run under Google Chrome or Microsoft Edge, run the following command:  
+The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications, run the following command:  
 
 #### Under Linux 
 
 ```bash
 make wasm
 ```
-
-and open the 'wasm-example.html' (e.g. with a Live Server) afterwards.
 
 ## Run
 
@@ -109,7 +107,7 @@ Type `-h` or `--help` for help. Further CLI parameters are:
 
 ### Web Assembly Usage
 
-In order to test the WASM build, you can use the [wasm-example.html](./wasm-example.html) page which contains a very basic integration of the generated ES6 module. This API - provided by a corresponding NPM package - can then also be imported from the given package:
+In order to test the WASM build, you can use the [wasm-example.html](./wasm-example.html) page which contains a very basic integration of the generated ES6 module. Open the page (e.g. with a Live Server) under Google Chrome or Microsoft Edge. This API - provided by a corresponding NPM package - can then also be imported from the given package: 
 
 ```javascript
 import AnonymizedStream from 'wsi-anon'
