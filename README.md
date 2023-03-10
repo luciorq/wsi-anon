@@ -73,13 +73,17 @@ and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
 
 ### Web Assembly Target
 
-The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. **This is currently experimental.**
+**This is currently experimental.**
+
+The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications run under Google Chrome or Microsoft Edge, run the following command:  
+
+#### Under Linux 
 
 ```bash
 make wasm
 ```
 
-This produces an ES6 module `./bin/wsi-anon.mjs` with embedded, base64 encoded wasm binary to facilitate usage in arbitrary web applications.
+and open the 'wasm-example.html' (e.g. with a Live Server) afterwards.
 
 ## Run
 
