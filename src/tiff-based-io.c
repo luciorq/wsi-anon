@@ -481,7 +481,7 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
 
                 char *buffer = malloc(entry_size * entry.count);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image tag %d.\n", tag);
+                    fprintf(stderr, "Error: Could not read image tag %" PRId32 ".\n", tag);
                     free(buffer);
                     return -1;
                 }
@@ -510,7 +510,7 @@ int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32
 
                 char *buffer = malloc(entry_size * entry.count);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image tag %d.\n", tag);
+                    fprintf(stderr, "Error: Could not read image tag %" PRId32 ".\n", tag);
                     free(buffer);
                     return -1;
                 }
