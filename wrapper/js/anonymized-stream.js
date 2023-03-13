@@ -87,7 +87,7 @@ export default class AnonymizedStream {
       const changeStart = this._changes[i].start
       const changeSize = this._changes[i].size
       const changeEnd = changeStart + changeSize
-      if ((changeStart < offset && changeEnd > offset) || (changeStart >= offset && changeStart < end)) { // ToDo: never enters this under ventana
+      if ((changeStart < offset && changeEnd > offset) || (changeStart >= offset && changeStart < end)) {
         console.log('Applying changes...')
         const changeOffset = offset - changeStart
         const frontClip = Math.max(0, changeOffset)

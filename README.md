@@ -125,7 +125,7 @@ try {
 }
 ```
 
-Anonymization is not done during creation of the instance, because there are WSI formats that consist of multiple files. For all of them, an `AnonymizedStream` instance must be created first. After that, `anonymize` is called **only** for the WSI's main file. After `anonymize` has been successfully awaited, all stream instances belonging to the given WSI can be uploaded, e.g., using the tus.Upload client.
+Anonymization is not done during creation of the instance, because there are WSI formats that consist of multiple files. For all of them, an `AnonymizedStream` instance must be created first. After `anonymize` has been called and successfully awaited, all stream instances belonging to the given WSI can be uploaded, e.g., using the tus.Upload client. The anonymized file can afterwards also be downloaded. This functionality is currently implemented for all file formats except for formats that consist of multiple files e.g. MIRAX.
 
 
 ## Development

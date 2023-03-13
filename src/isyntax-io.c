@@ -295,7 +295,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
         // encode new image data and check if string is longer than original string, replace old
         // base64-encoded string afterwards
-        char *new_image_data = b64_encode(jpeg, len);
+        char *new_image_data = b64_encode(jpeg, strlen(image_data));
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';
         }
@@ -320,7 +320,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
     }
 
     free(buffer);
-    return 1;
+    return 0;
 }
 
 // anonymize iSyntax file
@@ -366,5 +366,5 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
     // clean up
     file_close(fp);
-    return 0;
+    return result;
 }

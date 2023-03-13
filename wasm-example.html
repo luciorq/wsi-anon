@@ -38,36 +38,43 @@ async function runAnonymization(anonStream){
   }
 }
 
-// ToDo: currently only does this for MIRAX slidedat.ini file (directories) --> extend functionality
 async function downloadWSI(){
   // check for browser support
   if(!("showSaveFilePicker" in self) ) {
     abort("Unsupported browser");
   }
 
-  // check if files were anonymized
-  const files = document.getElementById("dir-input").files;
+  // check if single files were anonymized
+  let files = document.getElementById("file-input").files;
+  const dirFiles = document.getElementById("dir-input").files;
   if (typeof files[0] !== 'undefined'){
-    // create stream and writer
-    const handle = await showSaveFilePicker();
-    const filestream = await handle.createWritable();
-    const writer = await filestream.getWriter();
-    const files = document.getElementById("dir-input").files;
-    const stream = AnonymizedStream.retrieve(files[files.length-1].name, files[0].name.split('.')[0])
-
-    // write stream to file
-    while(true){
-      let result = await stream.read();
-      if (result.done){
-        break;
-      }
-      writer.write(result.value);
-    }
-    writer.close();
+    const stream = AnonymizedStream.retrieve(files[0].name)
+    await writeFile(stream);
+    console.log("Download done!");
+  }
+  // ToDo: Download of MIRAX files
+  else if (typeof dirFiles[0] !== 'undefined'){
+    alert("Download of WSI for MIRAX-files is currently not supported!");
   }
   else{
     alert( "No files anonymized! Please anonymize files before downloading.");
   }
+}
+
+// write stream to file 
+async function writeFile(stream){
+  const handle = await showSaveFilePicker();
+  const filestream = await handle.createWritable();
+  const writer = await filestream.getWriter();
+
+  while(true){
+    let result = await stream.read();
+    if (result.done){
+      break;
+    }
+    writer.write(result.value);
+  }
+  writer.close();
 }
 
 window.globalThis.onAnonymizeWsi = onAnonymizeWsi;

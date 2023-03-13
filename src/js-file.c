@@ -9,7 +9,7 @@ struct file_s {
     char *filename;
     char *mode;
     int64_t offset;
-    size_t size;
+    int64_t size;
 };
 
 EM_ASYNC_JS(size_t, get_chunk, (void *buffer, size_t size, const char *filename, int64_t offset), {
@@ -38,11 +38,13 @@ EM_ASYNC_JS(int32_t, file_present_in_form, (const char *filename), {
     return AnonymizedStream.exists(jsFilename) ? 1 : 0;
 });
 
-EM_ASYNC_JS(size_t, file_size, (const char *filename), {
+EM_ASYNC_JS(char *, file_size, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
-    const anonStream = AnonymizedStream.retrieve(jsFilename);
-    // console.log(anonStream.size);
-    return anonStream.size; // ToDo: return tuple or string
+    const anonStreamSize = AnonymizedStream.retrieve(jsFilename).size.toString();
+    const lengthBytes = lengthBytesUTF8(anonStreamSize) + 1;
+    var stringOnWasmHeap = _malloc(lengthBytes);
+    stringToUTF8(anonStreamSize, stringOnWasmHeap, lengthBytes);
+    return stringOnWasmHeap;
 });
 
 file_t *file_open(const char *filename, const char *mode) {
@@ -51,11 +53,16 @@ file_t *file_open(const char *filename, const char *mode) {
     if (file_present_in_form(filename)) {
         stream = (file_t *)malloc(sizeof(file_t));
         stream->offset = 0;
-        stream->size = file_size(filename);
         stream->filename = (char *)malloc(strlen(filename) + 1);
         stream->mode = (char *)malloc(strlen(mode) + 1);
         strcpy(stream->filename, filename);
         strcpy(stream->mode, mode);
+
+        // safe method to set file_size for >4GB files
+        char *size_str = file_size(filename);
+        int64_t size = strtoll(size_str, NULL, 10);
+        free(size_str);
+        stream->size = size;
     }
 
     return stream;
