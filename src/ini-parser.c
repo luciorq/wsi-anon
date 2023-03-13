@@ -33,6 +33,8 @@ int32_t get_groups_count(file_t *fp) {
     return count_groups;
 }
 
+// TODO: Urgent! Fix bug when a Slidedat.ini file is not in order.
+// E.g., Attribute groups are not sorted by respective layers and levels
 struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filename) {
     // concat slidedat filename
     const char *slidedat_filename = concat_path_filename(path, ini_filename);
