@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.14
+
+- fix WASM bugs for ventana and isyntax
+- allow passing of directories for MIRAX
+- add download option for all file formats except MIRAX
+- handle 32-Bit integer limitation
+
 ## 0.3.13
 
 * enabled mirax unlinking

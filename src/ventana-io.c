@@ -65,15 +65,18 @@ int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image description.\n");
+                    free(buffer);
                     return -1;
                 }
 
                 if (contains(buffer, "Label")) {
+                    free(buffer);
                     return i;
                 }
+                free(buffer);
             }
         }
     }
@@ -151,9 +154,10 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
             if (entry.tag == TIFFTAG_XMP) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read XMP Tag.\n");
+                    free(buffer);
                     return -1;
                 }
 
@@ -215,9 +219,11 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(result, entry_size, entry.count, fp)) {
                         fprintf(stderr, "Error: changing XML Data in XMP Tag failed.\n");
+                        free(buffer);
                         return -1;
                     }
                 }
+                free(buffer);
             }
         }
     }

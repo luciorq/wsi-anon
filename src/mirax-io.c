@@ -590,7 +590,6 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
                             "label name.\n");
             return -1;
         }
-        *filename = path;
     }
 
     struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);

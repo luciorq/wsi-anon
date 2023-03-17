@@ -26,7 +26,7 @@ The design and implementation is described in a technical note (currently as a p
 * install `MinGW-w64`, e.g. from [Winlibs](https://winlibs.com/) (only required when running under windows)
 
 WebAssembly:
-* install `emscripten` (only required for Web Assembly target)
+* install `emscripten`, e.g. from [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) (at least v. 1.39.15, only required for Web Assembly target)
 
 Development (Testing and code checks):
 * install `clang-format-10`
@@ -73,13 +73,15 @@ and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
 
 ### Web Assembly Target
 
-The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. **This is currently experimental.**
+**This is currently experimental.**
+
+The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications, run the following command:  
+
+#### Under Linux 
 
 ```bash
 make wasm
 ```
-
-This produces an ES6 module `./bin/wsi-anon.mjs` with embedded, base64 encoded wasm binary to facilitate usage in arbitrary web applications.
 
 ## Run
 
@@ -105,7 +107,7 @@ Type `-h` or `--help` for help. Further CLI parameters are:
 
 ### Web Assembly Usage
 
-In order to test the WASM build, you can use the [wasm-example.html](./wasm-example.html) page which contains a very basic integration of the generated ES6 module. This API - provided by a corresponding NPM package - can then also be imported from the given package:
+In order to test the WASM build, you can use the [wasm-example.html](./wasm-example.html) page which contains a very basic integration of the generated ES6 module. Open the page (e.g. with a Live Server) under Google Chrome or Microsoft Edge. This API - provided by a corresponding NPM package - can then also be imported from the given package: 
 
 ```javascript
 import AnonymizedStream from 'wsi-anon'
@@ -123,7 +125,7 @@ try {
 }
 ```
 
-Anonymization is not done during creation of the instance, because there are WSI formats that consist of multiple files. For all of them, an `AnonymizedStream` instance must be created first. After that, `anonymize` is called **only** for the WSI's main file. After `anonymize` has been successfully awaited, all stream instances belonging to the given WSI can be uploaded, e.g., using the tus.Upload client.
+Anonymization is not done during creation of the instance, because there are WSI formats that consist of multiple files. For all of them, an `AnonymizedStream` instance must be created first. After `anonymize` has been called and successfully awaited, all stream instances belonging to the given WSI can be uploaded, e.g., using the tus.Upload client. The anonymized file can afterwards also be downloaded. This functionality is currently implemented for all file formats except for formats that consist of multiple files, e.g. MIRAX.
 
 
 ## Development

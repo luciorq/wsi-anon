@@ -37,9 +37,9 @@ int32_t get_groups_count(file_t *fp) {
 // E.g., Attribute groups are not sorted by respective layers and levels
 struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filename) {
     // concat slidedat filename
-    const char *slidedat_filname = concat_path_filename(path, ini_filename);
+    const char *slidedat_filename = concat_path_filename(path, ini_filename);
 
-    file_t *fp = file_open(slidedat_filname, "r");
+    file_t *fp = file_open(slidedat_filename, "r");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not read ini file.\n");
@@ -304,8 +304,8 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *gr
 
 int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *filename) {
 
-    const char *slidedat_filname = concat_path_filename(path, filename);
-    file_t *fp = file_open(slidedat_filname, "w+");
+    const char *slidedat_filename = concat_path_filename(path, filename);
+    file_t *fp = file_open(slidedat_filename, "w+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Failed writing index file.\n");

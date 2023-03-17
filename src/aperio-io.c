@@ -101,7 +101,7 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
         struct tiff_entry entry = dir.entries[i];
         if (entry.tag == TIFFTAG_COMPRESSION) {
             if (file_seek(fp, entry.start + 12, SEEK_SET)) {
-                fprintf(stderr, "Error: Failed to seek to offset %lu.\n", entry.offset);
+                fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
                 continue;
             }
             uint64_t lzw_com = COMPRESSION_LZW;

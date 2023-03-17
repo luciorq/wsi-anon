@@ -1,45 +1,50 @@
 #include "file-api.h"
 
 #include <emscripten.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
 struct file_s {
     char *filename;
     char *mode;
-    long offset;
-    size_t size;
+    int64_t offset;
+    int64_t size;
 };
 
-EM_ASYNC_JS(size_t, get_chunk, (void *buffer, size_t size, const char *filename, long offset), {
+EM_ASYNC_JS(size_t, get_chunk, (void *buffer, size_t size, const char *filename, int64_t offset), {
     const jsFilename = UTF8ToString(filename);
     const anonStream = AnonymizedStream.retrieve(jsFilename);
-    const sliceData = await anonStream.getAnonymizedChunk(offset, size);
+    const sliceData = await anonStream.getAnonymizedChunk(BigInt(offset), size);
     const sourceView = new Uint8Array(sliceData, 0, sliceData.byteLength);
     const targetView = new Uint8Array(wasmMemory.buffer, buffer, sliceData.byteLength);
     targetView.set(sourceView);
     return sliceData.byteLength;
 });
 
-EM_ASYNC_JS(void, set_chunk, (const void *buffer, size_t size, const char *filename, long offset), {
-    const sourceView = new Uint8Array(wasmMemory.buffer, buffer, size);
-    const targetBuffer = new ArrayBuffer(size);
-    const targetView = new Uint8Array(targetBuffer);
-    targetView.set(sourceView);
-    const jsFilename = UTF8ToString(filename);
-    const anonStream = AnonymizedStream.retrieve(jsFilename);
-    anonStream.addChanges(targetBuffer, offset)
-});
+EM_ASYNC_JS(void, set_chunk,
+            (const void *buffer, size_t size, const char *filename, int64_t offset), {
+                const sourceView = new Uint8Array(wasmMemory.buffer, buffer, size);
+                const targetBuffer = new ArrayBuffer(size);
+                const targetView = new Uint8Array(targetBuffer);
+                targetView.set(sourceView);
+                const jsFilename = UTF8ToString(filename);
+                const anonStream = AnonymizedStream.retrieve(jsFilename);
+                anonStream.addChanges(targetBuffer, BigInt(offset));
+            });
 
 EM_ASYNC_JS(int32_t, file_present_in_form, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
     return AnonymizedStream.exists(jsFilename) ? 1 : 0;
 });
 
-EM_ASYNC_JS(size_t, file_size, (const char *filename), {
+EM_ASYNC_JS(char *, file_size, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
-    const anonStream = AnonymizedStream.retrieve(jsFilename);
-    return anonStream.size;
+    const anonStreamSize = AnonymizedStream.retrieve(jsFilename).size.toString();
+    const lengthBytes = lengthBytesUTF8(anonStreamSize) + 1;
+    var stringOnWasmHeap = _malloc(lengthBytes);
+    stringToUTF8(anonStreamSize, stringOnWasmHeap, lengthBytes);
+    return stringOnWasmHeap;
 });
 
 file_t *file_open(const char *filename, const char *mode) {
@@ -48,20 +53,25 @@ file_t *file_open(const char *filename, const char *mode) {
     if (file_present_in_form(filename)) {
         stream = (file_t *)malloc(sizeof(file_t));
         stream->offset = 0;
-        stream->size = file_size(filename);
         stream->filename = (char *)malloc(strlen(filename) + 1);
         stream->mode = (char *)malloc(strlen(mode) + 1);
         strcpy(stream->filename, filename);
         strcpy(stream->mode, mode);
+
+        // safe method to set file_size for >4GB files
+        char *size_str = file_size(filename);
+        int64_t size = strtoll(size_str, NULL, 10);
+        free(size_str);
+        stream->size = size;
     }
 
     return stream;
 }
 
 size_t file_read(void *buffer, size_t element_size, size_t element_count, file_t *stream) {
-    get_chunk(buffer, element_size * element_count, stream->filename, stream->offset);
-    // TODO: how many elements were really read and adapt offset accordingly
-    stream->offset += element_size * element_count;
+    uint32_t bytes_read =
+        get_chunk(buffer, element_size * element_count, stream->filename, stream->offset);
+    stream->offset += bytes_read * element_count;
     return element_count;
 }
 
@@ -98,7 +108,7 @@ int32_t file_getc(file_t *stream) {
 }
 
 int64_t file_seek(file_t *stream, int64_t offset, int32_t origin) {
-    long new_offset = 0;
+    uint64_t new_offset = 0;
     if (origin == SEEK_SET) {
         new_offset = offset;
     } else if (origin == SEEK_CUR) {

@@ -42,23 +42,23 @@ export default class AnonymizedStream {
 
   addChanges (data, offset) {
     this._changes.push({
-      start: offset,
+      start: Number(offset),
       size: data.byteLength,
       data: data
     })
   }
 
   async getAnonymizedChunk (offset, size) {
-    const slice = this._original.slice(offset, offset + size)
+    const slice = this._original.slice(Number(offset), Number(offset) + size)
     const sliceData = await slice.arrayBuffer()
-    this._applyChanges(sliceData, offset)
+    this._applyChanges(sliceData, Number(offset))
     return sliceData
   }
 
 
   // ReadableStreamDefaultReader compliant API to be used in upload client
 
-  read () {
+  async read () {
     if (this._start === this.size) {
       const value = undefined
       const done = true
@@ -88,7 +88,7 @@ export default class AnonymizedStream {
       const changeSize = this._changes[i].size
       const changeEnd = changeStart + changeSize
       if ((changeStart < offset && changeEnd > offset) || (changeStart >= offset && changeStart < end)) {
-        console.log('applying changes...')
+        console.log('Applying changes...')
         const changeOffset = offset - changeStart
         const frontClip = Math.max(0, changeOffset)
         const tailClip = Math.max(0, (changeStart + changeSize) - (offset + bufferSize))
