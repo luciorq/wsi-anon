@@ -49,12 +49,17 @@ async function downloadWSI(){
   const dirFiles = document.getElementById("dir-input").files;
   if (typeof files[0] !== 'undefined'){
     const stream = AnonymizedStream.retrieve(files[0].name)
-    await writeFile(stream);
+    await writeFile(stream, "_anonymized_wsi." + files[0].name.split('.')[1]);
     console.log("Download done!");
   }
-  // ToDo: Download of MIRAX files
   else if (typeof dirFiles[0] !== 'undefined'){
-    alert("Download of WSI for MIRAX-files is currently not supported!");
+    const stream = AnonymizedStream.retrieve(dirFiles[0].name)
+    await writeFile(stream, "_anonymized_wsi." + dirFiles[0].name.split('.')[1]);
+    for(let i = 1; i < dirFiles.length; i++){
+      const stream = AnonymizedStream.retrieve(dirFiles[i].name, dirFiles[0].name.split('.')[0])
+      await writeFile(stream, dirFiles[i].name);
+    }
+    console.log("Download done!");
   }
   else{
     alert( "No files anonymized! Please anonymize files before downloading.");
@@ -62,8 +67,8 @@ async function downloadWSI(){
 }
 
 // write stream to file 
-async function writeFile(stream){
-  const handle = await showSaveFilePicker();
+async function writeFile(stream, filename){
+  const handle = await showSaveFilePicker({suggestedName: filename});
   const filestream = await handle.createWritable();
   const writer = await filestream.getWriter();
 
@@ -87,7 +92,7 @@ window.globalThis.downloadWSI = downloadWSI;
 <input id="file-input" type="file" accept=".svs,.mrxs,.ndpi,.tif,.bif,.isyntax"></input>
 <p>(Accepted file formats: '.svs', '.ndpi', '.tif', '.bif', '.isyntax')</br></br></br></p>
 <input id="dir-input" type="file" webkitdirectory></input>
-<p>(ONLY for '.mrxs': please select the directory that contains the '.mrxs' and the corresponding subfolder and upload them)</br></br></br></p>
+<p>(ONLY for '.mrxs': please select the directory that only contains the '.mrxs' and the corresponding subfolder and upload them)</br></br></br></p>
 <p>Open the console to see the result!</p>
 <button onclick="onAnonymizeWsi()">Anonymize WSI</button>
 <button onclick="downloadWSI()">Download WSI</button>
