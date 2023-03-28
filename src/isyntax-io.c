@@ -260,6 +260,11 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         return -1;
     }
 
+    // handle bigger overhead when using malloc in WASM
+    if (strlen(buffer) > header_size) {
+        buffer[header_size] = '\0';
+    }
+
     char *result = buffer;
     bool rewrite = false;
 
@@ -295,7 +300,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
         // encode new image data and check if string is longer than original string, replace old
         // base64-encoded string afterwards
-        char *new_image_data = b64_encode(jpeg, strlen(image_data));
+        char *new_image_data = b64_encode(jpeg, len);
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';
         }
@@ -314,11 +319,12 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         file_seek(fp, 0, SEEK_SET);
         if (!file_write(buffer, header_size, 1, fp)) {
             fprintf(stderr, "Error: changing XML Header failed.\n");
+            result = NULL;
             free(buffer);
             return -1;
         }
     }
-
+    result = NULL;
     free(buffer);
     return 0;
 }

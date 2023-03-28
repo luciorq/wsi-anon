@@ -230,16 +230,16 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 // check tiff file header
 int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
     int32_t result = -1;
-    uint16_t endianess;
+    uint16_t endianness;
 
     // read endianness in header
-    if (file_read(&endianess, sizeof endianess, 1, fp) != 1) {
+    if (file_read(&endianness, sizeof endianness, 1, fp) != 1) {
         return result;
     }
 
-    if (endianess == TIFF_BIGENDIAN || endianess == TIFF_LITTLEENDIAN) {
+    if (endianness == TIFF_BIGENDIAN || endianness == TIFF_LITTLEENDIAN) {
         // set endianness and check ndpi version in header
-        *big_endian = (endianess == TIFF_BIGENDIAN);
+        *big_endian = (endianness == TIFF_BIGENDIAN);
         uint16_t version = read_uint(fp, 2, *big_endian);
 
         if (version == TIFF_VERSION_BIG) {
@@ -279,8 +279,6 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     // initialize tiff file and add first directory
     init_tiff_file(file, 1);
     insert_dir_into_tiff_file(file, dir);
-    // set the current directory as previous directory
-    // struct tiff_directory *prev_dir = dir;
 
     // when the directory offset is 0 we reached the end of the tiff file
     while (diroff != 0) {
