@@ -18,8 +18,14 @@ export default class AnonymizedStream {
     return stream
   }
 
+  // ToDo: handle punctuation ('.') in filenames
   static exists (filename) {
-    return Object.prototype.hasOwnProperty.call(AnonymizedStream._files, filename)
+    if (!Object.prototype.hasOwnProperty.call(AnonymizedStream._files, filename)){
+      throw Error("Please remove all '.' from filename!");
+    }
+    else{
+      return Object.prototype.hasOwnProperty.call(AnonymizedStream._files, filename);
+    }
   }
 
   static retrieve (filename, path) {

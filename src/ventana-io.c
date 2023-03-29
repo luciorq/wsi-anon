@@ -54,7 +54,7 @@ int32_t is_ventana(const char *filename) {
 }
 
 // gets the label directory of ventana file
-int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
+int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 
     for (uint64_t i = 0; i < file->used; i++) {
 
@@ -119,16 +119,19 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 }
 
 // wipes and unlinks directory
-int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_t directory,
+int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory,
                                           bool big_endian, bool disable_unlinking) {
 
     struct tiff_directory dir = file->directories[directory];
 
     int32_t result = wipe_label_ventana(fp, &dir, big_endian);
 
+    // ToDo: check if unlinking for overview image (IFD 0) for .bif files is possible
+    /*
     if (result != -1 && !disable_unlinking) {
         result = unlink_directory(fp, file, directory, false);
     }
+    */
 
     return result;
 }
@@ -150,7 +153,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
             struct tiff_entry entry = dir.entries[j];
 
-            // searches for XMP Tag in all directories
+            // searches for XMP Tag in all directories and removes metadata in it
             if (entry.tag == TIFFTAG_XMP) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
@@ -225,6 +228,27 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 }
                 free(buffer);
             }
+
+            // remove value in DATE_TIME tag
+            if (entry.tag == TIFFTAG_DATETIME) {
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read DATE_TIME Tag.\n");
+                    free(buffer);
+                    return -1;
+                }
+                char *replacement = anonymize_string(" ", strlen(buffer));
+                buffer = replace_str(buffer, buffer, replacement);
+                file_seek(fp, entry.offset, SEEK_SET);
+                if (!file_write(buffer, entry_size, entry.count, fp)) {
+                    fprintf(stderr, "Error: changing data in DATE_TIME Tag failed.\n");
+                    free(buffer);
+                    return -1;
+                }
+                free(buffer);
+            }
         }
     }
     return 1;
@@ -267,7 +291,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
         return -1;
     }
 
-    int32_t label_dir = get_ventana_label_dir(fp, file);
+    int64_t label_dir = get_ventana_label_dir(fp, file);
 
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find Image File Directory of Label image.\n");

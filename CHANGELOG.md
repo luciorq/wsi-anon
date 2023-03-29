@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.15
+
+- add download option for MIRAX under WASM
+- temporary disable unlinking option for .bif files
+- remove TIFFTAG_DATETIME for .bif
+- fix errors when anonymizing .isyntax under Ubuntu, Windows and WASM
+
 ## 0.3.14
 
 - fix WASM bugs for ventana and isyntax
