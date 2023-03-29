@@ -247,6 +247,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     free(buffer);
                     return -1;
                 }
+                free(buffer);
             }
         }
     }
