@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- change AnonymizedStream API for easier path mapping to support multi-anonymization of WSI files with same names
+
 ## 0.3.15
 
 - add download option for MIRAX under WASM
