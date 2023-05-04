@@ -33,8 +33,6 @@ int32_t get_groups_count(file_t *fp) {
     return count_groups;
 }
 
-// TODO: Urgent! Fix bug when a Slidedat.ini file is not in order.
-// E.g., Attribute groups are not sorted by respective layers and levels
 struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filename) {
     // concat slidedat filename
     const char *slidedat_filename = concat_path_filename(path, ini_filename);
@@ -64,7 +62,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
             // create new group and populate
             struct ini_group *temp_group = (struct ini_group *)malloc(sizeof(struct ini_group));
             const char *group_id = get_string_between_delimiters(buffer, "[", "]");
-            temp_group->group_identifier = group_id;
+            temp_group->group_identifier = strdup(group_id);
             temp_group->start_line = line;
             // add group to array
             groups[group_count] = *temp_group;
@@ -305,7 +303,7 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *gr
 int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *filename) {
 
     const char *slidedat_filename = concat_path_filename(path, filename);
-    file_t *fp = file_open(slidedat_filename, "w+");
+    file_t *fp = file_open(slidedat_filename, "w");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Failed writing index file.\n");

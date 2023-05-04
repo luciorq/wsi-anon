@@ -651,30 +651,30 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
             wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER,
                                SLIDE_THUMBNAIL);
         }
+    }
 
-        // remove metadata in slidedata ini
-        printf("Removing metadata in Slidedat.ini...\n");
-        anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, "X");
-        anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, "X");
-        anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, "X");
-        anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, "X");
-        anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, "X");
-        anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, "X");
+    // remove metadata in slidedata ini
+    printf("Removing metadata in Slidedat.ini...\n");
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, "X");
+    anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, "X");
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, "X");
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, "X");
+    anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, "X");
+    anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, "X");
 
-        // remove metadata in data dat files
-        remove_metadata_in_data_dat(path, data_filenames, f_count, MRXS_PROFILENAME);
+    // remove metadata in data dat files
+    remove_metadata_in_data_dat(path, data_filenames, f_count, MRXS_PROFILENAME);
 
-        // remove slide id in slidedat, indexfile and data files
-        const char *value = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);
-        const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID, "0");
-        int32_t size =
-            strlen(get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION)) + strlen(value) + 1;
-        replace_slide_id_in_indexdat(path, index_filename, value, replacement, size);
-        replace_slide_id_in_datfiles(path, data_filenames, f_count, value, replacement, size);
+    // remove slide id in slidedat, indexfile and data files
+    const char *slide_id = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);
+    const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID, "0");
+    const char *slide_version = get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION);
+    int32_t size = strlen(slide_version) + strlen(slide_id) + 1;
+    replace_slide_id_in_indexdat(path, index_filename, slide_id, replacement, size);
+    replace_slide_id_in_datfiles(path, data_filenames, f_count, slide_id, replacement, size);
 
-        if (write_ini_file(ini, path, SLIDEDAT) == -1) {
-            return -1;
-        }
+    if (write_ini_file(ini, path, SLIDEDAT) == -1) {
+        return -1;
     }
 
     free(data_filenames);
