@@ -2,7 +2,7 @@
 
 ## 0.4.1
 
-* bugfix for wirting out mirax Slidedat.ini file
+* bugfix for writing out mirax Slidedat.ini file
 
 ## 0.4.0
 
