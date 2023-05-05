@@ -165,7 +165,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     struct tiff_directory dir = file->directories[label_dir];
-    result = wipe_directory(fp, &dir, false, big_endian, LZW_CLEARCODE, NULL);
+    result = wipe_directory(fp, &dir, false, big_endian, big_tiff, LZW_CLEARCODE, NULL);
 
     if (result != 0) {
         free_tiff_file(file);
@@ -188,7 +188,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
 
         struct tiff_directory dir = file->directories[macro_dir];
-        result = wipe_directory(fp, &dir, false, big_endian, NULL, NULL);
+        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
 
         if (_is_aperio_gt450 == 1) {
             result = change_macro_image_compression_gt450(fp, file, macro_dir);
@@ -216,7 +216,4 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 /*
 ToDo:
 - manage proper unlinking for classic tiff
-- manage LZW compression --> how is the value written into an image not just 0
-- make sure that classic tiff files can still be anonymized --> potentially create new
-functions/classes for bigTiff (L. 305/307)
 */

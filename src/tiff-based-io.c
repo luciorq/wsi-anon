@@ -297,76 +297,107 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     return file;
 }
 
+// check the head of the directory offset for a given prefix. if the head is not equal to the given
+// prefix the label/macro image is not wiped
+int32_t check_prefix(file_t *fp, const char *prefix) {
+    size_t prefix_len = strlen(prefix);
+    char *buf = (char *)malloc(prefix_len + 1);
+    buf[prefix_len] = '\0';
+
+    if (file_read(buf, prefix_len, 1, fp) != 1) {
+        fprintf(stderr, "Error: Could not read strip prefix.\n");
+        free(buf);
+        return -1;
+    }
+
+    if (strcmp(prefix, buf) != 0) {
+        fprintf(stderr, "Error: Prefix in data strip not found.\n");
+        free(buf);
+        return -1;
+    }
+    free(buf);
+    return 0;
+}
+
 int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
-                       const char *prefix, const char *suffix) {
+                       bool big_tiff, const char *prefix, const char *suffix) {
     int32_t size_offsets;
     int32_t size_lengths;
     // gather strip offsets and lengths form tiff directory
-    uint64_t *strip_offsets =
-        read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-    uint64_t *strip_lengths =
-        read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
+    if (big_tiff) {
+        uint64_t *strip_offsets =
+            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint64_t *strip_lengths =
+            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
 
-    if (strip_offsets == NULL || strip_lengths == NULL) {
-        fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
-        return -1;
-    }
-
-    if (size_offsets != size_lengths) {
-        fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
-        return -1;
-    }
-
-    for (int32_t i = 0; i < size_offsets; i++) {
-        file_seek(fp, strip_offsets[i], SEEK_SET);
-
-        if (prefix != NULL) {
-            // we check the head of the directory offset for a given
-            // prefix. if the head is not equal to the given prefix
-            // we do not wipe the label data
-            size_t prefix_len = strlen(prefix);
-            char *buf = (char *)malloc(prefix_len + 1);
-            buf[prefix_len] = '\0';
-
-            if (file_read(buf, prefix_len, 1, fp) != 1) {
-                fprintf(stderr, "Error: Could not read strip prefix.\n");
-                free(buf);
-                return -1;
-            }
-
-            if (strcmp(prefix, buf) != 0) {
-                fprintf(stderr, "Error: Prefix in data strip not found.\n");
-                free(buf);
-                return -1;
-            }
-
-            file_seek(fp, strip_offsets[i], SEEK_SET);
-            free(buf);
-        }
-
-        if (i == 0) {
-            char *buf = malloc(sizeof(char) * strip_lengths[i]);
-
-            if (file_read(buf, strip_lengths[i], 1, fp) != 1) {
-                fprintf(stderr, "Error: Could not read strip prefix.\n");
-                free(buf);
-                return -1;
-            }
-
-            printf("BUF:%s\n", buf);
-            free(buf);
-        }
-
-        // fill strip with zeros
-        char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
-        if (!file_write(strip, 1, strip_lengths[i], fp)) {
-            fprintf(stderr, "Error: Wiping image data failed.\n");
-            free(strip);
+        if (strip_offsets == NULL || strip_lengths == NULL) {
+            fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
             return -1;
         }
-        free(strip);
-    }
 
+        if (size_offsets != size_lengths) {
+            fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            return -1;
+        }
+
+        for (int32_t i = 0; i < size_offsets; i++) {
+            file_seek(fp, strip_offsets[i], SEEK_SET);
+
+            if (prefix != NULL) {
+                if (check_prefix(fp, prefix) != 0) {
+                    return -1;
+                }
+                file_seek(fp, strip_offsets[i], SEEK_SET);
+            }
+
+            // fill strip with zeros
+            // ToDo: check if writing 0's is sufficient when image is LZW encoded
+            char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
+            if (!file_write(strip, 1, strip_lengths[i], fp)) {
+                fprintf(stderr, "Error: Wiping image data failed.\n");
+                free(strip);
+                return -1;
+            }
+            free(strip);
+        }
+        return 0;
+    } else {
+        uint32_t *strip_offsets =
+            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint32_t *strip_lengths =
+            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
+
+        if (strip_offsets == NULL || strip_lengths == NULL) {
+            fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+            return -1;
+        }
+
+        if (size_offsets != size_lengths) {
+            fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            return -1;
+        }
+
+        for (int32_t i = 0; i < size_offsets; i++) {
+            file_seek(fp, strip_offsets[i], SEEK_SET);
+
+            if (prefix != NULL) {
+                if (check_prefix(fp, prefix) != 0) {
+                    return -1;
+                }
+                file_seek(fp, strip_offsets[i], SEEK_SET);
+            }
+
+            // fill strip with zeros
+            // ToDo: check if writing 0's is sufficient when image is LZW encoded
+            char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
+            if (!file_write(strip, 1, strip_lengths[i], fp)) {
+                fprintf(stderr, "Error: Wiping image data failed.\n");
+                free(strip);
+                return -1;
+            }
+            free(strip);
+        }
+    }
     return 0;
 }
 
