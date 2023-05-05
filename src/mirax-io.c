@@ -35,8 +35,6 @@ static const char *SLIDE_BARCODE = "ScanDataLayer_SlideBarcode";
 static const char *SLIDE_THUMBNAIL = "ScanDataLayer_SlideThumbnail";
 // whole slide image
 static const char *SLIDE_WSI = "ScanDataLayer_WholeSlide";
-// preview image
-static const char *SLIDE_PREVIEW = "ScanDataLayer_SlidePreview";
 
 // retrieve the file structure of the mirax file from the
 // Slidedat.ini file
@@ -634,17 +632,13 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     result = delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER,
                           SLIDE_WSI);
 
-    // delete preview image
-    result = delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER,
-                          SLIDE_PREVIEW);
-
     // unlink directory
     if (!disable_unlinking) {
 
-        // unlink whole slide, preview and label images
-        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_WSI);
-        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_PREVIEW);
+        // unlink whole slide and label images; order actually matters here!
+        // TODO: investigate why the barcode is not removed when order in Slidedat.ini is different
         wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_BARCODE);
+        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_WSI);
 
         // unlink macro image
         if (!keep_macro_image) {
