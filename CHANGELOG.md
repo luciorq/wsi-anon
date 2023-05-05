@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+* keep preview image in mirax format
+
 ## 0.4.1
 
 * bugfix for writing out mirax Slidedat.ini file
