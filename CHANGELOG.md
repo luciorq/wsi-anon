@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.4.1
+## 0.4.1 & 0.4.2
 
 * bugfix for writing out mirax Slidedat.ini file
+* bugfix of non hierarchical order in Slidat.ini
 
 ## 0.4.0
 
