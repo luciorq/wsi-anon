@@ -3,7 +3,8 @@
 ## 0.4.1 & 0.4.2
 
 * bugfix for writing out mirax Slidedat.ini file
-* bugfix of non hierarchical order in Slidat.ini
+* bugfix of non hierarchical order in Slidedat.ini
+* keep preview in mirax format
 
 ## 0.4.0
 

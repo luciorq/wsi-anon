@@ -35,8 +35,6 @@ static const char *SLIDE_BARCODE = "ScanDataLayer_SlideBarcode";
 static const char *SLIDE_THUMBNAIL = "ScanDataLayer_SlideThumbnail";
 // whole slide image
 static const char *SLIDE_WSI = "ScanDataLayer_WholeSlide";
-// preview image
-static const char *SLIDE_PREVIEW = "ScanDataLayer_SlidePreview";
 
 // retrieve the file structure of the mirax file from the
 // Slidedat.ini file
