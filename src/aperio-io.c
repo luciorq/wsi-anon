@@ -231,8 +231,3 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     file_close(fp);
     return result;
 }
-
-/*
-ToDo:
-- manage proper unlinking for classic tiff
-*/
