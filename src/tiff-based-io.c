@@ -218,7 +218,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
     }
 
     // get the directory offset of the successor
-    uint64_t next_dir_offset = file_tell(fp) + 8;
+    uint64_t next_dir_offset = file_tell(fp) + (big_tiff ? 8 : 2);
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
@@ -264,7 +264,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     // get directory offset; file stream pointer must be located just
     // before the directory offset
     uint64_t in_pointer_offset = file_tell(fp);
-    uint64_t diroff = read_uint(fp, 4, big_endian);
+    uint64_t diroff = read_uint(fp, big_tiff ? 8 : 4, big_endian);
     // reading the initial directory
     struct tiff_directory *prev_dir = NULL;
     struct tiff_directory *dir =
@@ -302,9 +302,9 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     int32_t size_offsets;
     int32_t size_lengths;
     // gather strip offsets and lengths form tiff directory
-    uint32_t *strip_offsets =
+    uint64_t *strip_offsets =
         read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-    uint32_t *strip_lengths =
+    uint64_t *strip_lengths =
         read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
 
     if (strip_offsets == NULL || strip_lengths == NULL) {
@@ -344,6 +344,19 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             free(buf);
         }
 
+        if (i == 0) {
+            char *buf = malloc(sizeof(char) * strip_lengths[i]);
+
+            if (file_read(buf, strip_lengths[i], 1, fp) != 1) {
+                fprintf(stderr, "Error: Could not read strip prefix.\n");
+                free(buf);
+                return -1;
+            }
+
+            printf("BUF:%s\n", buf);
+            free(buf);
+        }
+
         // fill strip with zeros
         char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
         if (!file_write(strip, 1, strip_lengths[i], fp)) {
@@ -358,7 +371,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 }
 
 // read a pointer from the directory entries by tiff tag
-uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+uint64_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
                               bool big_endian, int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
@@ -366,7 +379,7 @@ uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t ta
             int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
             if (entry_size) {
-                uint32_t *v_buffer = (uint32_t *)malloc(entry_size * entry.count);
+                uint64_t *v_buffer = (uint64_t *)malloc(entry_size * entry.count);
 
                 if (entry.count == 1) {
                     *length = entry.count;
@@ -440,6 +453,73 @@ int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir
         fprintf(stderr, "Error: Failed to write directory in pointer \
                     to predecessor at pointer position.\n");
         return -1;
+    }
+
+    return 0;
+}
+
+int32_t unlink_directories(file_t *fp, struct tiff_file *file, int32_t macro_dir,
+                           int32_t label_dir) {
+    bool label_before_macro = macro_dir > label_dir;
+    int32_t dif = label_before_macro ? macro_dir - label_dir : label_dir - macro_dir;
+
+    // check if the directories are next to each other
+    if (dif == 1) {
+        if (label_before_macro) {
+            struct tiff_directory dir = file->directories[label_dir];
+            struct tiff_directory successor = file->directories[macro_dir + 1];
+            // current directory has no successor
+            if (successor.in_pointer_offset == 0 && successor.count == 0) {
+                // set in pointer offset for label dir to 0
+                if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
+                    fprintf(stderr, "Error: Failed to seek to offset.\n");
+                    return -1;
+                }
+                uint64_t new_pointer_address[1];
+                new_pointer_address[0] = 0x0;
+                if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+                    fprintf(stderr, "Error: Failed to write directory in pointer \
+                                to predecessor at pointer position.\n");
+                    return -1;
+                }
+                return 0;
+            }
+            // ToDo: check if everything from this part down makes sense
+            else {
+                // current directory has a successor
+                if (file_seek(fp, successor.in_pointer_offset, SEEK_SET)) {
+                    fprintf(stderr, "Error: Failed to seek to offset.\n");
+                    return -1;
+                }
+                uint64_t new_pointer_address[1];
+                if (file_read(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+                    fprintf(stderr, "Error: Failed to read pointer.\n");
+                    return -1;
+                }
+                if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
+                    fprintf(stderr, "Error: Failed to seek to offset.\n");
+                    return -1;
+                }
+                if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
+                    fprintf(stderr, "Error: Failed to write directory in pointer \
+                                to predecessor at pointer position.\n");
+                    return -1;
+                }
+                return 0;
+            }
+        }
+    }
+    // if macro dir and label dir are not next to each other
+    int32_t result = unlink_directory(fp, file, label_dir, false);
+
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not unlink label directory.\n");
+    }
+
+    result = unlink_directory(fp, file, macro_dir, false);
+
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not unlink macro directory.\n");
     }
 
     return 0;

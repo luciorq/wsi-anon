@@ -41,10 +41,13 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
 int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
                        const char *prefix, const char *suffix);
 
-uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+uint64_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
                               bool big_endian, int32_t *length);
 
 int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi);
+
+int32_t unlink_directories(file_t *fp, struct tiff_file *file, int32_t macro_dir,
+                           int32_t label_dir);
 
 int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const char *dir_name);
 

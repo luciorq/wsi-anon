@@ -120,9 +120,13 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
                       bool disable_unlinking, bool do_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
 
+    const char *ext = get_filename_ext(*filename);
+
+    bool is_svs = strcmp(ext, SVS) == 0;
+
     if (!do_inplace) {
         // check if filename is svs or tif here
-        *filename = duplicate_file(*filename, new_label_name, DOT_SVS);
+        *filename = duplicate_file(*filename, new_label_name, is_svs ? DOT_SVS : DOT_TIF);
     }
 
     file_t *fp;
@@ -200,8 +204,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     remove_metadata_in_aperio(fp, file);
 
     if (!disable_unlinking) {
-        unlink_directory(fp, file, label_dir, false);
-        unlink_directory(fp, file, macro_dir, false);
+        // unlink_directories(fp, file, macro_dir, label_dir);// macro_dir: 5/5 label_dir: 4/5
     }
 
     // clean up
@@ -209,3 +212,11 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     file_close(fp);
     return result;
 }
+
+/*
+ToDo:
+- manage proper unlinking for classic tiff
+- manage LZW compression --> how is the value written into an image not just 0
+- make sure that classic tiff files can still be anonymized --> potentially create new
+functions/classes for bigTiff (L. 305/307)
+*/
