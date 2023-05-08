@@ -47,7 +47,7 @@ int32_t is_aperio(const char *filename) {
 }
 
 // searches for tags in image description Data and replaces its values with equal amount of X's
-char *wipe_image_description(char *result, char *delimiter) {
+char *override_image_description(char *result, char *delimiter) {
     const char *value = get_string_between_delimiters(result, delimiter, "|");
     // check if tag is not an empty string
     if (value[0] != '\0') {
@@ -78,22 +78,22 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
                 char *result = buffer;
 
                 if (contains(result, APERIO_FILENAME_TAG)) {
-                    result = wipe_image_description(result, APERIO_FILENAME_TAG);
+                    result = override_image_description(result, APERIO_FILENAME_TAG);
                     rewrite = true;
                 }
 
                 if (contains(result, APERIO_USER_TAG)) {
-                    result = wipe_image_description(result, APERIO_USER_TAG);
+                    result = override_image_description(result, APERIO_USER_TAG);
                     rewrite = true;
                 }
 
                 if (contains(result, APERIO_DATE_TAG)) {
-                    result = wipe_image_description(result, APERIO_DATE_TAG);
+                    result = override_image_description(result, APERIO_DATE_TAG);
                     rewrite = true;
                 }
 
                 if (contains(result, APERIO_BARCODE_TAG)) {
-                    result = wipe_image_description(result, APERIO_BARCODE_TAG);
+                    result = override_image_description(result, APERIO_BARCODE_TAG);
                     rewrite = true;
                 }
 

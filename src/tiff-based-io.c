@@ -326,9 +326,9 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     // gather strip offsets and lengths form tiff directory
     if (big_tiff) {
         uint64_t *strip_offsets =
-            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-        uint64_t *strip_lengths =
-            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
+            read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint64_t *strip_lengths = read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi,
+                                                        big_endian, &size_lengths);
 
         if (strip_offsets == NULL || strip_lengths == NULL) {
             fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
@@ -363,9 +363,9 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
         return 0;
     } else {
         uint32_t *strip_offsets =
-            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-        uint32_t *strip_lengths =
-            read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
+            read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint32_t *strip_lengths = read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi,
+                                                        big_endian, &size_lengths);
 
         if (strip_offsets == NULL || strip_lengths == NULL) {
             fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
@@ -401,9 +401,51 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
     return 0;
 }
 
-// read a pointer from the directory entries by tiff tag
-uint64_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
-                              bool big_endian, int32_t *length) {
+// read a 32-bit pointer from the directory entries by tiff tag
+uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+                                bool big_endian, int32_t *length) {
+    for (uint64_t i = 0; i < dir->count; i++) {
+        struct tiff_entry entry = dir->entries[i];
+        if (entry.tag == tag) {
+            int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+            if (entry_size) {
+                uint32_t *v_buffer = (uint32_t *)malloc(entry_size * entry.count);
+
+                if (entry.count == 1) {
+                    *length = entry.count;
+                    v_buffer[0] = entry.offset;
+                    return v_buffer;
+                }
+
+                uint64_t new_offset = entry.offset;
+
+                if (ndpi) {
+                    new_offset = entry.start + 8;
+                }
+
+                if (file_seek(fp, new_offset, SEEK_SET)) {
+                    fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
+                    continue;
+                }
+                if (file_read(v_buffer, entry_size, entry.count, fp) < 1) {
+                    fprintf(stderr, "Error: Failed to read entry value.\n");
+                    continue;
+                }
+
+                fix_byte_order(v_buffer, entry_size, entry.count, big_endian);
+                *length = entry.count;
+
+                return v_buffer;
+            }
+        }
+    }
+    return NULL;
+}
+
+// read a 64-bit pointer from the directory entries by tiff tag
+uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+                                bool big_endian, int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
         if (entry.tag == tag) {
