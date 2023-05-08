@@ -6,12 +6,13 @@
 #include "hamamatsu-io.h"
 #include "isyntax-io.h"
 #include "mirax-io.h"
+#include "philips-tiff-io.h"
 #include "plugin.h"
 #include "ventana-io.h"
 
 static const char *VENDOR_STRINGS[] = {"Aperio",  "Hamamatsu",        "3DHistech (Mirax)",
-                                       "Ventana", "Philips’ iSyntax", "Unknown",
-                                       "Invalid"};
+                                       "Ventana", "Philips’ iSyntax", "Philips' TIFF",
+                                       "Unknown", "Invalid"};
 
 extern int8_t check_file_format(const char *filename);
 

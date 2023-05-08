@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.3
+
+* full Philips' TIFF support
+* refactor philips based formats
+
 ## 0.4.1 & 0.4.2
 
 * bugfix for writing out mirax Slidedat.ini file

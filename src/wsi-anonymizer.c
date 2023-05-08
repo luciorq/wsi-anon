@@ -1,12 +1,13 @@
 #include "wsi-anonymizer.h"
 
-int32_t (*is_format_functions[])(const char *filename) = {&is_aperio, &is_hamamatsu, &is_mirax,
-                                                          &is_ventana, &is_isyntax};
+int32_t (*is_format_functions[])(const char *filename) = {
+    &is_aperio, &is_hamamatsu, &is_mirax, &is_ventana, &is_isyntax, &is_philips_tiff};
 
 int32_t (*handle_format_functions[])(const char **filename, const char *new_label_name,
                                      bool keep_macro_image, bool disable_unlinking,
-                                     bool do_inplace) = {
-    &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax};
+                                     bool do_inplace) = {&handle_aperio,  &handle_hamamatsu,
+                                                         &handle_mirax,   &handle_ventana,
+                                                         &handle_isyntax, &handle_philips_tiff};
 
 int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
 
