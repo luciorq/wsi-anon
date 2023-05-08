@@ -107,7 +107,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     // wipe macro data from directory
     // check for JPEG SOI header in macro dir
-    result = wipe_directory(fp, &dir, true, big_endian, JPEG_SOI, NULL);
+    result = wipe_directory(fp, &dir, true, big_endian, big_tiff, JPEG_SOI, NULL);
 
     if (result != 0) {
         free_tiff_file(file);

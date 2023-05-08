@@ -37,6 +37,8 @@
 // aperio
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
+#define APERIO_DATE_TAG "Date = "
+#define APERIO_BARCODE_TAG "Barcode = "
 
 // ventana
 #define VENTANA_FILENAME_ATT "JP2FileName="

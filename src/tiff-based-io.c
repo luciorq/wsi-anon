@@ -218,7 +218,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
     }
 
     // get the directory offset of the successor
-    uint64_t next_dir_offset = file_tell(fp) + 8;
+    uint64_t next_dir_offset = file_tell(fp) + (big_tiff ? 8 : 2);
 
     tiff_dir->entries = entries;
     tiff_dir->out_pointer_offset = next_dir_offset;
@@ -264,7 +264,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     // get directory offset; file stream pointer must be located just
     // before the directory offset
     uint64_t in_pointer_offset = file_tell(fp);
-    uint64_t diroff = read_uint(fp, 4, big_endian);
+    uint64_t diroff = read_uint(fp, big_tiff ? 8 : 4, big_endian);
     // reading the initial directory
     struct tiff_directory *prev_dir = NULL;
     struct tiff_directory *dir =
@@ -297,69 +297,113 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     return file;
 }
 
-int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
-                       const char *prefix, const char *suffix) {
-    int32_t size_offsets;
-    int32_t size_lengths;
-    // gather strip offsets and lengths form tiff directory
-    uint32_t *strip_offsets =
-        read_pointer_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-    uint32_t *strip_lengths =
-        read_pointer_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
+// check the head of the directory offset for a given prefix. if the head is not equal to the given
+// prefix the label/macro image is not wiped
+int32_t check_prefix(file_t *fp, const char *prefix) {
+    size_t prefix_len = strlen(prefix);
+    char *buf = (char *)malloc(prefix_len + 1);
+    buf[prefix_len] = '\0';
 
-    if (strip_offsets == NULL || strip_lengths == NULL) {
-        fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+    if (file_read(buf, prefix_len, 1, fp) != 1) {
+        fprintf(stderr, "Error: Could not read strip prefix.\n");
+        free(buf);
         return -1;
     }
 
-    if (size_offsets != size_lengths) {
-        fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+    if (strcmp(prefix, buf) != 0) {
+        fprintf(stderr, "Error: Prefix in data strip not found.\n");
+        free(buf);
         return -1;
     }
-
-    for (int32_t i = 0; i < size_offsets; i++) {
-        file_seek(fp, strip_offsets[i], SEEK_SET);
-
-        if (prefix != NULL) {
-            // we check the head of the directory offset for a given
-            // prefix. if the head is not equal to the given prefix
-            // we do not wipe the label data
-            size_t prefix_len = strlen(prefix);
-            char *buf = (char *)malloc(prefix_len + 1);
-            buf[prefix_len] = '\0';
-
-            if (file_read(buf, prefix_len, 1, fp) != 1) {
-                fprintf(stderr, "Error: Could not read strip prefix.\n");
-                free(buf);
-                return -1;
-            }
-
-            if (strcmp(prefix, buf) != 0) {
-                fprintf(stderr, "Error: Prefix in data strip not found.\n");
-                free(buf);
-                return -1;
-            }
-
-            file_seek(fp, strip_offsets[i], SEEK_SET);
-            free(buf);
-        }
-
-        // fill strip with zeros
-        char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
-        if (!file_write(strip, 1, strip_lengths[i], fp)) {
-            fprintf(stderr, "Error: Wiping image data failed.\n");
-            free(strip);
-            return -1;
-        }
-        free(strip);
-    }
-
+    free(buf);
     return 0;
 }
 
-// read a pointer from the directory entries by tiff tag
-uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
-                              bool big_endian, int32_t *length) {
+int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
+                       bool big_tiff, const char *prefix, const char *suffix) {
+    int32_t size_offsets;
+    int32_t size_lengths;
+    // gather strip offsets and lengths form tiff directory
+    if (big_tiff) {
+        uint64_t *strip_offsets =
+            read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint64_t *strip_lengths = read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi,
+                                                        big_endian, &size_lengths);
+
+        if (strip_offsets == NULL || strip_lengths == NULL) {
+            fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+            return -1;
+        }
+
+        if (size_offsets != size_lengths) {
+            fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            return -1;
+        }
+
+        for (int32_t i = 0; i < size_offsets; i++) {
+            file_seek(fp, strip_offsets[i], SEEK_SET);
+
+            if (prefix != NULL) {
+                if (check_prefix(fp, prefix) != 0) {
+                    return -1;
+                }
+                file_seek(fp, strip_offsets[i], SEEK_SET);
+            }
+
+            // fill strip with zeros
+            // ToDo: check if writing 0's is sufficient when image is LZW encoded
+            char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
+            if (!file_write(strip, 1, strip_lengths[i], fp)) {
+                fprintf(stderr, "Error: Wiping image data failed.\n");
+                free(strip);
+                return -1;
+            }
+            free(strip);
+        }
+        return 0;
+    } else {
+        uint32_t *strip_offsets =
+            read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint32_t *strip_lengths = read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi,
+                                                        big_endian, &size_lengths);
+
+        if (strip_offsets == NULL || strip_lengths == NULL) {
+            fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+            return -1;
+        }
+
+        if (size_offsets != size_lengths) {
+            fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            return -1;
+        }
+
+        for (int32_t i = 0; i < size_offsets; i++) {
+            file_seek(fp, strip_offsets[i], SEEK_SET);
+
+            if (prefix != NULL) {
+                if (check_prefix(fp, prefix) != 0) {
+                    return -1;
+                }
+                file_seek(fp, strip_offsets[i], SEEK_SET);
+            }
+
+            // fill strip with zeros
+            // ToDo: check if writing 0's is sufficient when image is LZW encoded
+            char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
+            if (!file_write(strip, 1, strip_lengths[i], fp)) {
+                fprintf(stderr, "Error: Wiping image data failed.\n");
+                free(strip);
+                return -1;
+            }
+            free(strip);
+        }
+    }
+    return 0;
+}
+
+// read a 32-bit pointer from the directory entries by tiff tag
+uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+                                bool big_endian, int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
         if (entry.tag == tag) {
@@ -367,6 +411,48 @@ uint32_t *read_pointer_by_tag(file_t *fp, struct tiff_directory *dir, int32_t ta
 
             if (entry_size) {
                 uint32_t *v_buffer = (uint32_t *)malloc(entry_size * entry.count);
+
+                if (entry.count == 1) {
+                    *length = entry.count;
+                    v_buffer[0] = entry.offset;
+                    return v_buffer;
+                }
+
+                uint64_t new_offset = entry.offset;
+
+                if (ndpi) {
+                    new_offset = entry.start + 8;
+                }
+
+                if (file_seek(fp, new_offset, SEEK_SET)) {
+                    fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
+                    continue;
+                }
+                if (file_read(v_buffer, entry_size, entry.count, fp) < 1) {
+                    fprintf(stderr, "Error: Failed to read entry value.\n");
+                    continue;
+                }
+
+                fix_byte_order(v_buffer, entry_size, entry.count, big_endian);
+                *length = entry.count;
+
+                return v_buffer;
+            }
+        }
+    }
+    return NULL;
+}
+
+// read a 64-bit pointer from the directory entries by tiff tag
+uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
+                                bool big_endian, int32_t *length) {
+    for (uint64_t i = 0; i < dir->count; i++) {
+        struct tiff_entry entry = dir->entries[i];
+        if (entry.tag == tag) {
+            int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+            if (entry_size) {
+                uint64_t *v_buffer = (uint64_t *)malloc(entry_size * entry.count);
 
                 if (entry.count == 1) {
                     *length = entry.count;
