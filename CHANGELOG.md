@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.4
+
+* quickfix for mirax file structure bug in Slidedat.ini
+* commented out closing of file handle that causes `corrupted size vs. prev_size` error in some cases
+
 ## 0.4.3
 
 * bugfix for Aperio files with BigTiff structure

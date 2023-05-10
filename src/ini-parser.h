@@ -11,6 +11,8 @@ const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_name);
 
+int32_t get_group_index_of_ini_file(struct ini_file *ini_file, const char *group_name);
+
 void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer, int32_t layer_id,
                                 struct mirax_file *mirax_file);
 
