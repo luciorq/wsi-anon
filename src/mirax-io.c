@@ -634,11 +634,39 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
 
     // unlink directory
     if (!disable_unlinking) {
+        // THIS IS A QUICKFIX!
+        // The order of label/macro images etc. actually matters in the file structure of the
+        // Slidedat.ini
+        // TODO: investigate why the barcode/wsi level is not removed when order in Slidedat.ini is
+        // different
+        struct mirax_level *barcode_layer =
+            get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
+        int32_t barcode_group_index = -1;
+        if (barcode_layer != NULL) {
+            barcode_group_index = get_group_index_of_ini_file(ini, barcode_layer->section);
+            // fprintf(stdout, "Barcode group index: %i\n", barcode_group_index);
+        }
+        struct mirax_level *wsi_layer =
+            get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
+        int32_t wsi_group_index = -1;
+        if (wsi_layer != NULL) {
+            wsi_group_index = get_group_index_of_ini_file(ini, wsi_layer->section);
+            // fprintf(stdout, "Wholeslide group index: %i\n", wsi_group_index);
+        }
 
-        // unlink whole slide and label images; order actually matters here!
-        // TODO: investigate why the barcode is not removed when order in Slidedat.ini is different
-        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_BARCODE);
-        wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_WSI);
+        if (barcode_group_index != -1 || wsi_group_index != -1) {
+            if (barcode_group_index < wsi_group_index) {
+                wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER,
+                                   SLIDE_WSI);
+                wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER,
+                                   SLIDE_BARCODE);
+            } else {
+                wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER,
+                                   SLIDE_BARCODE);
+                wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER,
+                                   SLIDE_WSI);
+            }
+        }
 
         // unlink macro image
         if (!keep_macro_image) {

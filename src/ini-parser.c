@@ -121,13 +121,16 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         groups[i].entry_count = entry_count;
     }
 
+    // TODO: Investigate why closing of some files cause a `corrupted size vs. prev_size` error
+    // here? Anyway, this shouldn't make any troubles here, because the file is released after
+    // termination anyway
+    // file_close(fp);
     free(buffer);
 
     struct ini_file *ini_file = (struct ini_file *)malloc(sizeof(struct ini_file));
     ini_file->group_count = group_count;
     ini_file->groups = groups;
 
-    file_close(fp);
     return ini_file;
 }
 
@@ -154,15 +157,7 @@ struct ini_group *remove_ini_group_from_array(struct ini_group *groups, int32_t 
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_name) {
     // get the group index
-    int32_t group_index = -1;
-    for (int32_t i = 0; i < ini_file->group_count; i++) {
-        struct ini_group group = ini_file->groups[i];
-        if (strcmp(group.group_identifier, group_name) == 0) {
-            group_index = i;
-            break;
-        }
-    }
-
+    int32_t group_index = get_group_index_of_ini_file(ini_file, group_name);
     if (group_index == -1) {
         return -1;
     }
@@ -174,6 +169,18 @@ int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_
     ini_file->group_count--;
 
     return 0;
+}
+
+int32_t get_group_index_of_ini_file(struct ini_file *ini_file, const char *group_name) {
+    int32_t group_index = -1;
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
+        struct ini_group group = ini_file->groups[i];
+        if (strcmp(group.group_identifier, group_name) == 0) {
+            group_index = i;
+            break;
+        }
+    }
+    return group_index;
 }
 
 // modify structure of levels in mirax_file
