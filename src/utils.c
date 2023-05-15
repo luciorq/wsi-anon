@@ -273,6 +273,10 @@ const char *add_equals_sign(const char *str1, const char *str2) {
 
 // function to check if str1 contains str2
 bool contains(const char *str1, const char *str2) {
+    if (str1 == NULL || str2 == NULL) {
+        return false;
+    }
+
     while (*str1) {
         const char *i = str1;
         const char *j = str2;

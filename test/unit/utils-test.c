@@ -175,6 +175,26 @@ void test_contains2() {
     CU_ASSERT_FALSE(result);
 }
 
+void test_contains3() {
+    char *input1 = strdup("01.022A3B42AF8AB54FED8106CB0E38B32CB2");
+    char *c = strdup("2A3B42AF8AB54FED8106CB0E38B32CB2");
+    bool result = contains(input1, c);
+    CU_ASSERT_TRUE(result);
+}
+
+void test_contains4() {
+    char *input1 = strdup("01.?15sade|59  2d8,19%§$6sdc592(&)15928-    &fs152ew");
+    char *c = strdup("15928");
+    bool result = contains(input1, c);
+    CU_ASSERT_TRUE(result);
+}
+
+void test_contains5() {
+    char *c = strdup("15928");
+    bool result = contains(NULL, c);
+    CU_ASSERT_FALSE(result);
+}
+
 void test_swap_uint16() {
     uint16_t input = 1;
     uint16_t swapped = _swap_uint16(input);
@@ -216,6 +236,9 @@ CU_TestInfo testcases1[] = {
     {"Test [add_equals_sign]:", test_add_equals_sign},
     {"Test [contains] 1:", test_contains1},
     {"Test [contains] 2:", test_contains2},
+    {"Test [contains] 3:", test_contains3},
+    {"Test [contains] 4:", test_contains4},
+    {"Test [contains] 5:", test_contains5},
     CU_TEST_INFO_NULL};
 
 CU_TestInfo testcases2[] = {{"Test [swap_uint16]:", test_swap_uint16},
