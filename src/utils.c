@@ -273,21 +273,22 @@ const char *add_equals_sign(const char *str1, const char *str2) {
 
 // function to check if str1 contains str2
 bool contains(const char *str1, const char *str2) {
-    int32_t i = 0, j = 0;
+    while (*str1) {
+        const char *i = str1;
+        const char *j = str2;
 
-    while (str1[i] != '\0') {
-        if (str1[i] == str2[j]) {
-            while (str1[i] == str2[j] && str2[j] != '\0') {
-                j++;
-                i++;
-            }
-            if (str2[j] == '\0') {
-                return true;
-            }
-            j = 0;
+        while (*i && *j && (*i == *j)) {
+            i++;
+            j++;
         }
-        i++;
+
+        if (!*j) {
+            return true;
+        }
+
+        str1++;
     }
+
     return false;
 }
 
