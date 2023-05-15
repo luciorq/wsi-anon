@@ -33,8 +33,6 @@ extern const char *add_square_brackets(const char *str);
 
 extern const char *add_equals_sign(const char *str1, const char *str2);
 
-extern bool contains(const char *str1, const char *str2);
-
 extern uint16_t _swap_uint16(uint16_t value);
 
 extern uint32_t _swap_uint32(uint32_t value);
@@ -161,40 +159,6 @@ void test_add_equals_sign() {
     CU_ASSERT_STRING_EQUAL(result, "teststring1 = teststring2");
 }
 
-void test_contains1() {
-    char *input1 = strdup("testst&/Djs()ring1");
-    char *c = strdup("&/Djs()");
-    bool result = contains(input1, c);
-    CU_ASSERT_TRUE(result);
-}
-
-void test_contains2() {
-    char *input1 = strdup("testst&/Djs()ring1");
-    char *c = strdup("&/sdDjs()");
-    bool result = contains(input1, c);
-    CU_ASSERT_FALSE(result);
-}
-
-void test_contains3() {
-    char *input1 = strdup("01.022A3B42AF8AB54FED8106CB0E38B32CB2");
-    char *c = strdup("2A3B42AF8AB54FED8106CB0E38B32CB2");
-    bool result = contains(input1, c);
-    CU_ASSERT_TRUE(result);
-}
-
-void test_contains4() {
-    char *input1 = strdup("01.?15sade|59  2d8,19%§$6sdc592(&)15928-    &fs152ew");
-    char *c = strdup("15928");
-    bool result = contains(input1, c);
-    CU_ASSERT_TRUE(result);
-}
-
-void test_contains5() {
-    char *c = strdup("15928");
-    bool result = contains(NULL, c);
-    CU_ASSERT_FALSE(result);
-}
-
 void test_swap_uint16() {
     uint16_t input = 1;
     uint16_t swapped = _swap_uint16(input);
@@ -234,11 +198,6 @@ CU_TestInfo testcases1[] = {
     {"Test [number_of_digits]:", test_number_of_digits},
     {"Test [add_square_brackets]:", test_add_square_brackets},
     {"Test [add_equals_sign]:", test_add_equals_sign},
-    {"Test [contains] 1:", test_contains1},
-    {"Test [contains] 2:", test_contains2},
-    {"Test [contains] 3:", test_contains3},
-    {"Test [contains] 4:", test_contains4},
-    {"Test [contains] 5:", test_contains5},
     CU_TEST_INFO_NULL};
 
 CU_TestInfo testcases2[] = {{"Test [swap_uint16]:", test_swap_uint16},

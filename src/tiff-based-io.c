@@ -570,7 +570,7 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
                     return -1;
                 }
                 // check if tag value contains given string
-                if (contains(buffer, contains_value)) {
+                if (strstr(buffer, contains_value) != NULL) {
                     free(buffer);
                     return 1;
                 }
@@ -600,7 +600,7 @@ int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32
                 }
 
                 // check if value contains expected value and return directory
-                if (contains(buffer, value)) {
+                if (strstr(buffer, value) != NULL) {
                     free(buffer);
                     return i;
                 }

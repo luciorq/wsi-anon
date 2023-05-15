@@ -443,7 +443,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
 
     // overwrite value for slide id in index.dat
     if (file_gets(buffer, size, fp) != NULL) {
-        if (contains(buffer, value)) {
+        if (strstr(buffer, value) != NULL) {
             buffer = replace_str(buffer, value, replacement);
             file_seek(fp, 0, SEEK_SET);
             if (file_write(buffer, size - 1, 1, fp) != 1) {
@@ -482,7 +482,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
 
         // overwrite value for slide id in data.dat files
         if (file_gets(buffer, size, fp) != NULL) {
-            if (contains(buffer, value)) {
+            if (strstr(buffer, value) != NULL) {
                 buffer = replace_str(buffer, value, replacement);
                 file_seek(fp, 0, SEEK_SET);
                 if (file_write(buffer, size - 1, 1, fp) != 1) {
@@ -518,7 +518,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
         // read file
         if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
             // check for ProfileName
-            if (contains(buffer, MRXS_PROFILENAME)) {
+            if (strstr(buffer, MRXS_PROFILENAME) != NULL) {
                 const char *value = get_string_between_delimiters(buffer, MRXS_PROFILENAME, "\"");
                 char *replacement = anonymize_string("X", strlen(value));
                 buffer = replace_str(buffer, value, replacement);

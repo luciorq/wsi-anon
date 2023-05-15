@@ -271,31 +271,6 @@ const char *add_equals_sign(const char *str1, const char *str2) {
     return result;
 }
 
-// function to check if str1 contains str2
-bool contains(const char *str1, const char *str2) {
-    if (str1 == NULL || str2 == NULL) {
-        return false;
-    }
-
-    while (*str1) {
-        const char *i = str1;
-        const char *j = str2;
-
-        while (*i && *j && (*i == *j)) {
-            i++;
-            j++;
-        }
-
-        if (!*j) {
-            return true;
-        }
-
-        str1++;
-    }
-
-    return false;
-}
-
 // function to check how many times str1 contains str2
 int32_t count_contains(const char *str1, const char *str2) {
     int32_t i = 0, j = 0, count = 0;
@@ -476,7 +451,7 @@ int32_t file_contains_value(file_t *fp, char *value) {
     }
 
     // searches for value
-    if (contains(buffer, value)) {
+    if (strstr(buffer, value) != NULL) {
         free(buffer);
         return 1;
     }

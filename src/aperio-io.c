@@ -77,22 +77,22 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
                 bool rewrite = false;
                 char *result = buffer;
 
-                if (contains(result, APERIO_FILENAME_TAG)) {
+                if (strstr(result, APERIO_FILENAME_TAG) != NULL) {
                     result = override_image_description(result, APERIO_FILENAME_TAG);
                     rewrite = true;
                 }
 
-                if (contains(result, APERIO_USER_TAG)) {
+                if (strstr(result, APERIO_USER_TAG) != NULL) {
                     result = override_image_description(result, APERIO_USER_TAG);
                     rewrite = true;
                 }
 
-                if (contains(result, APERIO_DATE_TAG)) {
+                if (strstr(result, APERIO_DATE_TAG) != NULL) {
                     result = override_image_description(result, APERIO_DATE_TAG);
                     rewrite = true;
                 }
 
-                if (contains(result, APERIO_BARCODE_TAG)) {
+                if (strstr(result, APERIO_BARCODE_TAG) != NULL) {
                     result = override_image_description(result, APERIO_BARCODE_TAG);
                     rewrite = true;
                 }

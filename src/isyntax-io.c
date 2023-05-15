@@ -98,38 +98,38 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
     bool rewrite = false;
 
     // Datetime attribute is substituted with minimum possible value
-    if (contains(result, ISYNTAX_DATETIME_ATT)) {
+    if (strstr(result, ISYNTAX_DATETIME_ATT) != NULL) {
         const char *value = get_value_from_attribute(result, ISYNTAX_DATETIME_ATT);
         result = replace_str(result, value, ISYNTAX_MIN_DATETIME);
         rewrite = true;
     }
 
     // replaced with arbitrary value
-    if (contains(result, ISYNTAX_SERIAL_ATT)) {
+    if (strstr(result, ISYNTAX_SERIAL_ATT) != NULL) {
         result = anonymize_value_of_attribute(result, ISYNTAX_SERIAL_ATT);
         rewrite = true;
     }
 
     // wipes complete section of given attribute
-    if (contains(result, ISYNTAX_SLOT_ATT)) {
+    if (strstr(result, ISYNTAX_SLOT_ATT) != NULL) {
         result = wipe_section_of_attribute(result, ISYNTAX_SLOT_ATT);
         rewrite = true;
     }
 
     // wipes complete section of given attribute
-    if (contains(result, ISYNTAX_RACK_ATT)) {
+    if (strstr(result, ISYNTAX_RACK_ATT) != NULL) {
         result = wipe_section_of_attribute(result, ISYNTAX_RACK_ATT);
         rewrite = true;
     }
 
     // replace with arbitrary value
-    if (contains(result, ISYNTAX_OPERID_ATT)) {
+    if (strstr(result, ISYNTAX_OPERID_ATT) != NULL) {
         result = anonymize_value_of_attribute(result, ISYNTAX_OPERID_ATT);
         rewrite = true;
     }
 
     // replace with arbitrary value
-    if (contains(result, ISYNTAX_BARCODE_ATT)) {
+    if (strstr(result, ISYNTAX_BARCODE_ATT) != NULL) {
         result = anonymize_value_of_attribute(result, ISYNTAX_BARCODE_ATT);
         rewrite = true;
     }
@@ -268,7 +268,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
     char *result = buffer;
     bool rewrite = false;
 
-    if (contains(result, image_type)) {
+    if (strstr(result, image_type) != NULL) {
 
         // get image data string
         const char *image_data = get_string_between_delimiters(result, image_type, ISYNTAX_OBJECT);

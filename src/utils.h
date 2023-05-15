@@ -40,8 +40,6 @@ const char *add_square_brackets(const char *str);
 
 const char *add_equals_sign(const char *str1, const char *str2);
 
-bool contains(const char *str1, const char *str2);
-
 int32_t get_size_to_substring(file_t *fp, char *substring);
 
 int32_t file_contains_value(file_t *fp, char *value);

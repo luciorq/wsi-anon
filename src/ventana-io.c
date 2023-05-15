@@ -72,7 +72,7 @@ int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
                     return -1;
                 }
 
-                if (contains(buffer, "Label")) {
+                if (strstr(buffer, "Label") != NULL) {
                     free(buffer);
                     return i;
                 }
@@ -167,28 +167,28 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 char *result = buffer;
                 bool rewrite = false;
 
-                if (contains(result, VENTANA_BASENAME_ATT)) {
+                if (strstr(result, VENTANA_BASENAME_ATT) != NULL) {
                     result = wipe_xmp_data(result, VENTANA_BASENAME_ATT, " ");
                     rewrite = true;
                 }
 
-                if (contains(result, VENTANA_FILENAME_ATT)) {
+                if (strstr(result, VENTANA_FILENAME_ATT) != NULL) {
                     result = wipe_xmp_data(result, VENTANA_FILENAME_ATT, " ");
                     rewrite = true;
                 }
 
-                if (contains(result, VENTANA_UNITNUMBER_ATT)) {
+                if (strstr(result, VENTANA_UNITNUMBER_ATT) != NULL) {
                     result = wipe_xmp_data(result, VENTANA_UNITNUMBER_ATT, " ");
                     rewrite = true;
                 }
 
-                if (contains(result, VENTANA_USERNAME_ATT)) {
+                if (strstr(result, VENTANA_USERNAME_ATT) != NULL) {
                     result = wipe_xmp_data(result, VENTANA_USERNAME_ATT, " ");
                     rewrite = true;
                 }
 
                 // checks if attribute occurs more than once in directory
-                if (contains(result, VENTANA_BUILDDATE1_ATT)) {
+                if (strstr(result, VENTANA_BUILDDATE1_ATT) != NULL) {
                     int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
                     for (int32_t i = 0; i <= count; i++) {
                         const char *value =
@@ -199,7 +199,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     rewrite = true;
                 }
 
-                if (contains(result, VENTANA_BUILDDATE2_ATT)) {
+                if (strstr(result, VENTANA_BUILDDATE2_ATT) != NULL) {
                     const char *value =
                         get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
                     char *replacement = anonymize_string(" ", strlen(value));
@@ -207,12 +207,12 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     rewrite = true;
                 }
 
-                if (contains(result, VENTANA_BARCODE1D_ATT)) {
+                if (strstr(result, VENTANA_BARCODE1D_ATT) != NULL) {
                     result = wipe_xmp_data(result, VENTANA_BARCODE1D_ATT, " ");
                     rewrite = true;
                 }
 
-                if (contains(result, VENTANA_BARCODE2D_ATT)) {
+                if (strstr(result, VENTANA_BARCODE2D_ATT) != NULL) {
                     result = wipe_xmp_data(result, VENTANA_BARCODE2D_ATT, " ");
                     rewrite = true;
                 }
