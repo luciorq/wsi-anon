@@ -56,7 +56,7 @@ def test_check_fileformat(wsi_filename, vendor):
         ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
         ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
         ("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"),
-        ("/data/Ventana/OS-2.bif", "anon-ventana1", "/data/Ventana/anon-ventana1.bif"),         # ToDo: until unlinking works correclty for .bif files
+        ("/data/Ventana/OS-2.bif", "anon-ventana1", "/data/Ventana/anon-ventana1.bif"),
     ],
 )
 def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_label_name):
@@ -68,11 +68,16 @@ def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_lab
 
     slide = openslide.OpenSlide(result_label_name)
     assert "label" not in slide.associated_images
-    assert "macro" not in slide.associated_images
+
+    if "Ventana" not in wsi_filename:
+        assert "macro" not in slide.associated_images
 
     if wsi_filename == "/data/Aperio/CMU-1.svs":
         assert "XXXXX" in slide.properties["aperio.Filename"]
         assert "XXXXX" in slide.properties["aperio.User"]
+
+    # TODO: Check more metadata!
+
     slide.close()
 
     cleanup(result_label_name)

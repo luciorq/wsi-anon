@@ -12,7 +12,7 @@ build-wsi-anon:
   tags:
     - empaia-parallel
   script:
-    - make
+    - make clean && make
     - make wasm
   artifacts:
     paths:
@@ -24,7 +24,7 @@ test-wsi-anon:
     - empaia-parallel
   script:
     - apt-get update -q && apt-get install -yq libcunit1-dev
-    - make tests
+    - make clean && make tests
     - bin/utests
   artifacts:
     paths:
@@ -40,7 +40,7 @@ test-integration:
     - docker-compose -f docker-compose.test.yml down -v --remove-orphans
     - docker-compose -f docker-compose.test.yml up -d --build
   script:
-    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test
+    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test -vv
   after_script:
     - docker-compose -f docker-compose.test.yml down
 
