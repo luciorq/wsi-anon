@@ -29,7 +29,7 @@ test-wsi-anon:
     - make clean 
   script:
     - make tests
-    - bin/utests
+    - ./bin/utests
   artifacts:
     paths:
       - Test-Wsi-Anon-Results.xml

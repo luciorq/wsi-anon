@@ -17,20 +17,18 @@ int main() {
         AddTestsUtils();
         AddTestsIniParser();
         AddTestsWsiAnonymizer();
-        
+
         fprintf(stdout, "Set output filename to Test-Wsi-Anon\n");
         CU_set_output_filename("Test-Wsi-Anon");
-        
-        fprintf(stdout, "Running tests...\n");
-        CU_automated_enable_junit_xml(CU_TRUE);
-        CU_automated_run_tests();
 
+        fprintf(stdout, "Running tests...\n");
+        CU_automated_run_tests();
 
         fprintf(stdout, "_______________________________________________\n");
         CU_pRunSummary summary = CU_get_run_summary();
-        fprintf(stdout, "Result: %u succeeded - %u skipped - %u failed\n", summary->nTestsRun, summary->nTestsInactive,
-                summary->nTestsFailed);
-        
+        fprintf(stdout, "Result: %u succeeded - %u skipped - %u failed\n", summary->nTestsRun,
+                summary->nTestsInactive, summary->nTestsFailed);
+
         result = (summary->nTestsFailed != 0);
         CU_cleanup_registry();
     }
