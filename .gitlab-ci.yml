@@ -1,5 +1,5 @@
 codecheck:
-  image: ubuntu:20.04
+  image: registry.gitlab.com/empaia/integration/ci-docker-images/test-runner
   tags:
     - empaia-parallel
   before_script:
@@ -21,7 +21,7 @@ build-wsi-anon:
       - bin
 
 test-wsi-anon:
-  image: emscripten/emsdk
+  image: registry.gitlab.com/empaia/integration/ci-docker-images/test-runner
   tags:
     - empaia-parallel
   before_script:
