@@ -40,7 +40,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
     file_t *fp = file_open(slidedat_filename, "r");
 
     if (fp == NULL) {
-        printf(stderr, "Error: Could not read ini file.\n");
+        fprintf(stderr, "Error: Could not read ini file.\n");
         return NULL;
     }
 
@@ -313,7 +313,7 @@ int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *
     file_t *fp = file_open(slidedat_filename, "w");
 
     if (fp == NULL) {
-        printf(stderr, "Error: Failed writing index file.\n");
+        fprintf(stderr, "Error: Failed writing index file.\n");
         return -1;
     }
 

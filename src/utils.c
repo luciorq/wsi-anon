@@ -67,7 +67,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
                             const char *suffix) {
     // assure length is a postive integer and not zero
     if (length < 1) {
-        printf(stderr, "Error: Length smaller 1.\n");
+        fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;
     }
 
@@ -107,7 +107,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
 
 char *anonymize_string(const char *x, uint64_t length) {
     if (length < 1) {
-        printf(stderr, "Error: Length smaller 1.\n");
+        fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;
     }
 
@@ -297,7 +297,7 @@ const char *duplicate_file(const char *filename, const char *new_file_name,
     const char *_filename = get_filename_from_path(filename);
 
     if (_filename == NULL) {
-        printf(stderr, "Error: Could not retrieve filename from filepath.\n");
+        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
         return NULL;
     }
 
@@ -422,7 +422,7 @@ int32_t get_size_to_substring(file_t *fp, char *substring) {
 
     if (file_read(buffer, file_length, 1, fp) != 1) {
         free(buffer);
-        printf(stderr, "Error: Could not read file.\n");
+        fprintf(stderr, "Error: Could not read file.\n");
         return -1;
     }
 
@@ -446,7 +446,7 @@ int32_t file_contains_value(file_t *fp, char *value) {
 
     if (file_read(buffer, size, 1, fp) != 1) {
         free(buffer);
-        printf(stderr, "Error: Could not read file.\n");
+        fprintf(stderr, "Error: Could not read file.\n");
         return -1;
     }
 
