@@ -16,9 +16,7 @@ void print_help_message() {
     fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
     fprintf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
     fprintf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
-    fprintf(
-        stderr,
-        "       Note: For file formats using JPEG compression this does not work currently.\n\n");
+    fprintf(stderr, "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
 
 int32_t main(int32_t argc, char *argv[]) {
@@ -90,12 +88,10 @@ int32_t main(int32_t argc, char *argv[]) {
     } else {
         if (filename != NULL) {
             if (new_label_name != NULL) {
-                anonymize_wsi(filename, new_label_name, keep_macro_image, disable_unlinking,
-                              do_inplace);
+                anonymize_wsi(filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
             } else {
                 // TODO: new file name (old_filename + tag)
-                anonymize_wsi(filename, "_anonymized_wsi", keep_macro_image, disable_unlinking,
-                              do_inplace);
+                anonymize_wsi(filename, "_anonymized_wsi", keep_macro_image, disable_unlinking, do_inplace);
             }
             fprintf(stdout, "Done.\n");
         } else {

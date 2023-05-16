@@ -22,16 +22,15 @@ EM_ASYNC_JS(size_t, get_chunk, (void *buffer, size_t size, const char *filename,
     return sliceData.byteLength;
 });
 
-EM_ASYNC_JS(void, set_chunk,
-            (const void *buffer, size_t size, const char *filename, int64_t offset), {
-                const sourceView = new Uint8Array(wasmMemory.buffer, buffer, size);
-                const targetBuffer = new ArrayBuffer(size);
-                const targetView = new Uint8Array(targetBuffer);
-                targetView.set(sourceView);
-                const jsFilename = UTF8ToString(filename);
-                const anonStream = AnonymizedStream.retrieve(jsFilename);
-                anonStream.addChanges(targetBuffer, BigInt(offset));
-            });
+EM_ASYNC_JS(void, set_chunk, (const void *buffer, size_t size, const char *filename, int64_t offset), {
+    const sourceView = new Uint8Array(wasmMemory.buffer, buffer, size);
+    const targetBuffer = new ArrayBuffer(size);
+    const targetView = new Uint8Array(targetBuffer);
+    targetView.set(sourceView);
+    const jsFilename = UTF8ToString(filename);
+    const anonStream = AnonymizedStream.retrieve(jsFilename);
+    anonStream.addChanges(targetBuffer, BigInt(offset));
+});
 
 EM_ASYNC_JS(int32_t, file_present_in_form, (const char *filename), {
     const jsFilename = UTF8ToString(filename);
@@ -69,8 +68,7 @@ file_t *file_open(const char *filename, const char *mode) {
 }
 
 size_t file_read(void *buffer, size_t element_size, size_t element_count, file_t *stream) {
-    uint32_t bytes_read =
-        get_chunk(buffer, element_size * element_count, stream->filename, stream->offset);
+    uint32_t bytes_read = get_chunk(buffer, element_size * element_count, stream->filename, stream->offset);
     stream->offset += bytes_read * element_count;
     return element_count;
 }

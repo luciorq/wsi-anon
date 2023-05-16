@@ -19,8 +19,7 @@ char *replace_str(const char *original_str, const char *replace_str, const char 
 
 bool starts_with(const char *str, const char *pre);
 
-const char *get_string_between_delimiters(const char *buffer, const char *delimiter1,
-                                          const char *delimiter2);
+const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);
 
 void remove_leading_spaces(char *str);
 
@@ -55,8 +54,7 @@ int32_t *read_int32(file_t *fp);
 bool assert_value(file_t *fp, int32_t value);
 
 // file operations
-const char *duplicate_file(const char *filename, const char *new_file_name,
-                           const char *file_extension);
+const char *duplicate_file(const char *filename, const char *new_file_name, const char *file_extension);
 
 int32_t copy_file_v2(const char *src, const char *dest);
 

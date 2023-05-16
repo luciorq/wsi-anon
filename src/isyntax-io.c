@@ -38,8 +38,8 @@ int32_t is_isyntax(const char *filename) {
 char *anonymize_value_of_attribute(char *buffer, char *attribute) {
 
     const char *value = get_string_between_delimiters(buffer, attribute, ISYNTAX_ATT_OPEN);
-    value = get_string_between_delimiters(
-        value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
+    value = get_string_between_delimiters(value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL),
+                                          ISYNTAX_ATT_END);
 
     // check for empty String
     if (strcmp(value, "") != 0) {
@@ -54,16 +54,15 @@ char *anonymize_value_of_attribute(char *buffer, char *attribute) {
 // returns value for an attribute
 const char *get_value_from_attribute(char *buffer, char *attribute) {
     const char *value = get_string_between_delimiters(buffer, attribute, ISYNTAX_ATT_OPEN);
-    const char *delimiter =
-        get_string_between_delimiters(value, ISYNTAX_ATT_PMSVR, ISYNTAX_CLOSING_SYMBOL);
+    const char *delimiter = get_string_between_delimiters(value, ISYNTAX_ATT_PMSVR, ISYNTAX_CLOSING_SYMBOL);
 
     // check for datatype
     if (strcmp(delimiter, ISYNTAX_DELIMITER_STR) == 0) {
-        return get_string_between_delimiters(
-            value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
+        return get_string_between_delimiters(value, concat_str(ISYNTAX_DELIMITER_STR, ISYNTAX_CLOSING_SYMBOL),
+                                             ISYNTAX_ATT_END);
     } else if (strcmp(delimiter, ISYNTAX_DELIMITER_INT) == 0) {
-        return get_string_between_delimiters(
-            value, concat_str(ISYNTAX_DELIMITER_INT, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
+        return get_string_between_delimiters(value, concat_str(ISYNTAX_DELIMITER_INT, ISYNTAX_CLOSING_SYMBOL),
+                                             ISYNTAX_ATT_END);
     } else {
         fprintf(stderr, "Unable find value for attribute with this datatype");
         return NULL;
@@ -72,8 +71,8 @@ const char *get_value_from_attribute(char *buffer, char *attribute) {
 
 // replaces section of passed attribute with empty string
 char *wipe_section_of_attribute(char *buffer, char *attribute) {
-    const char *section = get_string_between_delimiters(
-        buffer, attribute, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
+    const char *section =
+        get_string_between_delimiters(buffer, attribute, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
     section = concat_str(attribute, section);
     section = concat_str(section, concat_str(ISYNTAX_ATT_END, ISYNTAX_CLOSING_SYMBOL));
     char *replacement = anonymize_string(" ", strlen(section));
@@ -289,8 +288,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         */
 
         // alloc with height and width and fill with 255 for a white image
-        unsigned char *white_image =
-            (unsigned char *)malloc((height * width) * sizeof(unsigned char));
+        unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
         memset(white_image, 255, height * width);
 
         // create white jpg image
@@ -330,8 +328,8 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 }
 
 // anonymize iSyntax file
-int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool disable_unlinking, bool do_inplace) {
+int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                       bool do_inplace) {
 
     if (disable_unlinking) {
         fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");

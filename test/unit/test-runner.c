@@ -10,7 +10,6 @@
 int main() {
     int result = 1;
     if (CU_initialize_registry()) {
-        fprintf(stderr, " Initialization of Test Registry failed. ");
         exit(result);
     } else {
         AddTestsUtils();
