@@ -276,10 +276,8 @@ int32_t delete_record_from_index_file(const char *filename, int32_t record, int3
     return 0;
 }
 
-// duplicate and rename the mirax file file.mrxs and
-// the associated folder with the image data
-// return new path name of image data folder
-// filename will be modified to new filename
+// duplicate and rename the mirax file file.mrxs and the associated folder with the image data
+// return new path name of image data folder (filename will be modified to new filename)
 const char *duplicate_mirax_filedata(const char *filename, const char *new_label_name,
                                      const char *file_extension) {
     // retrive filename from whole file path

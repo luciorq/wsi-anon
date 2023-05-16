@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
-  build-essential python3-dev python3-pip python3-openslide
+  build-essential python3-dev python3-pip python3-openslide xvfb
 
 RUN mkdir /openslide_deps
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
