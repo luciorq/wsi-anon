@@ -29,8 +29,7 @@ int main() {
         printf("Result: %u succeeded - %u skipped - %u failed\n", summary->nTestsRun,
                 summary->nTestsInactive, summary->nTestsFailed);
 
-        //result = (summary->nTestsFailed != 0);
-        result = 0;
+        result = (summary->nTestsFailed != 0);
         CU_cleanup_registry();
     }
     return result;
