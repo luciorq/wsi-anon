@@ -84,6 +84,6 @@ makedirs:
 
 .PHONY: clean
 clean:
-	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out
-	@rm -r $(OBJDIR) $(BINDIR)
+	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out || true
+	@rm -r $(OBJDIR) $(BINDIR) || true
 	@echo "Cleanup complete!"

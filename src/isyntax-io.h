@@ -6,8 +6,8 @@
 // main functions
 int32_t is_isyntax(const char *filename);
 
-int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool disable_unlinking, bool do_inplace);
+int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                       bool do_inplace);
 
 // additional functions
 char *anonymize_value_of_attribute(char *buffer, char *attribute);

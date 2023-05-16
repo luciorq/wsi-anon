@@ -111,8 +111,7 @@ uint32_t get_size_of_value(uint16_t type, uint64_t *count) {
     } else if (type == TIFF_RATIONAL || type == TIFF_SRATIONAL) {
         *count *= 2;
         return 4;
-    } else if (type == TIFF_DOUBLE || type == TIFF_LONG8 || type == TIFF_SLONG8 ||
-               type == TIFF_IFD8) {
+    } else if (type == TIFF_DOUBLE || type == TIFF_LONG8 || type == TIFF_SLONG8 || type == TIFF_IFD8) {
         return 8;
     } else {
         return 0;
@@ -129,10 +128,9 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
-                                           uint64_t *in_pointer_offset,
-                                           struct tiff_directory *first_directory, bool big_tiff,
-                                           bool ndpi, bool big_endian) {
+struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset,
+                                           struct tiff_directory *first_directory, bool big_tiff, bool ndpi,
+                                           bool big_endian) {
     uint64_t offset = *dir_offset;
     *dir_offset = 0;
 
@@ -145,13 +143,11 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
     // read number of entries in directory
     uint64_t entry_count = read_uint(fp, big_tiff ? 8 : 2, big_endian);
 
-    struct tiff_directory *tiff_dir =
-        (struct tiff_directory *)malloc(sizeof(struct tiff_directory));
+    struct tiff_directory *tiff_dir = (struct tiff_directory *)malloc(sizeof(struct tiff_directory));
     tiff_dir->count = entry_count;
     tiff_dir->in_pointer_offset = *in_pointer_offset;
 
-    struct tiff_entry *entries =
-        (struct tiff_entry *)malloc(entry_count * sizeof(struct tiff_entry));
+    struct tiff_entry *entries = (struct tiff_entry *)malloc(entry_count * sizeof(struct tiff_entry));
 
     for (uint64_t i = 0; i < entry_count; i++) {
         struct tiff_entry *entry = (struct tiff_entry *)malloc(sizeof(struct tiff_entry));
@@ -283,8 +279,8 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     // when the directory offset is 0 we reached the end of the tiff file
     while (diroff != 0) {
         uint64_t current_in_pointer_offset = file_tell(fp) - 8;
-        struct tiff_directory *current_dir = read_tiff_directory(
-            fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
+        struct tiff_directory *current_dir =
+            read_tiff_directory(fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
         if (current_dir == NULL) {
             fprintf(stderr, "Error: Failed reading directory.\n");
@@ -319,16 +315,15 @@ int32_t check_prefix(file_t *fp, const char *prefix) {
     return 0;
 }
 
-int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian,
-                       bool big_tiff, const char *prefix, const char *suffix) {
+int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian, bool big_tiff,
+                       const char *prefix, const char *suffix) {
     int32_t size_offsets;
     int32_t size_lengths;
     // gather strip offsets and lengths form tiff directory
     if (big_tiff) {
-        uint64_t *strip_offsets =
-            read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-        uint64_t *strip_lengths = read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi,
-                                                        big_endian, &size_lengths);
+        uint64_t *strip_offsets = read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint64_t *strip_lengths =
+            read_pointer64_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
 
         if (strip_offsets == NULL || strip_lengths == NULL) {
             fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
@@ -362,10 +357,9 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
         }
         return 0;
     } else {
-        uint32_t *strip_offsets =
-            read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
-        uint32_t *strip_lengths = read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi,
-                                                        big_endian, &size_lengths);
+        uint32_t *strip_offsets = read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
+        uint32_t *strip_lengths =
+            read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPBYTECOUNTS, ndpi, big_endian, &size_lengths);
 
         if (strip_offsets == NULL || strip_lengths == NULL) {
             fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
@@ -402,8 +396,8 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 }
 
 // read a 32-bit pointer from the directory entries by tiff tag
-uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
-                                bool big_endian, int32_t *length) {
+uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian,
+                                int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
         if (entry.tag == tag) {
@@ -444,8 +438,8 @@ uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t 
 }
 
 // read a 64-bit pointer from the directory entries by tiff tag
-uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi,
-                                bool big_endian, int32_t *length) {
+uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian,
+                                int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
         if (entry.tag == tag) {
@@ -552,8 +546,7 @@ int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const c
     return -1;
 }
 
-int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
-                           const char *contains_value) {
+int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag, const char *contains_value) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -581,8 +574,7 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
     return -1;
 }
 
-int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32_t tag,
-                                       const char *value) {
+int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32_t tag, const char *value) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {

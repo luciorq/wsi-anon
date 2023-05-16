@@ -63,8 +63,7 @@ int32_t file_exists(const char *filename) {
 }
 
 // return a char buffer filled with char x
-char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
-                            const char *suffix) {
+char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix) {
     // assure length is a postive integer and not zero
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
@@ -83,8 +82,8 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
     }
 
     // allocate buffer
-    char *result = (char *)malloc((length * sizeof(char)) + prefix_length * sizeof(char) +
-                                  suffix_length * sizeof(char));
+    char *result =
+        (char *)malloc((length * sizeof(char)) + prefix_length * sizeof(char) + suffix_length * sizeof(char));
 
     int32_t start = 0;
     // add image prefix
@@ -165,8 +164,7 @@ bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
 }
 
-const char *get_string_between_delimiters(const char *buffer, const char *delimiter1,
-                                          const char *delimiter2) {
+const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2) {
     const char *substring1 = strstr(buffer, delimiter1);
     if (substring1) {
         const size_t s_del1 = strlen(delimiter1);
@@ -272,24 +270,7 @@ const char *add_equals_sign(const char *str1, const char *str2) {
 }
 
 // function to check if str1 contains str2
-bool contains(const char *str1, const char *str2) {
-    int32_t i = 0, j = 0;
-
-    while (str1[i] != '\0') {
-        if (str1[i] == str2[j]) {
-            while (str1[i] == str2[j] && str2[j] != '\0') {
-                j++;
-                i++;
-            }
-            if (str2[j] == '\0') {
-                return true;
-            }
-            j = 0;
-        }
-        i++;
-    }
-    return false;
-}
+bool contains(const char *str1, const char *str2) { return strstr(str1, str2) != NULL; }
 
 // function to check how many times str1 contains str2
 int32_t count_contains(const char *str1, const char *str2) {
@@ -311,8 +292,7 @@ int32_t count_contains(const char *str1, const char *str2) {
     return count;
 }
 
-const char *duplicate_file(const char *filename, const char *new_file_name,
-                           const char *file_extension) {
+const char *duplicate_file(const char *filename, const char *new_file_name, const char *file_extension) {
     // retrive filename from whole file path
     const char *_filename = get_filename_from_path(filename);
 
@@ -487,8 +467,7 @@ const char *concat_wildcard_string_int32(const char *str, int32_t integer) {
 }
 
 const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, int32_t integer2) {
-    char *result_string =
-        (char *)malloc(strlen(str) + number_of_digits(integer1) + number_of_digits(integer2) + 1);
+    char *result_string = (char *)malloc(strlen(str) + number_of_digits(integer1) + number_of_digits(integer2) + 1);
     sprintf(result_string, str, integer1, integer2);
     return result_string;
 }

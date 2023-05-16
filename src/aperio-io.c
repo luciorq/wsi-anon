@@ -112,8 +112,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
 
 // macro image for gt450 needs to be treated differently because it is JPEG encoded.
 // therefore we need to convert it to LZW compression
-int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
-                                             int32_t directory) {
+int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file, int32_t directory) {
     struct tiff_directory dir = file->directories[directory];
     for (int32_t i = 0; i < dir.count; i++) {
         struct tiff_entry entry = dir.entries[i];
@@ -134,8 +133,8 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
 }
 
 // anonymizes aperio file
-int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image,
-                      bool disable_unlinking, bool do_inplace) {
+int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                      bool do_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
 
     const char *ext = get_filename_ext(*filename);

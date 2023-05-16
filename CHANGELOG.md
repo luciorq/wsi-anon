@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.5
+
+* bugfix for string contains function in utils (replaced by string.h's `strstr` function)
+
 ## 0.4.4
 
 * quickfix for mirax file structure bug in Slidedat.ini
