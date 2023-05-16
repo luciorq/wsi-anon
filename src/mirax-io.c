@@ -703,6 +703,11 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     free(mirax_file);
     free(ini);
 
+    if (!do_inplace) {
+        // override with new filename
+        *filename = path;
+    }
+
     return result;
 }
 
