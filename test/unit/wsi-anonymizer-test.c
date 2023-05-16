@@ -4,8 +4,8 @@
 
 // ####################### functions to test ####################### //
 
-extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name,
-                                     bool keep_macro_image, bool disable_unlinking);
+extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name, bool keep_macro_image,
+                                     bool disable_unlinking);
 
 // ####################### test cases ####################### //
 
@@ -16,11 +16,11 @@ void test_errors_are_propagated() {
 
 // ####################### test case setup ####################### //
 
-CU_TestInfo anonymize_wsi_tests[] = {
-    {"Test [anonymize_wsi_inplace] 1:", test_errors_are_propagated}, CU_TEST_INFO_NULL};
+CU_TestInfo anonymize_wsi_tests[] = {{"Test [anonymize_wsi_inplace] 1:", test_errors_are_propagated},
+                                     CU_TEST_INFO_NULL};
 
-CU_SuiteInfo anonymize_wsi_test_suite[] = {
-    {"Testing wsi-anonymizer.c:", NULL, NULL, NULL, NULL, anonymize_wsi_tests}, CU_SUITE_INFO_NULL};
+CU_SuiteInfo anonymize_wsi_test_suite[] = {{"Testing wsi-anonymizer.c:", NULL, NULL, NULL, NULL, anonymize_wsi_tests},
+                                           CU_SUITE_INFO_NULL};
 
 void AddTestsWsiAnonymizer(void) {
     assert(NULL != CU_get_registry());

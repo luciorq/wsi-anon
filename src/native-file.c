@@ -24,9 +24,7 @@ size_t file_read(void *buffer, size_t element_size, size_t element_count, file_t
     return fread(buffer, element_size, element_count, stream->fp);
 }
 
-char *file_gets(char *buffer, int32_t max_count, file_t *stream) {
-    return fgets(buffer, max_count, stream->fp);
-}
+char *file_gets(char *buffer, int32_t max_count, file_t *stream) { return fgets(buffer, max_count, stream->fp); }
 
 int32_t file_getc(file_t *stream) { return fgetc(stream->fp); }
 
