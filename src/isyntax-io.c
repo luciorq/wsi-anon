@@ -65,7 +65,7 @@ const char *get_value_from_attribute(char *buffer, char *attribute) {
         return get_string_between_delimiters(
             value, concat_str(ISYNTAX_DELIMITER_INT, ISYNTAX_CLOSING_SYMBOL), ISYNTAX_ATT_END);
     } else {
-        printf(stderr, "Unable find value for attribute with this datatype");
+        fprintf(stderr, "Unable find value for attribute with this datatype");
         return NULL;
     }
 }
@@ -90,7 +90,7 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 
     if (file_read(buffer, header_size, 1, fp) != 1) {
         free(buffer);
-        printf(stderr, "Error: Could not read iSyntax file.\n");
+        fprintf(stderr, "Error: Could not read iSyntax file.\n");
         return -1;
     }
 
@@ -139,7 +139,7 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
         strcpy(buffer, result);
         file_seek(fp, 0, SEEK_SET);
         if (!file_write(buffer, header_size, 1, fp)) {
-            printf(stderr, "Error: changing XML Header failed.\n");
+            fprintf(stderr, "Error: changing XML Header failed.\n");
             free(buffer);
             return -1;
         }
@@ -256,7 +256,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
 
     if (file_read(buffer, header_size, 1, fp) != 1) {
         free(buffer);
-        printf(stderr, "Error: Could not read iSyntax file.\n");
+        fprintf(stderr, "Error: Could not read iSyntax file.\n");
         return -1;
     }
 
@@ -318,7 +318,7 @@ int32_t wipe_image_data(file_t *fp, int32_t header_size, char *image_type) {
         strcpy(buffer, result);
         file_seek(fp, 0, SEEK_SET);
         if (!file_write(buffer, header_size, 1, fp)) {
-            printf(stderr, "Error: changing XML Header failed.\n");
+            fprintf(stderr, "Error: changing XML Header failed.\n");
             result = NULL;
             free(buffer);
             return -1;
@@ -334,10 +334,10 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
                        bool disable_unlinking, bool do_inplace) {
 
     if (disable_unlinking) {
-        printf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
+        fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
     }
 
-    printf(stdout, "Anonymize iSyntax WSI...\n");
+    fprintf(stdout, "Anonymize iSyntax WSI...\n");
 
     if (!do_inplace) {
         *filename = duplicate_file(*filename, new_label_name, DOT_ISYNTAX);
@@ -356,7 +356,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
     int32_t result = wipe_image_data(fp, header_size, "LABELIMAGE");
 
     if (result == -1) {
-        printf(stderr, "Error: Could not wipe label image from file.\n");
+        fprintf(stderr, "Error: Could not wipe label image from file.\n");
     }
 
     // remove macro image
@@ -364,7 +364,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         result = wipe_image_data(fp, header_size, "MACROIMAGE");
 
         if (result == -1) {
-            printf(stderr, "Error: Could not wipe macro image from file.\n");
+            fprintf(stderr, "Error: Could not wipe macro image from file.\n");
         }
     }
 

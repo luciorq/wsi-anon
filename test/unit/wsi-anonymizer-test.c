@@ -27,7 +27,7 @@ void AddTestsWsiAnonymizer(void) {
     assert(!CU_is_test_running());
 
     if (CUE_SUCCESS != CU_register_suites(anonymize_wsi_test_suite)) {
-        printf(stderr, "Register suites failed - %s ", CU_get_error_msg());
+        fprintf(stderr, "Register suites failed - %s ", CU_get_error_msg());
         exit(1);
     }
 }
