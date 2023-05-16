@@ -25,6 +25,7 @@ test-wsi-anon:
   tags:
     - empaia-parallel
   before_script:
+    - rm -rf Test-Wsi-Anon-Results.xml
     - apt-get update -q && apt-get install -yq libcunit1-dev
     - make clean 
   script:

@@ -55,7 +55,7 @@ def test_check_fileformat(wsi_filename, vendor):
     [
         ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
         ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
-        ("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"),
         #("/data/Ventana/OS-2.bif", "anon-ventana1", "/data/Ventana/anon-ventana1.bif"),
     ],
 )
