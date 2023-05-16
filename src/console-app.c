@@ -9,14 +9,14 @@ char *get_app_name() {
 }
 
 void print_help_message() {
-    fprintf(stderr, "Usage: %s [FILE] [-OPTIONS]\n\n", get_app_name());
-    fprintf(stderr, "OPTIONS:\n");
-    fprintf(stderr, "-c     Only check file for vendor format\n");
-    fprintf(stderr, "-n     Specify pseudo label name (e.g. -n \"labelname\")\n");
-    fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
-    fprintf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
-    fprintf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
-    fprintf(
+    printf(stderr, "Usage: %s [FILE] [-OPTIONS]\n\n", get_app_name());
+    printf(stderr, "OPTIONS:\n");
+    printf(stderr, "-c     Only check file for vendor format\n");
+    printf(stderr, "-n     Specify pseudo label name (e.g. -n \"labelname\")\n");
+    printf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
+    printf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
+    printf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
+    printf(
         stderr,
         "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
@@ -30,7 +30,7 @@ int32_t main(int32_t argc, char *argv[]) {
     const char *new_label_name = NULL;
 
     if (argv[1] == NULL) {
-        fprintf(stderr, "No filename specified.\n\n");
+        printf(stderr, "No filename specified.\n\n");
         print_help_message();
         exit(EXIT_FAILURE);
     }
@@ -71,7 +71,7 @@ int32_t main(int32_t argc, char *argv[]) {
                 exit(EXIT_FAILURE);
             }
             default: {
-                fprintf(stderr, "Invalid arguments.\n");
+                printf(stderr, "Invalid arguments.\n");
                 print_help_message();
                 exit(EXIT_FAILURE);
             }
@@ -82,9 +82,9 @@ int32_t main(int32_t argc, char *argv[]) {
     if (only_check) {
         if (filename != NULL) {
             int8_t format = check_file_format(filename);
-            fprintf(stdout, "Vendor: [%s]\n", VENDOR_STRINGS[format]);
+            printf(stdout, "Vendor: [%s]\n", VENDOR_STRINGS[format]);
         } else {
-            fprintf(stderr, "No filename to check for vendor selected.\n");
+            printf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);
         }
     } else {
@@ -97,9 +97,9 @@ int32_t main(int32_t argc, char *argv[]) {
                 anonymize_wsi(filename, "_anonymized_wsi", keep_macro_image, disable_unlinking,
                               do_inplace);
             }
-            fprintf(stdout, "Done.\n");
+            printf(stdout, "Done.\n");
         } else {
-            fprintf(stderr, "No file for anonymization selected.\n");
+            printf(stderr, "No file for anonymization selected.\n");
             exit(EXIT_FAILURE);
         }
     }

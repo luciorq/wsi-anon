@@ -138,7 +138,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
 
     // seek to directory offset
     if (file_seek(fp, offset, SEEK_SET) != 0) {
-        fprintf(stderr, "Error: seeking to offset failed\n");
+        printf(stderr, "Error: seeking to offset failed\n");
         return NULL;
     }
 
@@ -157,7 +157,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
         struct tiff_entry *entry = (struct tiff_entry *)malloc(sizeof(struct tiff_entry));
 
         if (entry == NULL) {
-            fprintf(stderr, "Error: could not allocate memory for entry\n");
+            printf(stderr, "Error: could not allocate memory for entry\n");
             return NULL;
         }
 
@@ -174,14 +174,14 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset,
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
 
         if (!value_size) {
-            fprintf(stderr, "Error: calculating value size failed\n");
+            printf(stderr, "Error: calculating value size failed\n");
             return NULL;
         }
 
         // read entry value to array
         uint8_t value[big_tiff ? 8 : 4];
         if (file_read(value, sizeof(value), 1, fp) != 1) {
-            fprintf(stderr, "Error: reading value to array failed\n");
+            printf(stderr, "Error: reading value to array failed\n");
             return NULL;
         }
 
@@ -271,7 +271,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
         read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
     if (dir == NULL) {
-        fprintf(stderr, "Error: Failed reading directory.\n");
+        printf(stderr, "Error: Failed reading directory.\n");
         return NULL;
     }
 
@@ -287,7 +287,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
             fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
 
         if (current_dir == NULL) {
-            fprintf(stderr, "Error: Failed reading directory.\n");
+            printf(stderr, "Error: Failed reading directory.\n");
             return NULL;
         }
         insert_dir_into_tiff_file(file, current_dir);
@@ -305,13 +305,13 @@ int32_t check_prefix(file_t *fp, const char *prefix) {
     buf[prefix_len] = '\0';
 
     if (file_read(buf, prefix_len, 1, fp) != 1) {
-        fprintf(stderr, "Error: Could not read strip prefix.\n");
+        printf(stderr, "Error: Could not read strip prefix.\n");
         free(buf);
         return -1;
     }
 
     if (strcmp(prefix, buf) != 0) {
-        fprintf(stderr, "Error: Prefix in data strip not found.\n");
+        printf(stderr, "Error: Prefix in data strip not found.\n");
         free(buf);
         return -1;
     }
@@ -331,12 +331,12 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
                                                         big_endian, &size_lengths);
 
         if (strip_offsets == NULL || strip_lengths == NULL) {
-            fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+            printf(stderr, "Error: Could not retrieve strip offset and length.\n");
             return -1;
         }
 
         if (size_offsets != size_lengths) {
-            fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            printf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
             return -1;
         }
 
@@ -354,7 +354,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             // ToDo: check if writing 0's is sufficient when image is LZW encoded
             char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
-                fprintf(stderr, "Error: Wiping image data failed.\n");
+                printf(stderr, "Error: Wiping image data failed.\n");
                 free(strip);
                 return -1;
             }
@@ -368,12 +368,12 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
                                                         big_endian, &size_lengths);
 
         if (strip_offsets == NULL || strip_lengths == NULL) {
-            fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+            printf(stderr, "Error: Could not retrieve strip offset and length.\n");
             return -1;
         }
 
         if (size_offsets != size_lengths) {
-            fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            printf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
             return -1;
         }
 
@@ -391,7 +391,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             // ToDo: check if writing 0's is sufficient when image is LZW encoded
             char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
-                fprintf(stderr, "Error: Wiping image data failed.\n");
+                printf(stderr, "Error: Wiping image data failed.\n");
                 free(strip);
                 return -1;
             }
@@ -425,11 +425,11 @@ uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t 
                 }
 
                 if (file_seek(fp, new_offset, SEEK_SET)) {
-                    fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
+                    printf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
                     continue;
                 }
                 if (file_read(v_buffer, entry_size, entry.count, fp) < 1) {
-                    fprintf(stderr, "Error: Failed to read entry value.\n");
+                    printf(stderr, "Error: Failed to read entry value.\n");
                     continue;
                 }
 
@@ -467,11 +467,11 @@ uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t 
                 }
 
                 if (file_seek(fp, new_offset, SEEK_SET)) {
-                    fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
+                    printf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
                     continue;
                 }
                 if (file_read(v_buffer, entry_size, entry.count, fp) < 1) {
-                    fprintf(stderr, "Error: Failed to read entry value.\n");
+                    printf(stderr, "Error: Failed to read entry value.\n");
                     continue;
                 }
 
@@ -494,14 +494,14 @@ int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir
         // current directory is the last in file
         // search to out pointer of current dir
         if (file_seek(fp, dir.out_pointer_offset, SEEK_SET)) {
-            fprintf(stderr, "Error: Failed to seek to offset.\n");
+            printf(stderr, "Error: Failed to seek to offset.\n");
             return -1;
         }
         // overwrite out pointer with 0 to end file
         uint64_t new_pointer_address[1];
         new_pointer_address[0] = 0x0;
         if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-            fprintf(stderr, "Error: Failed to write directory out pointer \
+            printf(stderr, "Error: Failed to write directory out pointer \
                         to null at pointer position.\n");
             return -1;
         }
@@ -510,20 +510,20 @@ int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir
 
     // current directory has a successor
     if (file_seek(fp, successor.in_pointer_offset, SEEK_SET)) {
-        fprintf(stderr, "Error: Failed to seek to offset.\n");
+        printf(stderr, "Error: Failed to seek to offset.\n");
         return -1;
     }
     uint64_t new_pointer_address[1];
     if (file_read(&new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-        fprintf(stderr, "Error: Failed to read pointer.\n");
+        printf(stderr, "Error: Failed to read pointer.\n");
         return -1;
     }
     if (file_seek(fp, dir.in_pointer_offset, SEEK_SET)) {
-        fprintf(stderr, "Error: Failed to seek to offset.\n");
+        printf(stderr, "Error: Failed to seek to offset.\n");
         return -1;
     }
     if (file_write(new_pointer_address, sizeof(uint64_t), 1, fp) != 1) {
-        fprintf(stderr, "Error: Failed to write directory in pointer \
+        printf(stderr, "Error: Failed to write directory in pointer \
                     to predecessor at pointer position.\n");
         return -1;
     }
@@ -565,7 +565,7 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag,
 
                 char *buffer = malloc(entry_size * entry.count);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image tag %" PRId32 ".\n", tag);
+                    printf(stderr, "Error: Could not read image tag %" PRId32 ".\n", tag);
                     free(buffer);
                     return -1;
                 }
@@ -594,7 +594,7 @@ int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32
 
                 char *buffer = malloc(entry_size * entry.count);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image tag %" PRId32 ".\n", tag);
+                    printf(stderr, "Error: Could not read image tag %" PRId32 ".\n", tag);
                     free(buffer);
                     return -1;
                 }

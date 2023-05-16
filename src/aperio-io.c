@@ -14,7 +14,7 @@ int32_t is_aperio(const char *filename) {
     fp = file_open(filename, "r+");
 
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
+        printf(stderr, "Error: Could not open tiff file.\n");
         return result;
     }
 
@@ -30,7 +30,7 @@ int32_t is_aperio(const char *filename) {
     file = read_tiff_file(fp, big_tiff, false, big_endian);
 
     if (file == NULL) {
-        fprintf(stderr, "Error: Could not read tiff file.\n");
+        printf(stderr, "Error: Could not read tiff file.\n");
         file_close(fp);
         return result;
     }
@@ -38,7 +38,7 @@ int32_t is_aperio(const char *filename) {
     result = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Aperio");
 
     if (result == -1) {
-        fprintf(stderr, "Error: Could not find aperio label directory.\n");
+        printf(stderr, "Error: Could not find aperio label directory.\n");
     }
 
     // is aperio
@@ -70,7 +70,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
 
                 char buffer[entry_size * entry.count];
                 if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read tag image description.\n");
+                    printf(stderr, "Error: Could not read tag image description.\n");
                     return -1;
                 }
 
@@ -100,7 +100,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
                 if (rewrite == true) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (file_write(result, entry.count, entry_size, fp) != 1) {
-                        fprintf(stderr, "Error: Could not overwrite image description.\n");
+                        printf(stderr, "Error: Could not overwrite image description.\n");
                         return -1;
                     }
                 }
@@ -119,12 +119,12 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
         struct tiff_entry entry = dir.entries[i];
         if (entry.tag == TIFFTAG_COMPRESSION) {
             if (file_seek(fp, entry.start + 12, SEEK_SET)) {
-                fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
+                printf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", entry.offset);
                 continue;
             }
             uint64_t lzw_com = COMPRESSION_LZW;
             if (!file_write(&lzw_com, 1, sizeof(uint64_t), fp)) {
-                fprintf(stderr, "Error: Wiping image data failed.\n");
+                printf(stderr, "Error: Wiping image data failed.\n");
                 return -1;
             }
             break;
@@ -136,7 +136,7 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
 // anonymizes aperio file
 int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image,
                       bool disable_unlinking, bool do_inplace) {
-    fprintf(stdout, "Anonymize Aperio WSI...\n");
+    printf(stdout, "Anonymize Aperio WSI...\n");
 
     const char *ext = get_filename_ext(*filename);
 
@@ -163,7 +163,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     file = read_tiff_file(fp, big_tiff, false, big_endian);
 
     if (file == NULL) {
-        fprintf(stderr, "Error: Could not read tiff file.\n");
+        printf(stderr, "Error: Could not read tiff file.\n");
         return -1;
     }
 
@@ -178,7 +178,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     if (label_dir == -1) {
-        fprintf(stderr, "Error: Could not find IFD of label image.\n");
+        printf(stderr, "Error: Could not find IFD of label image.\n");
         return -1;
     }
 
@@ -201,7 +201,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
 
         if (macro_dir == -1) {
-            fprintf(stderr, "Error: Could not find IFD of macro image.\n");
+            printf(stderr, "Error: Could not find IFD of macro image.\n");
             return -1;
         }
 

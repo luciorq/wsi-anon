@@ -214,7 +214,7 @@ void AddTestsUtils(void) {
     assert(!CU_is_test_running());
 
     if (CUE_SUCCESS != CU_register_suites(suites1)) {
-        fprintf(stderr, "Register suites failed - %s ", CU_get_error_msg());
+        printf(stderr, "Register suites failed - %s ", CU_get_error_msg());
         exit(1);
     }
 }

@@ -49,7 +49,7 @@ size_t file_write(const void *buffer, size_t size, size_t count, file_t *stream)
 int32_t file_putc(int32_t character, file_t *stream) { return fputc(character, stream->fp); }
 
 int32_t file_printf(file_t *stream, const char *format, const char *value) {
-    return fprintf(stream->fp, format, value);
+    return printf(stream->fp, format, value);
 }
 
 int64_t file_tell(file_t *stream) {

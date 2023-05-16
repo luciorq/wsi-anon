@@ -40,12 +40,12 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
                         // to get the expected value
                         uint64_t new_start = temp_entry.start + 8;
                         if (file_seek(fp, new_start, SEEK_SET)) {
-                            fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n",
+                            printf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n",
                                     new_start);
                             return -1;
                         }
                         if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
-                            fprintf(stderr, "Error: Failed to read entry value.\n");
+                            printf(stderr, "Error: Failed to read entry value.\n");
                             return -1;
                         }
                         fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
@@ -67,10 +67,10 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
                          bool disable_unlinking, bool do_inplace) {
 
     if (keep_macro_image) {
-        fprintf(stderr, "Error: Macro image will be wiped if found.\n");
+        printf(stderr, "Error: Macro image will be wiped if found.\n");
     }
 
-    fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
+    printf(stdout, "Anonymize Hamamatsu WSI...\n");
     if (!do_inplace) {
         *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);
     }
@@ -85,7 +85,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     int32_t result = check_file_header(fp, &big_endian, &big_tiff);
 
     if (result != 0) {
-        fprintf(stderr, "Error: Could not read header file.\n");
+        printf(stderr, "Error: Could not read header file.\n");
         file_close(fp);
         return result;
     }
@@ -97,7 +97,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     // find the macro directory
     int32_t dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
     if (dir_count == -1) {
-        fprintf(stderr, "Error: No macro directory.\n");
+        printf(stderr, "Error: No macro directory.\n");
         free_tiff_file(file);
         file_close(fp);
         return -1;

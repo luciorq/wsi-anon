@@ -33,10 +33,10 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
     int8_t result_check_format = check_file_format(*filename);
 
     if (result_check_format == num_of_formats - 1) {
-        fprintf(stderr, "Error: File does not exist or is invalid.\n");
+        printf(stderr, "Error: File does not exist or is invalid.\n");
         return result;
     } else if (result_check_format == num_of_formats - 2) {
-        fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
+        printf(stderr, "Error: Unknown file format. Process aborted.\n");
         return result;
     } else {
         result = handle_format_functions[result_check_format](

@@ -129,12 +129,12 @@ int32_t *read_data_location(const char *filename, int32_t record, int32_t **posi
     file_t *fp = file_open(filename, "r+w");
 
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open file stream.\n");
+        printf(stderr, "Error: Could not open file stream.\n");
         return NULL;
     }
 
     if (file_seek(fp, MRXS_ROOT_OFFSET_NONHIER, SEEK_SET)) {
-        fprintf(stderr, "Error: Can not seek to mrxs offset in Index.dat.\n");
+        printf(stderr, "Error: Can not seek to mrxs offset in Index.dat.\n");
         file_close(fp);
         return NULL;
     }
@@ -185,19 +185,19 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
     file_t *fp = file_open(filename, "r+w");
 
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open label file.\n");
+        printf(stderr, "Error: Could not open label file.\n");
         return -1;
     }
 
     if (file_seek(fp, **offset, SEEK_SET)) {
-        fprintf(stderr, "Error: Failed to seek to offset.\n");
+        printf(stderr, "Error: Failed to seek to offset.\n");
         file_close(fp);
         return -1;
     }
 
     char *buffer = (char *)malloc(sizeof(prefix));
     if (file_read(buffer, sizeof(prefix), 1, fp) != 1) {
-        fprintf(stderr, "Error: Could not read strip prefix.\n");
+        printf(stderr, "Error: Could not read strip prefix.\n");
         file_close(fp);
         free(buffer);
         return -1;
@@ -205,7 +205,7 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
 
     // check for jpeg prefix start of file (soi)
     if (buffer[0] != prefix[0] || buffer[1] != prefix[1]) {
-        fprintf(stderr, "Error: Unexpected data in file.\n");
+        printf(stderr, "Error: Unexpected data in file.\n");
         file_close(fp);
         free(buffer);
         return -1;
@@ -227,7 +227,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
     struct mirax_level *level_to_delete = get_level_by_name(layers, layer_name, level_name);
 
     if (level_to_delete == NULL) {
-        fprintf(stderr, "Error: Could not find expected level.\n");
+        printf(stderr, "Error: Could not find expected level.\n");
         return -1;
     }
 
@@ -262,7 +262,7 @@ int32_t delete_record_from_index_file(const char *filename, int32_t record, int3
 
     char buffer[to_move * 4];
     if (file_read(buffer, (to_move * 4), 1, fp) != 1) {
-        fprintf(stderr, "Error: Unexpected length of buffer.\n");
+        printf(stderr, "Error: Unexpected length of buffer.\n");
         file_close(fp);
         return -1;
     }
@@ -284,7 +284,7 @@ const char *duplicate_mirax_filedata(const char *filename, const char *new_label
     const char *_filename = get_filename_from_path(filename);
 
     if (_filename == NULL) {
-        fprintf(stderr, "Error: Could not retrieve filename from filepath.\n");
+        printf(stderr, "Error: Could not retrieve filename from filepath.\n");
         return NULL;
     }
 
@@ -430,7 +430,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
     file_t *fp = file_open(indexdat_filename, "r+w");
 
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not read index.dat file.\n");
+        printf(stderr, "Error: Could not read index.dat file.\n");
         return -1;
     }
 
@@ -445,7 +445,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
             buffer = replace_str(buffer, value, replacement);
             file_seek(fp, 0, SEEK_SET);
             if (file_write(buffer, size - 1, 1, fp) != 1) {
-                fprintf(stderr, "Error: Could not overwrite slide id in index.dat.\n");
+                printf(stderr, "Error: Could not overwrite slide id in index.dat.\n");
                 return -1;
             }
         }
@@ -484,7 +484,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
                 buffer = replace_str(buffer, value, replacement);
                 file_seek(fp, 0, SEEK_SET);
                 if (file_write(buffer, size - 1, 1, fp) != 1) {
-                    fprintf(stderr, "Error: Could not overwrite slide id in data.dat.\n");
+                    printf(stderr, "Error: Could not overwrite slide id in data.dat.\n");
                 }
             }
         }
@@ -524,7 +524,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
             // overwrite value in data.dat file
             file_seek(fp, 0, SEEK_SET);
             if (file_write(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
-                fprintf(stderr, "Error: Could not overwrite value in %s.\n", data_files[i]);
+                printf(stderr, "Error: Could not overwrite value in %s.\n", data_files[i]);
             }
         }
 
@@ -552,12 +552,12 @@ int32_t wipe_delete_unlink(const char *path, struct ini_file *ini, const char *i
 
     if (level != NULL) {
         if (wipe_data_in_index_file(path, index_filename, level, mirax_file) != 0) {
-            fprintf(stderr, "Error: Failed to wipe data in Index.dat.\n");
+            printf(stderr, "Error: Failed to wipe data in Index.dat.\n");
             return -1;
         }
 
         if (delete_group_form_ini_file(ini, level->section) != 0) {
-            fprintf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
+            printf(stderr, "Error: Failed to delete group in Slidedat.ini.\n");
             return -1;
         }
 
@@ -575,14 +575,14 @@ char *strndup(const char *s1, size_t n) {
 
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image,
                      bool disable_unlinking, bool do_inplace) {
-    fprintf(stdout, "Anonymize Mirax WSI...\n");
+    printf(stdout, "Anonymize Mirax WSI...\n");
     const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
 
     if (!do_inplace) {
         path = duplicate_mirax_filedata(*filename, new_label_name, DOT_MRXS_EXT);
 
         if (path == NULL || filename == NULL) {
-            fprintf(stderr, "Error: File with stated filename already exists. Remove file or set "
+            printf(stderr, "Error: File with stated filename already exists. Remove file or set "
                             "label name.\n");
             return -1;
         }
@@ -594,7 +594,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     const char *layer_count = get_value_from_ini_file(ini, HIERARCHICAL, NONHIER_COUNT);
 
     if (index_filename == NULL || file_count == NULL || layer_count == NULL) {
-        fprintf(stderr, "Error: No index file specified.\n");
+        printf(stderr, "Error: No index file specified.\n");
         return -1;
     }
 
@@ -642,14 +642,14 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         int32_t barcode_group_index = -1;
         if (barcode_layer != NULL) {
             barcode_group_index = get_group_index_of_ini_file(ini, barcode_layer->section);
-            // fprintf(stdout, "Barcode group index: %i\n", barcode_group_index);
+            // printf(stdout, "Barcode group index: %i\n", barcode_group_index);
         }
         struct mirax_level *wsi_layer =
             get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
         int32_t wsi_group_index = -1;
         if (wsi_layer != NULL) {
             wsi_group_index = get_group_index_of_ini_file(ini, wsi_layer->section);
-            // fprintf(stdout, "Wholeslide group index: %i\n", wsi_group_index);
+            // printf(stdout, "Wholeslide group index: %i\n", wsi_group_index);
         }
 
         if (barcode_group_index != -1 || wsi_group_index != -1) {
