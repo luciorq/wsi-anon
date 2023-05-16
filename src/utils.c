@@ -272,9 +272,7 @@ const char *add_equals_sign(const char *str1, const char *str2) {
 }
 
 // function to check if str1 contains str2
-bool contains(const char *str1, const char *str2) {
-    return strstr(str1, str2) != NULL;
-}
+bool contains(const char *str1, const char *str2) { return strstr(str1, str2) != NULL; }
 
 // function to check how many times str1 contains str2
 int32_t count_contains(const char *str1, const char *str2) {

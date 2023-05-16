@@ -10,17 +10,26 @@
 int main() {
     int result = 1;
     if (CU_initialize_registry()) {
-        fprintf(stderr, " Initialization of Test Registry failed. ");
+        fprintf(stderr, "Initialization of Test Registry failed.\n");
         exit(result);
     } else {
+        fprintf(stdout, "Initializing tests\n");
         AddTestsUtils();
         AddTestsIniParser();
         AddTestsWsiAnonymizer();
+
+        fprintf(stdout, "Set output filename to Test-Wsi-Anon\n");
         CU_set_output_filename("Test-Wsi-Anon");
+
+        fprintf(stdout, "Running tests...\n");
         CU_automated_run_tests();
 
-        unsigned int num_fails = CU_get_number_of_failures();
-        result = (num_fails != 0);
+        fprintf(stdout, "_______________________________________________\n");
+        CU_pRunSummary summary = CU_get_run_summary();
+        fprintf(stdout, "Result: %u succeeded - %u skipped - %u failed\n", summary->nTestsRun,
+                summary->nTestsInactive, summary->nTestsFailed);
+
+        result = (summary->nTestsFailed != 0);
 
         CU_cleanup_registry();
     }
