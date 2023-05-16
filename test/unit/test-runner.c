@@ -24,12 +24,8 @@ int main() {
         fprintf(stdout, "Running tests...\n");
         CU_automated_run_tests();
 
-        fprintf(stdout, "_______________________________________________\n");
-        CU_pRunSummary summary = CU_get_run_summary();
-        fprintf(stdout, "Result: %u succeeded - %u skipped - %u failed\n", summary->nTestsRun,
-                summary->nTestsInactive, summary->nTestsFailed);
-
-        result = (summary->nTestsFailed != 0);
+        unsigned int num_fails = CU_get_number_of_failures();
+        result = (num_fails != 0);
 
         CU_cleanup_registry();
     }
