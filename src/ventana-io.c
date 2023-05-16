@@ -140,7 +140,7 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
     char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
     value = skip_first_and_last_char(value);
-    char *replacement = anonymize_string(" ", strlen(value));
+    char *replacement = anonymize_string("X", strlen(value));
     return replace_str(result, value, replacement);
 }
 
@@ -192,7 +192,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
                     for (int32_t i = 0; i <= count; i++) {
                         const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
-                        char *replacement = anonymize_string(" ", strlen(value));
+                        char *replacement = anonymize_string("X", strlen(value));
                         result = replace_str(result, value, replacement);
                     }
                     rewrite = true;
@@ -200,7 +200,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
                 if (contains(result, VENTANA_BUILDDATE2_ATT)) {
                     const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
-                    char *replacement = anonymize_string(" ", strlen(value));
+                    char *replacement = anonymize_string("X", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }

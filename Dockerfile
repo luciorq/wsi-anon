@@ -1,15 +1,12 @@
-FROM docker.io/ubuntu:20.04 AS builder
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.78@sha256:7cbf05b3903c4989b84234713998e3ac64bc55c5dbf027b3042397a3522e754a
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
-  build-essential python3-dev python3-pip python3-openslide
+  build-essential python3-dev python3-pip openslide-tools python3-openslide
 
-RUN mkdir /openslide_deps
-RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
-RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
-  | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' /openslide_deps
+RUN pip install openslide-python
 
 COPY . /wsi-anon
 

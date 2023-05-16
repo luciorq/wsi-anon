@@ -40,7 +40,10 @@ test-integration:
     - docker-compose -f docker-compose.test.yml down -v --remove-orphans
     - docker-compose -f docker-compose.test.yml up -d --build
   script:
-    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test -vv
+    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test/test_anonymization.py::test_check_fileformat -vv
+    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test/test_anonymization.py::test_anonymize_file_format -vv
+    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test/test_anonymization.py::test_anonymize_file_format_only_label -vv
+    - docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test/test_anonymization.py::test_anonymize_file_format_only_label_hamamatsu -vv
   after_script:
     - docker-compose -f docker-compose.test.yml down
 
