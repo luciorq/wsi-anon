@@ -3,7 +3,7 @@ codecheck:
   tags:
     - empaia-parallel
   before_script:
-    - apt-get update -q && apt-get install -y -qq clang-format-10 git
+    - apt-get update -q && apt-get install -y -qq clang-format git
   script:
     - ./clang-format.sh
 

@@ -136,10 +136,10 @@ In order to extend this library by another format, please check the `plugin.h` h
 
 ### Code Formatting
 
-Format the code before committing. Install `clang-format-10` and run
+Format the code before committing. Install `clang-format` and run
 
 ```
-find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format-10 --Werror -i --verbose
+find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format --Werror -i --verbose
 ```
 
 ### Unit Tests
