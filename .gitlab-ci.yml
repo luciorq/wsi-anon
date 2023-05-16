@@ -11,8 +11,10 @@ build-wsi-anon:
   image: emscripten/emsdk
   tags:
     - empaia-parallel
+  before_script:
+    - make clean
   script:
-    - make clean && make
+    - make
     - make wasm
   artifacts:
     paths:
@@ -22,9 +24,11 @@ test-wsi-anon:
   image: emscripten/emsdk
   tags:
     - empaia-parallel
-  script:
+  before_script:
     - apt-get update -q && apt-get install -yq libcunit1-dev
-    - make clean && make tests
+    - make clean 
+  script:
+    - make tests
     - bin/utests
   artifacts:
     paths:
