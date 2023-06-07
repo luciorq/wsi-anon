@@ -205,10 +205,6 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
 int32_t handle_philips_tiff(const char **filename, const char *new_label_name, bool keep_macro_image,
                             bool disable_unlinking, bool do_inplace) {
 
-    if (disable_unlinking) {
-        fprintf(stderr, "Error: Cannot disable unlinking in Philips' TIFF file.\n");
-    }
-
     fprintf(stdout, "Anonymize Philips' TIFF WSI...\n");
 
     if (!do_inplace) {
@@ -236,22 +232,69 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
         return -1;
     }
 
-    // remove label image || TODO: check why removal is not working
+    // remove LABELIMAGE in ImageDescription XML
     result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE);
 
     if (result == -1) {
-        fprintf(stderr, "Error: Could not wipe label image from file.\n");
+        fprintf(stderr, "Error: Could not wipe LABELIMAGE in ImageDescription XML from file.\n");
     }
 
-    // remove macro image || TODO: check why removal is not working
+    // delete label image that may have been stored in other IFDs under 'Label' in ImageDescriptions
+    int32_t label_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Label");
+
+    if (label_dir == -1) {
+        fprintf(stderr, "Error: Could not find IFD of label image.\n");
+        return -1;
+    }
+
+    struct tiff_directory dir = file->directories[label_dir];
+    result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
+
+    // if removal did not work
+    if (result != 0) {
+        free_tiff_file(file);
+        file_close(fp);
+        return result;
+    }
+
+    int32_t macro_dir = -1;
+
     if (!keep_macro_image) {
+        // remove MACROIMAGE in ImageDescription XML
         result = wipe_philips_image_data(fp, file, PHILIPS_MACROIMAGE);
 
+        // if removal did not work
         if (result == -1) {
-            fprintf(stderr, "Error: Could not wipe macro image from file.\n");
+            fprintf(stderr, "Error: Could not wipe MACROIMAGE in ImageDescription XML from file.\n");
+        }
+        // delete macro image that may have been stored in other IFDs under 'Macro' in ImageDescriptions
+        macro_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Macro"); // 10
+
+        if (macro_dir == -1) {
+            fprintf(stderr, "Error: Could not find IFD of macro image.\n");
+            return -1;
+        }
+
+        struct tiff_directory dir = file->directories[macro_dir];
+        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
+
+        // if removal did not work
+        if (result != 0) {
+            free_tiff_file(file);
+            file_close(fp);
+            return result;
         }
     }
 
+    // unlinking
+    if (!disable_unlinking) {
+        fprintf(stderr, "Error: Unlinking in Philips' TIFF file currently not supported.\n");
+        // ToDo: find out why unlinking of macro directory does not properly work
+        // unlink_directory(fp, file, macro_dir, false);
+        // unlink_directory(fp, file, label_dir, false);
+    }
+
+    // remove metadata
     anonymize_philips_metadata(fp, file);
 
     // clean up

@@ -346,7 +346,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             }
 
             // fill strip with zeros
-            // ToDo: check if writing 0's is sufficient when image is LZW encoded
+            // ToDo: check if writing 0's is sufficient
             char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
                 fprintf(stderr, "Error: Wiping image data failed.\n");
@@ -382,7 +382,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             }
 
             // fill strip with zeros
-            // ToDo: check if writing 0's is sufficient when image is LZW encoded
+            // ToDo: check if writing 0's is sufficient
             char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
                 fprintf(stderr, "Error: Wiping image data failed.\n");
