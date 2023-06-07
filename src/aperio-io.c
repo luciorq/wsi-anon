@@ -46,6 +46,17 @@ int32_t is_aperio(const char *filename) {
     return (result == 1);
 }
 
+// searches for tags in image description Data and replaces its values with equal amount of X's
+char *override_image_description(char *result, char *delimiter) {
+    const char *value = get_string_between_delimiters(result, delimiter, "|");
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        char *replacement = anonymize_string("X", strlen(value));
+        result = replace_str(result, value, replacement);
+    }
+    return result;
+}
+
 // removes all metadata
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
@@ -65,17 +76,24 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
 
                 bool rewrite = false;
                 char *result = buffer;
+
                 if (contains(result, APERIO_FILENAME_TAG)) {
-                    const char *value =
-                        get_string_between_delimiters(result, APERIO_FILENAME_TAG, "|");
-                    char *replacement = anonymize_string("X", strlen(value));
-                    result = replace_str(result, value, replacement);
+                    result = override_image_description(result, APERIO_FILENAME_TAG);
                     rewrite = true;
                 }
+
                 if (contains(result, APERIO_USER_TAG)) {
-                    const char *value = get_string_between_delimiters(result, APERIO_USER_TAG, "|");
-                    char *replacement = anonymize_string("X", strlen(value));
-                    result = replace_str(result, value, replacement);
+                    result = override_image_description(result, APERIO_USER_TAG);
+                    rewrite = true;
+                }
+
+                if (contains(result, APERIO_DATE_TAG)) {
+                    result = override_image_description(result, APERIO_DATE_TAG);
+                    rewrite = true;
+                }
+
+                if (contains(result, APERIO_BARCODE_TAG)) {
+                    result = override_image_description(result, APERIO_BARCODE_TAG);
                     rewrite = true;
                 }
 
@@ -94,8 +112,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
 
 // macro image for gt450 needs to be treated differently because it is JPEG encoded.
 // therefore we need to convert it to LZW compression
-int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
-                                             int32_t directory) {
+int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file, int32_t directory) {
     struct tiff_directory dir = file->directories[directory];
     for (int32_t i = 0; i < dir.count; i++) {
         struct tiff_entry entry = dir.entries[i];
@@ -116,13 +133,17 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
 }
 
 // anonymizes aperio file
-int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image,
-                      bool disable_unlinking, bool do_inplace) {
+int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                      bool do_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
+
+    const char *ext = get_filename_ext(*filename);
+
+    bool is_svs = strcmp(ext, SVS) == 0;
 
     if (!do_inplace) {
         // check if filename is svs or tif here
-        *filename = duplicate_file(*filename, new_label_name, DOT_SVS);
+        *filename = duplicate_file(*filename, new_label_name, is_svs ? DOT_SVS : DOT_TIF);
     }
 
     file_t *fp;
@@ -161,7 +182,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     struct tiff_directory dir = file->directories[label_dir];
-    result = wipe_directory(fp, &dir, false, big_endian, LZW_CLEARCODE, NULL);
+    result = wipe_directory(fp, &dir, false, big_endian, big_tiff, LZW_CLEARCODE, NULL);
 
     if (result != 0) {
         free_tiff_file(file);
@@ -184,7 +205,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
 
         struct tiff_directory dir = file->directories[macro_dir];
-        result = wipe_directory(fp, &dir, false, big_endian, NULL, NULL);
+        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
 
         if (_is_aperio_gt450 == 1) {
             result = change_macro_image_compression_gt450(fp, file, macro_dir);

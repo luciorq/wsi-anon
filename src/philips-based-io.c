@@ -2,8 +2,8 @@
 
 // replaces section of passed attribute with empty string
 char *wipe_section_of_attribute(char *buffer, char *attribute) {
-    const char *section = get_string_between_delimiters(
-        buffer, attribute, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
+    const char *section =
+        get_string_between_delimiters(buffer, attribute, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
     section = concat_str(attribute, section);
     section = concat_str(section, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
     char *replacement = anonymize_string(" ", strlen(section));
@@ -13,16 +13,15 @@ char *wipe_section_of_attribute(char *buffer, char *attribute) {
 // returns value for an attribute
 const char *get_value_from_attribute(char *buffer, char *attribute) {
     const char *value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
-    const char *delimiter =
-        get_string_between_delimiters(value, PHILIPS_ATT_PMSVR, PHILIPS_CLOSING_SYMBOL);
+    const char *delimiter = get_string_between_delimiters(value, PHILIPS_ATT_PMSVR, PHILIPS_CLOSING_SYMBOL);
 
     // check for datatype
     if (strcmp(delimiter, PHILIPS_DELIMITER_STR) == 0) {
-        return get_string_between_delimiters(
-            value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
+        return get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL),
+                                             PHILIPS_ATT_END);
     } else if (strcmp(delimiter, PHILIPS_DELIMITER_INT) == 0) {
-        return get_string_between_delimiters(
-            value, concat_str(PHILIPS_DELIMITER_INT, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
+        return get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_INT, PHILIPS_CLOSING_SYMBOL),
+                                             PHILIPS_ATT_END);
     } else {
         fprintf(stderr, "Unable find value for attribute with this datatype");
         return NULL;
@@ -32,8 +31,8 @@ const char *get_value_from_attribute(char *buffer, char *attribute) {
 // searches for attribute and replaces its value with equal amount of X's
 char *anonymize_value_of_attribute(char *buffer, char *attribute) {
     const char *value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
-    value = get_string_between_delimiters(
-        value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
+    value = get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL),
+                                          PHILIPS_ATT_END);
 
     // check for empty String
     if (strcmp(value, "") != 0) {

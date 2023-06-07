@@ -71,21 +71,17 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
                 if (contains(result, image_type)) {
 
                     // get image data string
-                    const char *image_data =
-                        get_string_between_delimiters(result, PHILIPS_OBJECT, image_type);
-                    image_data = get_string_between_delimiters(image_data, PHILIPS_IMAGE_DATA,
-                                                               PHILIPS_ATT_OPEN);
+                    const char *image_data = get_string_between_delimiters(result, PHILIPS_OBJECT, image_type);
+                    image_data = get_string_between_delimiters(image_data, PHILIPS_IMAGE_DATA, PHILIPS_ATT_OPEN);
                     image_data = get_string_between_delimiters(
-                        image_data, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL),
-                        PHILIPS_ATT_END);
+                        image_data, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
 
                     // set height and width to 1
                     int32_t height = 1;
                     int32_t width = 1;
 
                     // alloc with height and width and fill with 255 for a white image
-                    unsigned char *white_image =
-                        (unsigned char *)malloc((height * width) * sizeof(unsigned char));
+                    unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
                     memset(white_image, 255, height * width);
 
                     // create white jpg image
@@ -206,8 +202,8 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
 }
 
 // anonymize Philips' TIFF
-int32_t handle_philips_tiff(const char **filename, const char *new_label_name,
-                            bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
+int32_t handle_philips_tiff(const char **filename, const char *new_label_name, bool keep_macro_image,
+                            bool disable_unlinking, bool do_inplace) {
 
     if (disable_unlinking) {
         fprintf(stderr, "Error: Cannot disable unlinking in Philips' TIFF file.\n");

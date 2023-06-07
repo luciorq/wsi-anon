@@ -167,7 +167,7 @@ static void jpec_enc_write_dht(jpec_enc_t *e) {
     assert(e);
     jpec_buffer_write_2bytes(e->buf, 0xFFC4);               /* DHT marker */
     jpec_buffer_write_2bytes(e->buf, 19 + jpec_dc_nb_vals); /* segment length */
-    jpec_buffer_write_byte(e->buf, 0x00); /* table 0 (DC), type 0 (0 = Y, 1 = UV) */
+    jpec_buffer_write_byte(e->buf, 0x00);                   /* table 0 (DC), type 0 (0 = Y, 1 = UV) */
     for (int32_t i = 0; i < 16; i++) {
         jpec_buffer_write_byte(e->buf, jpec_dc_nodes[i + 1]);
     }
@@ -210,9 +210,8 @@ static int32_t jpec_enc_next_block(jpec_enc_t *e) {
 
 static void jpec_enc_block_dct(jpec_enc_t *e) {
     assert(e && e->bnum >= 0);
-#define JPEC_BLOCK(col, row)                                                                       \
-    e->img[(((e->by + row) < e->h) ? e->by + row : e->h - 1) * e->w +                              \
-           (((e->bx + col) < e->w) ? e->bx + col : e->w - 1)]
+#define JPEC_BLOCK(col, row)                                                                                           \
+    e->img[(((e->by + row) < e->h) ? e->by + row : e->h - 1) * e->w + (((e->bx + col) < e->w) ? e->bx + col : e->w - 1)]
     const float *coeff = jpec_dct;
     float tmp[64];
     for (int32_t row = 0; row < 8; row++) {

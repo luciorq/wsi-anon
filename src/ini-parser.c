@@ -2,8 +2,7 @@
 
 // retrive an entry value from the ini file by
 // given group and entry key
-const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group,
-                                    const char *entry_key) {
+const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group, const char *entry_key) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group ini_group = ini_file->groups[i];
         if (strcmp(ini_group.group_identifier, group) == 0) {
@@ -80,8 +79,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         struct ini_group next_group = groups[i + 1];
 
         int32_t entry_size = next_group.start_line - current_group.start_line;
-        struct ini_entry *entries =
-            (struct ini_entry *)malloc(entry_size * sizeof(struct ini_entry));
+        struct ini_entry *entries = (struct ini_entry *)malloc(entry_size * sizeof(struct ini_entry));
 
         // each iteration we return to the file start
         file_seek(fp, 0, SEEK_SET);
@@ -121,21 +119,23 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
         groups[i].entry_count = entry_count;
     }
 
+    // TODO: Investigate why closing of some files cause a `corrupted size vs. prev_size` error
+    // here? Anyway, this shouldn't make any troubles here, because the file is released after
+    // termination anyway
+    // file_close(fp);
     free(buffer);
 
     struct ini_file *ini_file = (struct ini_file *)malloc(sizeof(struct ini_file));
     ini_file->group_count = group_count;
     ini_file->groups = groups;
 
-    file_close(fp);
     return ini_file;
 }
 
 struct ini_group *remove_ini_group_from_array(struct ini_group *groups, int32_t size_of_array,
                                               int32_t index_to_remove) {
     // new array with size one less than old array
-    struct ini_group *temp =
-        (struct ini_group *)malloc((size_of_array - 1) * sizeof(struct ini_group));
+    struct ini_group *temp = (struct ini_group *)malloc((size_of_array - 1) * sizeof(struct ini_group));
 
     // copy all elements before the index
     if (index_to_remove != 0) {
@@ -154,6 +154,20 @@ struct ini_group *remove_ini_group_from_array(struct ini_group *groups, int32_t 
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_name) {
     // get the group index
+    int32_t group_index = get_group_index_of_ini_file(ini_file, group_name);
+    if (group_index == -1) {
+        return -1;
+    }
+
+    // remove group from array and assign new group pointer to group
+    struct ini_group *new_groups = remove_ini_group_from_array(ini_file->groups, ini_file->group_count, group_index);
+    ini_file->groups = new_groups;
+    ini_file->group_count--;
+
+    return 0;
+}
+
+int32_t get_group_index_of_ini_file(struct ini_file *ini_file, const char *group_name) {
     int32_t group_index = -1;
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group group = ini_file->groups[i];
@@ -162,18 +176,7 @@ int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_
             break;
         }
     }
-
-    if (group_index == -1) {
-        return -1;
-    }
-
-    // remove group from array and assign new group pointer to group
-    struct ini_group *new_groups =
-        remove_ini_group_from_array(ini_file->groups, ini_file->group_count, group_index);
-    ini_file->groups = new_groups;
-    ini_file->group_count--;
-
-    return 0;
+    return group_index;
 }
 
 // modify structure of levels in mirax_file
@@ -182,8 +185,7 @@ void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer
     for (int32_t i = level_pos_in_layer; i < mirax_file->layers[layer_id]->level_count - 1; i++) {
         restructure_groups_in_file(ini, mirax_file->layers[layer_id]->levels[i],
                                    mirax_file->layers[layer_id]->levels[i + 1]);
-        mirax_file->layers[layer_id]->levels[i]->name =
-            mirax_file->layers[layer_id]->levels[i + 1]->name;
+        mirax_file->layers[layer_id]->levels[i]->name = mirax_file->layers[layer_id]->levels[i + 1]->name;
     }
 }
 
@@ -200,12 +202,10 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
                 if (entry != NULL) {
 
                     if (strcmp(entry->value, current_level->name) == 0 &&
-                        strcmp(group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET].value,
-                               next_level->name) == 0) {
+                        strcmp(group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET].value, next_level->name) == 0) {
                         group->entries[j].value = group->entries[j + 4].value; // change level name
                         group->entries[j + 1].value =
-                            group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET + 1]
-                                .value; // change section
+                            group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET + 1].value; // change section
                     }
                 }
             }
@@ -213,8 +213,8 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
     }
 }
 
-const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                              const char *key, const char *c) {
+const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
+                                              const char *c) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
@@ -234,8 +234,7 @@ const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const c
 struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, int32_t size_of_array,
                                               int32_t index_to_remove) {
     // new array with size one less than old array
-    struct ini_entry *temp =
-        (struct ini_entry *)malloc((size_of_array - 1) * sizeof(struct ini_entry));
+    struct ini_entry *temp = (struct ini_entry *)malloc((size_of_array - 1) * sizeof(struct ini_entry));
 
     // copy all elements before the index
     if (index_to_remove != 0) {
@@ -251,8 +250,7 @@ struct ini_entry *remove_ini_entry_from_array(struct ini_entry *entries, int32_t
     return temp;
 }
 
-void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                    const char *key) {
+void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key) {
     int32_t c_group = -1, c_entry = -1;
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
@@ -273,15 +271,13 @@ void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group
     }
 
     struct ini_group *group = &ini_file->groups[c_group];
-    struct ini_entry *entries =
-        remove_ini_entry_from_array(group->entries, group->entry_count, c_entry);
+    struct ini_entry *entries = remove_ini_entry_from_array(group->entries, group->entry_count, c_entry);
     group->entries = entries;
     group->entry_count--;
 }
 
 // decrement a count value as entry value by a given group and entry key
-void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name,
-                                       const char *key) {
+void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {

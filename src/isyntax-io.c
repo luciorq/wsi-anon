@@ -146,8 +146,7 @@ int32_t wipe_isyntax_image_data(file_t *fp, int32_t header_size, char *image_typ
         */
 
         // alloc with height and width and fill with 255 for a white image
-        unsigned char *white_image =
-            (unsigned char *)malloc((height * width) * sizeof(unsigned char));
+        unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
         memset(white_image, 255, height * width);
 
         // create white jpg image
@@ -187,8 +186,8 @@ int32_t wipe_isyntax_image_data(file_t *fp, int32_t header_size, char *image_typ
 }
 
 // anonymize iSyntax file
-int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool disable_unlinking, bool do_inplace) {
+int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                       bool do_inplace) {
 
     if (disable_unlinking) {
         fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");

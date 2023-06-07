@@ -119,8 +119,8 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 }
 
 // wipes and unlinks directory
-int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory,
-                                          bool big_endian, bool disable_unlinking) {
+int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory, bool big_endian,
+                                          bool disable_unlinking) {
 
     struct tiff_directory dir = file->directories[directory];
 
@@ -191,8 +191,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 if (contains(result, VENTANA_BUILDDATE1_ATT)) {
                     int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
                     for (int32_t i = 0; i <= count; i++) {
-                        const char *value =
-                            get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
+                        const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
                         char *replacement = anonymize_string(" ", strlen(value));
                         result = replace_str(result, value, replacement);
                     }
@@ -200,8 +199,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 }
 
                 if (contains(result, VENTANA_BUILDDATE2_ATT)) {
-                    const char *value =
-                        get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
+                    const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
                     char *replacement = anonymize_string(" ", strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
@@ -255,8 +253,8 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 }
 
 // anonymizes ventana file
-int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool disable_unlinking, bool do_inplace) {
+int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                       bool do_inplace) {
 
     if (keep_macro_image) {
         fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");

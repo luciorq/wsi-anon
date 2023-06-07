@@ -1,9 +1,23 @@
 # Changelog
 
-## 0.4.3
+## 0.4.6
 
 * full Philips' TIFF support
 * refactor philips based formats
+
+## 0.4.5
+
+* bugfix for string contains function in utils (replaced by string.h's `strstr` function)
+
+## 0.4.4
+
+* quickfix for mirax file structure bug in Slidedat.ini
+* commented out closing of file handle that causes `corrupted size vs. prev_size` error in some cases
+
+## 0.4.3
+
+* bugfix for Aperio files with BigTiff structure
+* remove date and barcode from metadata in aperio file
 
 ## 0.4.1 & 0.4.2
 
