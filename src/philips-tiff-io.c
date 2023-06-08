@@ -270,7 +270,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
             fprintf(stderr, "Error: Could not wipe MACROIMAGE in ImageDescription XML from file.\n");
         }
         // delete macro image that may have been stored in other IFDs under 'Macro' in ImageDescriptions
-        macro_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Macro"); // 10
+        macro_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Macro");
 
         if (macro_dir == -1) {
             fprintf(stderr, "Error: Could not find IFD of macro image.\n");
