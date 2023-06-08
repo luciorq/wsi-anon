@@ -133,8 +133,8 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = (char *)malloc(entry.count * entry_size);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read tag image description.\n");
                     return -1;
                 }
@@ -191,9 +191,11 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(buffer, entry.count, entry_size, fp)) {
                         fprintf(stderr, "Error: changing Image Description failed.\n");
+                        free(buffer);
                         return -1;
                     }
                 }
+                free(buffer);
                 return 1;
             }
         }
