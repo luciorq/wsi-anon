@@ -64,7 +64,7 @@ def test_check_fileformat(wsi_filename, vendor):
         ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
         ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
         #("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
-        ("/data/Ventana/", "OS-2", "anon-ventana1", "bif"), # TODO: might be related to above issue
+        ("/data/Ventana/", "OS-2", "anon-ventana", "bif"),
     ],
 )
 def test_anonymize_file_format(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -103,8 +103,8 @@ def test_anonymize_file_format(cleanup, wsi_filepath, original_filename, new_ano
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
-        ("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
+        ("/data/Aperio/", "CMU-1", "anon-aperio2", "svs"),
+        ("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"),
     ],
 )
 def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -128,7 +128,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
     ],
 )
 def test_anonymize_file_format_only_label_hamamatsu(wsi_filepath, original_filename, new_anonyimized_name, file_extension):
