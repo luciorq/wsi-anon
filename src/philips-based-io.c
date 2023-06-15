@@ -6,7 +6,7 @@ char *wipe_section_of_attribute(char *buffer, char *attribute) {
         get_string_between_delimiters(buffer, attribute, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
     section = concat_str(attribute, section);
     section = concat_str(section, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
-    char *replacement = anonymize_string(" ", strlen(section));
+    char *replacement = create_replacement_string(' ', strlen(section));
     return replace_str(buffer, section, replacement);
 }
 
@@ -36,8 +36,8 @@ char *anonymize_value_of_attribute(char *buffer, char *attribute) {
 
     // check for empty String
     if (strcmp(value, "") != 0) {
-        char *replace_with = "X";
-        char *replacement = anonymize_string(replace_with, strlen(value));
+        char replace_with = 'X';
+        char *replacement = create_replacement_string(replace_with, strlen(value));
         return replace_str(buffer, value, replacement);
     }
 

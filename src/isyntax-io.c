@@ -156,7 +156,7 @@ int32_t wipe_isyntax_image_data(file_t *fp, int32_t header_size, char *image_typ
 
         // encode new image data and check if string is longer than original string, replace old
         // base64-encoded string afterwards
-        char *new_image_data = b64_encode(jpeg, len);
+        char *new_image_data = (char *)b64_encode(jpeg, len);
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';
         }

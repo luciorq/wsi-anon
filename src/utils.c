@@ -63,7 +63,8 @@ int32_t file_exists(const char *filename) {
 }
 
 // return a char buffer filled with char x
-char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix) {
+char *create_pre_suffixed_char_array(const char fill_character, uint64_t length, const char *prefix,
+                                     const char *suffix) {
     // assure length is a postive integer and not zero
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
@@ -93,7 +94,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, 
 
     // fill body of image with x
     for (; start < length - suffix_length; start++) {
-        result[start] = *x;
+        result[start] = fill_character;
     }
 
     // add suffix to image
@@ -104,7 +105,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, 
     return result;
 }
 
-char *anonymize_string(const char *x, uint64_t length) {
+char *create_replacement_string(const char x, uint64_t length) {
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;
@@ -113,7 +114,7 @@ char *anonymize_string(const char *x, uint64_t length) {
     char *result = (char *)malloc(length + 1);
 
     for (int32_t start = 0; start < length; start++) {
-        result[start] = *x;
+        result[start] = x;
     }
 
     result[length] = '\0';

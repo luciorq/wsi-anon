@@ -21,8 +21,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef JPEC_CONF_H
-#define JPEC_CONF_H
+#ifndef HEADER_JPEC_CONF_H
+#define HEADER_JPEC_CONF_H
 
 /* Common headers */
 #include <assert.h>

@@ -107,7 +107,7 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
     file_seek(fp, tile_offsets, SEEK_SET);
 
     // fill strip with zeros
-    char *strip = get_empty_char_buffer("0", tile_byte_counts, NULL, NULL);
+    char *strip = create_pre_suffixed_char_array('0', tile_byte_counts, NULL, NULL);
     if (!file_write(strip, 1, tile_byte_counts, fp)) {
         fprintf(stderr, "Error: Wiping image data failed.\n");
         free(strip);
@@ -140,7 +140,7 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
     char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
     value = skip_first_and_last_char(value);
-    char *replacement = anonymize_string(" ", strlen(value));
+    char *replacement = create_replacement_string(' ', strlen(value));
     return replace_str(result, value, replacement);
 }
 
@@ -192,7 +192,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
                     for (int32_t i = 0; i <= count; i++) {
                         const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
-                        char *replacement = anonymize_string(" ", strlen(value));
+                        char *replacement = create_replacement_string(' ', strlen(value));
                         result = replace_str(result, value, replacement);
                     }
                     rewrite = true;
@@ -200,7 +200,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
                 if (contains(result, VENTANA_BUILDDATE2_ATT)) {
                     const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
-                    char *replacement = anonymize_string(" ", strlen(value));
+                    char *replacement = create_replacement_string(' ', strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
@@ -237,7 +237,7 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     free(buffer);
                     return -1;
                 }
-                char *replacement = anonymize_string(" ", strlen(buffer));
+                char *replacement = create_replacement_string(' ', strlen(buffer));
                 buffer = replace_str(buffer, buffer, replacement);
                 file_seek(fp, entry.offset, SEEK_SET);
                 if (!file_write(buffer, entry_size, entry.count, fp)) {

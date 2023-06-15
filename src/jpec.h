@@ -21,8 +21,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef JPEC_H
-#define JPEC_H
+#ifndef HEADER_JPEC_H
+#define HEADER_JPEC_H
 
 #include <stdint.h>
 

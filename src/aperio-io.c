@@ -51,7 +51,7 @@ char *override_image_description(char *result, char *delimiter) {
     const char *value = get_string_between_delimiters(result, delimiter, "|");
     // check if tag is not an empty string
     if (value[0] != '\0') {
-        char *replacement = anonymize_string("X", strlen(value));
+        char *replacement = create_replacement_string('X', strlen(value));
         result = replace_str(result, value, replacement);
     }
     return result;

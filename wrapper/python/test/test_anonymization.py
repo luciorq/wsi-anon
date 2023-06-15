@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 import threading
 import time
@@ -51,84 +52,89 @@ def test_check_fileformat(wsi_filename, vendor):
 
 
 @pytest.mark.parametrize(
-    "wsi_filename, new_label_name, result_label_name",
+    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
-        ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
-        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax1", "/data/MIRAX/anon-mirax1.mrxs"), # TODO: OpenSlide occasionally throws error while initializing
-        #("/data/Ventana/OS-2.bif", "anon-ventana1", "/data/Ventana/anon-ventana1.bif"), # TODO: might be related to above issue
+        ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
+        #("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
+        #("/data/Ventana/", "OS-2.bif", "anon-ventana1", "bif"), # TODO: might be related to above issue
     ],
 )
-def test_anonymize_file_format(cleanup, wsi_filename, new_label_name, result_label_name):
-    if os.path.exists(result_label_name):
-        remove_file(result_label_name)
+def test_anonymize_file_format(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+    if result_filename.exists():
+        remove_file(str(result_filename.absolute()))
 
-    result = anonymize_wsi(wsi_filename, new_label_name)
-    assert result in result_label_name
-
+    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+    assert result != -1
+    
     time.sleep(1)
 
-    with openslide.OpenSlide(result_label_name) as slide:
+    with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
 
-        if "Ventana" not in wsi_filename:
+        if "Ventana" not in wsi_filepath:
             assert "macro" not in slide.associated_images
 
-        if "Aperio" in wsi_filename:
+        if "Aperio" in wsi_filepath:
             for property in ["Filename", "User", "Date"]:
                 assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
-        if "Ventana" in wsi_filename:
+        if "Ventana" in wsi_filepath:
             for property in ["UnitNumber", "UserName", "BuildDate"]:
                 assert all(c == " " for c in slide.properties[f"ventana.{property}"])
-        if "MIRAX" in wsi_filename:
+        if "MIRAX" in wsi_filepath:
             for property in ["SLIDE_NAME", "PROJECT_NAME", "SLIDE_CREATIONDATETIME"]:
                 assert all(c == "X" for c in slide.properties[f"mirax.GENERAL.{property}"])
             assert all(c == "0" for c in slide.properties[f"mirax.GENERAL.SLIDE_ID"])
-        if "Hamamatsu" in wsi_filename:
+        if "Hamamatsu" in wsi_filepath:
             # ToDo: check for Hamamatsu metadata!
             pass
 
-    cleanup(result_label_name)
-
+    cleanup(str(result_filename.absolute()))
 
 @pytest.mark.parametrize(
-    "wsi_filename, new_label_name, result_label_name",
+    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Aperio/CMU-1.svs", "anon-aperio", "/data/Aperio/anon-aperio.svs"),
-        #("/data/MIRAX/Mirax2.2-1.mrxs", "anon-mirax2", "/data/MIRAX/anon-mirax2.mrxs"), # TODO: OpenSlide occasionally throws error while initializing
+        ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
+        #("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
     ],
 )
-def test_anonymize_file_format_only_label(cleanup, wsi_filename, new_label_name, result_label_name):
-    if os.path.exists(result_label_name):
-        remove_file(result_label_name)
+def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+    if result_filename.exists():
+        remove_file(str(result_filename.absolute()))
 
-    result = anonymize_wsi(filename=wsi_filename, new_label_name=new_label_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
-    assert result in result_label_name
-
+    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+    result = anonymize_wsi(filename=wsi_filename, new_label_name=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
+    assert result != -1
+    
     time.sleep(1)
 
-    with openslide.OpenSlide(result_label_name) as slide:
+    with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
         assert "macro" in slide.associated_images
 
-    cleanup(result_label_name)
+    cleanup(str(result_filename.absolute()))
 
 
 @pytest.mark.parametrize(
-    "wsi_filename, new_label_name, result_label_name",
+    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Hamamatsu/OS-1.ndpi", "anon-hamamatsu", "/data/Hamamatsu/anon-hamamatsu.ndpi"),
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
     ],
 )
-def test_anonymize_file_format_only_label_hamamatsu(wsi_filename, new_label_name, result_label_name):
-    if os.path.exists(result_label_name):
-        remove_file(result_label_name)
+def test_anonymize_file_format_only_label_hamamatsu(wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+    if result_filename.exists():
+        remove_file(str(result_filename.absolute()))
 
-    result = anonymize_wsi(wsi_filename, new_label_name, keep_macro_image=True)
-    assert result in result_label_name
+    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+    result = anonymize_wsi(wsi_filename, new_anonyimized_name, keep_macro_image=True)
+    assert result != -1
 
     time.sleep(1)
 
-    with openslide.OpenSlide(result_label_name) as slide:
+    with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
         assert "macro" not in slide.associated_images

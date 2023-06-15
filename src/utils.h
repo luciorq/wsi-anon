@@ -11,9 +11,9 @@ const char *get_filename_ext(const char *filename);
 
 int32_t file_exists(const char *filename);
 
-char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix);
+char *create_pre_suffixed_char_array(const char x, uint64_t length, const char *prefix, const char *suffix);
 
-char *anonymize_string(const char *x, uint64_t length);
+char *create_replacement_string(const char x, uint64_t length);
 
 char *replace_str(const char *original_str, const char *replace_str, const char *with_str);
 

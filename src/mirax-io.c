@@ -204,7 +204,7 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
     }
 
     // write empty jpeg image to file
-    const char *empty_buffer = get_empty_char_buffer("0", **length, prefix, suffix);
+    const char *empty_buffer = create_pre_suffixed_char_array('0', **length, prefix, suffix);
     file_seek(fp, **offset, SEEK_SET);
     file_write(empty_buffer, **length, 1, fp);
 
@@ -500,7 +500,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
             // check for ProfileName
             if (contains(buffer, MRXS_PROFILENAME)) {
                 const char *value = get_string_between_delimiters(buffer, MRXS_PROFILENAME, "\"");
-                char *replacement = anonymize_string("X", strlen(value));
+                char *replacement = create_replacement_string('X', strlen(value));
                 buffer = replace_str(buffer, value, replacement);
             }
             // overwrite value in data.dat file
@@ -646,19 +646,19 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
 
     // remove metadata in slidedata ini
     printf("Removing metadata in Slidedat.ini...\n");
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, "X");
-    anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, "X");
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, "X");
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, "X");
-    anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, "X");
-    anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, "X");
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, 'X');
+    anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, 'X');
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, 'X');
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, 'X');
+    anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, 'X');
+    anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, 'X');
 
     // remove metadata in data dat files
     remove_metadata_in_data_dat(path, data_filenames, f_count, MRXS_PROFILENAME);
 
     // remove slide id in slidedat, indexfile and data files
     const char *slide_id = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);
-    const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID, "0");
+    const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID, '0');
     const char *slide_version = get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION);
     int32_t size = strlen(slide_version) + strlen(slide_id) + 1;
     replace_slide_id_in_indexdat(path, index_filename, slide_id, replacement, size);

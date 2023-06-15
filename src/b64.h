@@ -29,6 +29,9 @@
  * copyright (c) 2014 joseph werle
  */
 
+#ifndef HEADER_B64_H
+#define HEADER_B64_H
+
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -72,3 +75,5 @@ unsigned char *b64_decode_ex(const char *, size_t, size_t *);
  * Returns a `char *' base64 encoded string.
  */
 unsigned char *b64_encode(const unsigned char *src, size_t len);
+
+#endif
