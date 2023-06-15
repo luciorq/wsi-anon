@@ -36,6 +36,13 @@ def wait_between_tests():
     yield
     time.sleep(1)
 
+def wait_until_exists(filename: str, max_wait_in_sec: int):
+    while(max_wait_in_sec > 0):
+        time.sleep(1)
+        max_wait_in_sec -= 1
+        if pathlib.Path(filename).exists():
+            break
+
 
 @pytest.mark.parametrize(
     "wsi_filename, vendor",
@@ -57,7 +64,7 @@ def test_check_fileformat(wsi_filename, vendor):
         ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
         ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
         #("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
-        #("/data/Ventana/", "OS-2.bif", "anon-ventana1", "bif"), # TODO: might be related to above issue
+        ("/data/Ventana/", "OS-2", "anon-ventana1", "bif"), # TODO: might be related to above issue
     ],
 )
 def test_anonymize_file_format(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -69,7 +76,7 @@ def test_anonymize_file_format(cleanup, wsi_filepath, original_filename, new_ano
     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
     assert result != -1
     
-    time.sleep(1)
+    wait_until_exists(str(result_filename), 5)
 
     with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
@@ -97,7 +104,7 @@ def test_anonymize_file_format(cleanup, wsi_filepath, original_filename, new_ano
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
         ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
-        #("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
+        ("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
     ],
 )
 def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -109,7 +116,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
     result = anonymize_wsi(filename=wsi_filename, new_label_name=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
     assert result != -1
     
-    time.sleep(1)
+    wait_until_exists(str(result_filename), 5)
 
     with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
@@ -133,7 +140,7 @@ def test_anonymize_file_format_only_label_hamamatsu(wsi_filepath, original_filen
     result = anonymize_wsi(wsi_filename, new_anonyimized_name, keep_macro_image=True)
     assert result != -1
 
-    time.sleep(1)
+    time.sleep(2)
 
     with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
