@@ -15,7 +15,7 @@ COPY . /wsi-anon
 
 WORKDIR /wsi-anon
 
-RUN make
+RUN make clean && make
 
 RUN pip3 install -r wrapper/python/test/requirements.txt
 

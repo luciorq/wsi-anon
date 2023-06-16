@@ -219,7 +219,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
     struct mirax_level *level_to_delete = get_level_by_name(layers, layer_name, level_name);
 
     if (level_to_delete == NULL) {
-        fprintf(stderr, "Error: Could not find expected level.\n");
+        fprintf(stderr, "Warning: Could not find expected level.\n");
         return -1;
     }
 
