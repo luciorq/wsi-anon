@@ -63,7 +63,8 @@ int32_t file_exists(const char *filename) {
 }
 
 // return a char buffer filled with char x
-char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix) {
+char *create_pre_suffixed_char_array(const char fill_character, uint64_t length, const char *prefix,
+                                     const char *suffix) {
     // assure length is a postive integer and not zero
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
@@ -92,8 +93,8 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, 
     }
 
     // fill body of image with x
-    for (; start < length - suffix_length; start++) {
-        result[start] = *x;
+    for (; (uint64_t)start < length - suffix_length; start++) {
+        result[start] = fill_character;
     }
 
     // add suffix to image
@@ -104,7 +105,7 @@ char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, 
     return result;
 }
 
-char *anonymize_string(const char *x, uint64_t length) {
+char *create_replacement_string(const char x, uint64_t length) {
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
         return NULL;
@@ -112,8 +113,8 @@ char *anonymize_string(const char *x, uint64_t length) {
 
     char *result = (char *)malloc(length + 1);
 
-    for (int32_t start = 0; start < length; start++) {
-        result[start] = *x;
+    for (int32_t start = 0; (uint64_t)start < length; start++) {
+        result[start] = x;
     }
 
     result[length] = '\0';
@@ -393,12 +394,14 @@ uint64_t _swap_uint64(uint64_t value) {
     return (value << 32) | (value >> 32);
 }
 
-// skip first and last character of String
-char *skip_first_and_last_char(char *value) {
-    char *trimmed = value;
-    trimmed++;
-    trimmed[strlen(trimmed) - 1] = '\0';
-    return trimmed;
+const char *slice_str(const char *str, size_t start, size_t end) {
+    char *result = (char *)malloc(end - start);
+    size_t j = 0;
+    for (size_t i = start; i <= end; ++i) {
+        result[j++] = str[i];
+    }
+    result[j] = '\0';
+    return result;
 }
 
 // convert bytes into int
@@ -413,7 +416,7 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
 }
 
 // find size up to substring in file
-int32_t get_size_to_substring(file_t *fp, char *substring) {
+size_t get_size_to_substring(file_t *fp, char *substring) {
 
     file_seek(fp, 0, SEEK_END);
     long file_length = file_tell(fp);
@@ -428,7 +431,7 @@ int32_t get_size_to_substring(file_t *fp, char *substring) {
 
     // finds size
     char *ret = strstr(buffer, substring);
-    int32_t size = ret - buffer;
+    size_t size = ret - buffer;
 
     file_seek(fp, 0, SEEK_SET);
     free(buffer);

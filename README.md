@@ -12,9 +12,9 @@ Currently supported formats:
 | Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
 | 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
 | Roche Ventana | VS200, iScan Coreo | `*.bif` | - |
-| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` | - |
+| Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` `*.tiff`  | - |
 
-The library is implemented and tested under Linux (Ubuntu 20.04). 
+The library is implemented and tested under Linux (Ubuntu 20.04) and currently only experimental under Windows.
 
 ## Publications
 
@@ -72,8 +72,6 @@ mingw32-make -f MakefileWin.mk
 and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
 
 ### Web Assembly Target
-
-**This is currently experimental.**
 
 The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications, run the following command:  
 

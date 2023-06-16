@@ -8,7 +8,7 @@ extern char **str_split(char *a_str, const char a_delim);
 
 extern const char *get_filename_ext(const char *filename);
 
-extern char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix, const char *suffix);
+extern char *create_pre_suffixed_char_array(const char x, uint64_t length, const char *prefix, const char *suffix);
 
 extern bool starts_with(const char *str, const char *pre);
 
@@ -76,14 +76,14 @@ void test_get_filename_ext2() {
 void test_get_empty_char_buffer() {
     const char *prefix = strdup("\200");
     const char *suffix = strdup("\200");
-    const char *x_char = strdup("0");
-    const char *result = get_empty_char_buffer(x_char, 5, prefix, suffix);
+    const char x_char = '0';
+    const char *result = create_pre_suffixed_char_array(x_char, 5, prefix, suffix);
     CU_ASSERT_STRING_EQUAL(result, "\200000\200");
 }
 
 void test_get_empty_char_buffer_without_prefix() {
-    const char *x_char = strdup("0");
-    const char *result = get_empty_char_buffer(x_char, 5, NULL, NULL);
+    const char x_char = '0';
+    const char *result = create_pre_suffixed_char_array(x_char, 5, NULL, NULL);
     CU_ASSERT_STRING_EQUAL(result, "00000");
 }
 

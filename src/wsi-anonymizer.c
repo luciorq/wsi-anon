@@ -1,11 +1,11 @@
 #include "wsi-anonymizer.h"
 
-int32_t (*is_format_functions[])(const char *filename) = {&is_aperio, &is_hamamatsu, &is_mirax, &is_ventana,
-                                                          &is_isyntax};
+int32_t (*is_format_functions[])(const char *filename) = {&is_aperio,  &is_hamamatsu, &is_mirax,
+                                                          &is_ventana, &is_isyntax,   &is_philips_tiff};
 
 int32_t (*handle_format_functions[])(const char **filename, const char *new_label_name, bool keep_macro_image,
                                      bool disable_unlinking, bool do_inplace) = {
-    &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax};
+    &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax, &handle_philips_tiff};
 
 int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
 
@@ -49,10 +49,9 @@ int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name, 
     return anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disable_unlinking, true);
 }
 
-const char *anonymize_wsi(const char *filename, const char *new_label_name, bool keep_macro_image,
-                          bool disable_unlinking, bool do_inplace) {
-    anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
-    return filename;
+int32_t anonymize_wsi(const char *filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                      bool do_inplace) {
+    return anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
 void freeMem(void *ptr) { free(ptr); }

@@ -1,3 +1,6 @@
+#ifndef HEADER_VENTANA_IO_H
+#define HEADER_VENTANA_IO_H
+
 #include "tiff-based-io.h"
 
 static const char BIF[] = "bif";
@@ -20,3 +23,5 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2);
 
 int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file);
+
+#endif

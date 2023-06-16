@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define UNUSED(x) (void)(x)
+
 // mirax
 #define MAX_CHAR_IN_LINE 100
 #define MRXS_ROOT_OFFSET_NONHIER 41
@@ -16,10 +18,11 @@
 #define MRXS_MAX_SIZE_DATA_DAT 1000
 #define MRXS_PROFILENAME "ProfileName=\""
 
-// tiff like
+// tiff endianness
 #define TIFF_BIGENDIAN 0x4d4d
 #define TIFF_LITTLEENDIAN 0x4949
 
+// tiff tags
 #define TIFF_VERSION_CLASSIC 42
 #define TIFF_VERSION_BIG 43
 #define TIFFTAG_IMAGEDESCRIPTION 270
@@ -27,11 +30,13 @@
 #define TIFFTAG_STRIPBYTECOUNTS 279
 #define TIFFTAG_SUBFILETYPE 254
 #define TIFFTAG_COMPRESSION 259
+#define TIFFTAG_SOFTWARE 305
 #define TIFFTAG_DATETIME 306
 #define TIFFTAG_TILEOFFSETS 324
 #define TIFFTAG_TILEBYTECOUNTS 325
 #define TIFFTAG_XMP 700
 
+// compression type
 #define COMPRESSION_LZW 5
 
 // aperio
@@ -50,25 +55,30 @@
 #define VENTANA_BUILDDATE1_ATT "BuildDate=\'"
 #define VENTANA_BUILDDATE2_ATT "BuildDate=\""
 
-// isyntax
+// philips based (Philips' iSyntax and TIFF)
+#define PHILIPS_DELIMITER_STR "\"IString\""
+#define PHILIPS_DELIMITER_INT "\"IUInt16\""
+#define PHILIPS_ATT_END "</Attribute"
+#define PHILIPS_ATT_OPEN "<Attribute"
+#define PHILIPS_CLOSING_SYMBOL ">"
+#define PHILIPS_ATT_PMSVR "PMSVR="
+#define PHILIPS_DATETIME_ATT "DICOM_ACQUISITION_DATETIME"
+#define PHILIPS_SERIAL_ATT "DICOM_DEVICE_SERIAL_NUMBER"
+#define PHILIPS_SLOT_ATT "<Attribute Name=\"PIIM_DP_SCANNER_SLOT_NUMBER"
+#define PHILIPS_RACK_ATT "<Attribute Name=\"PIIM_DP_SCANNER_RACK_NUMBER"
+#define PHILIPS_OPERID_ATT "PIIM_DP_SCANNER_OPERATOR_ID"
+#define PHILIPS_BARCODE_ATT "PIM_DP_UFS_BARCODE"
+#define PHILIPS_SOURCE_FILE_ATT "PIM_DP_SOURCE_FILE"
+#define PHILIPS_MIN_DATETIME "19000101000000.000000"
+#define PHILIPS_LABELIMAGE "LABELIMAGE"
+#define PHILIPS_MACROIMAGE "MACROIMAGE"
+#define PHILIPS_OBJECT "Object>"
+#define PHILIPS_IMAGE_DATA "PIM_DP_IMAGE_DATA"
+
+// iSyntax
 #define ISYNTAX_ROOTNODE "DPUfsImport"
 #define ISYNTAX_EOT "\r\n\004"
-#define ISYNTAX_DELIMITER_STR "\"IString\""
-#define ISYNTAX_DELIMITER_INT "\"IUInt16\""
-#define ISYNTAX_ATT_END "</Attribute"
-#define ISYNTAX_ATT_OPEN "<Attribute"
-#define ISYNTAX_OBJECT "Object>"
 #define ISYNTAX_DATA "</Data"
-#define ISYNTAX_CLOSING_SYMBOL ">"
-#define ISYNTAX_ATT_PMSVR "PMSVR="
-#define ISYNTAX_DATETIME_ATT "DICOM_ACQUISITION_DATETIME"
-#define ISYNTAX_SERIAL_ATT "DICOM_DEVICE_SERIAL_NUMBER"
-#define ISYNTAX_OPERID_ATT "PIIM_DP_SCANNER_OPERATOR_ID"
-#define ISYNTAX_BARCODE_ATT "PIM_DP_UFS_BARCODE"
-#define ISYNTAX_IMAGE_DATA "PIM_DP_IMAGE_DATA"
-#define ISYNTAX_SLOT_ATT "<Attribute Name=\"PIIM_DP_SCANNER_SLOT_NUMBER"
-#define ISYNTAX_RACK_ATT "<Attribute Name=\"PIIM_DP_SCANNER_RACK_NUMBER"
-#define ISYNTAX_MIN_DATETIME "19000101000000.000000"
 
 // hamamatsu
 #define NDPI_FORMAT_FLAG 65420
@@ -150,22 +160,22 @@ struct mirax_file {
 struct tiff_entry {
     uint16_t tag;
     uint16_t type;
-    uint64_t count;
+    uint32_t count;
     uint64_t offset;
     uint64_t start;
 };
 
 struct tiff_directory {
-    uint64_t count;
     struct tiff_entry *entries;
+    uint32_t count;
     uint64_t in_pointer_offset;
     uint64_t out_pointer_offset;
     uint64_t number;
 };
 
 struct tiff_file {
-    uint64_t used;
-    uint64_t size;
+    uint32_t used;
+    uint32_t size;
     struct tiff_directory *directories;
 };
 

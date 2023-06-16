@@ -214,14 +214,14 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
 }
 
 const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
-                                              const char *c) {
+                                              const char c) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
             for (int32_t j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
                 if (strcmp(entry->key, key) == 0) {
-                    const char *value = anonymize_string(c, strlen((*entry).value));
+                    const char *value = create_replacement_string(c, strlen((*entry).value));
                     (*entry).value = strdup(value);
                     return value;
                 }

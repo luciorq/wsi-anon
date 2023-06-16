@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.6
+
+* full Philips' TIFF support
+* refactor philips based formats
+
 ## 0.4.5
 
 * bugfix for string contains function in utils (replaced by string.h's `strstr` function)

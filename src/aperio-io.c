@@ -51,7 +51,7 @@ char *override_image_description(char *result, char *delimiter) {
     const char *value = get_string_between_delimiters(result, delimiter, "|");
     // check if tag is not an empty string
     if (value[0] != '\0') {
-        char *replacement = anonymize_string("X", strlen(value));
+        char *replacement = create_replacement_string('X', strlen(value));
         result = replace_str(result, value, replacement);
     }
     return result;
@@ -59,9 +59,9 @@ char *override_image_description(char *result, char *delimiter) {
 
 // removes all metadata
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
+    for (uint32_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
+        for (uint32_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
             if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
                 // get requested image tag from file
@@ -114,7 +114,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
 // therefore we need to convert it to LZW compression
 int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file, int32_t directory) {
     struct tiff_directory dir = file->directories[directory];
-    for (int32_t i = 0; i < dir.count; i++) {
+    for (uint32_t i = 0; i < dir.count; i++) {
         struct tiff_entry entry = dir.entries[i];
         if (entry.tag == TIFFTAG_COMPRESSION) {
             if (file_seek(fp, entry.start + 12, SEEK_SET)) {
@@ -171,7 +171,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     // delete label image
     int32_t label_dir = 0;
     if (_is_aperio_gt450 == 1) {
-        label_dir = get_aperio_gt450_dir_by_name(fp, file, LABEL);
+        label_dir = get_aperio_gt450_dir_by_name(file, LABEL);
     } else {
         label_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, LABEL);
     }
@@ -194,7 +194,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     int32_t macro_dir = -1;
     if (!keep_macro_image) {
         if (_is_aperio_gt450 == 1) {
-            macro_dir = get_aperio_gt450_dir_by_name(fp, file, MACRO);
+            macro_dir = get_aperio_gt450_dir_by_name(file, MACRO);
         } else {
             macro_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, MACRO);
         }
