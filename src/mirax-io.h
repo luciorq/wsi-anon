@@ -40,7 +40,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
 int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, int32_t length, const char *value,
                                      const char *replacement, int32_t size);
 
-void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length, const char *var);
+void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length);
 
 int32_t wipe_data_in_index_file(const char *path, const char *index_filename, struct mirax_level *level_to_delete,
                                 struct mirax_file *mirax_file);

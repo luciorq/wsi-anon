@@ -19,7 +19,7 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
                                 struct mirax_level *next_level);
 
 const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
-                                              const char *c);
+                                              const char c);
 
 void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key);
 

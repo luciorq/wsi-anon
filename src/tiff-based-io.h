@@ -25,7 +25,7 @@ void fix_byte_order(void *data, int32_t size, int64_t count, bool big_endian);
 
 uint64_t read_uint(file_t *fp, int32_t size, bool big_endian);
 
-uint32_t get_size_of_value(uint16_t type, uint64_t *count);
+uint32_t get_size_of_value(uint16_t type, uint32_t *count);
 
 uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset);
 
@@ -50,7 +50,7 @@ uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t 
 
 int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi);
 
-int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const char *dir_name);
+int32_t get_aperio_gt450_dir_by_name(struct tiff_file *file, const char *dir_name);
 
 int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag, const char *contains_value);
 

@@ -12,6 +12,9 @@
  *
  */
 
+#ifndef HEADER_PLUGIN_H
+#define HEADER_PLUGIN_H
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -21,3 +24,5 @@ int32_t is_format(const char *filename);
 // implements the anonymization for the added format
 int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                       bool do_inplace);
+
+#endif

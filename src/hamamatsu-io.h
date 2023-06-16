@@ -1,3 +1,6 @@
+#ifndef HEADER_HAMAMATSU_H
+#define HEADER_HAMAMATSU_H
+
 #include "tiff-based-io.h"
 
 static const char DOT_NDPI[] = ".ndpi";
@@ -11,3 +14,5 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
 // additinonal functions
 int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian);
+
+#endif

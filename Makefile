@@ -11,7 +11,7 @@ SO_NAME = libwsianon
 TEST_TARGET = utests
 
 CC       = gcc
-CFLAGS   = -Wall -I. -O2
+CFLAGS   = -Wall -I. -O2 -Wextra
 CFLAGS_DEBUG = -g -ggdb -O0 -Wall
 
 LFLAGS   = -Wall -I.

@@ -40,8 +40,7 @@ int32_t main(int32_t argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    size_t optind;
-    for (optind = 2; optind < argc; optind++) {
+    for (int32_t optind = 2; optind < argc; optind++) {
         if (argv[optind][0] == '-') {
             switch (argv[optind][1]) {
             case 'c': {

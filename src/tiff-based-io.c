@@ -101,7 +101,7 @@ uint64_t read_uint(file_t *fp, int32_t size, bool big_endian) {
 }
 
 // get the type size needed to readout the value
-uint32_t get_size_of_value(uint16_t type, uint64_t *count) {
+uint32_t get_size_of_value(uint16_t type, uint32_t *count) {
     if (type == TIFF_BYTE || type == TIFF_ASCII || type == TIFF_SBYTE || type == TIFF_UNDEFINED) {
         return 1;
     } else if (type == TIFF_SHORT || type == TIFF_SSHORT) {
@@ -347,7 +347,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
             // fill strip with zeros
             // ToDo: check if writing 0's is sufficient
-            char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
+            char *strip = create_pre_suffixed_char_array('0', strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
                 fprintf(stderr, "Error: Wiping image data failed.\n");
                 free(strip);
@@ -383,7 +383,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
             // fill strip with zeros
             // ToDo: check if writing 0's is sufficient
-            char *strip = get_empty_char_buffer("0", strip_lengths[i], prefix, suffix);
+            char *strip = create_pre_suffixed_char_array('0', strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
                 fprintf(stderr, "Error: Wiping image data failed.\n");
                 free(strip);
@@ -525,7 +525,7 @@ int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir
     return 0;
 }
 
-int32_t get_aperio_gt450_dir_by_name(file_t *fp, struct tiff_file *file, const char *dir_name) {
+int32_t get_aperio_gt450_dir_by_name(struct tiff_file *file, const char *dir_name) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         // printf("--directory %i\n", i);

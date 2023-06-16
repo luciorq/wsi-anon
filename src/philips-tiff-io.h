@@ -1,3 +1,6 @@
+#ifndef HEADER_PHILIPS_IO_H
+#define HEADER_PHILIPS_IO_H
+
 #include "philips-based-io.h"
 #include "tiff-based-io.h"
 
@@ -14,3 +17,5 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
 int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_type);
 
 int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file);
+
+#endif

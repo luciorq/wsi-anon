@@ -38,7 +38,7 @@ static const char b64_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J
                                  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
 // The number of buffers we need
-int32_t bufc = 0;
+size_t bufc = 0;
 
 unsigned char *b64_buf_malloc() {
     unsigned char *buf = b64_malloc(B64_BUFFER_SIZE);

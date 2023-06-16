@@ -91,7 +91,7 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
 
                     // encode new image data and check if string is longer than original string,
                     // replace old base64-encoded string afterwards
-                    char *new_image_data = b64_encode(jpeg, strlen(image_data));
+                    char *new_image_data = (char *)b64_encode(jpeg, strlen(image_data));
                     if (strlen(new_image_data) > strlen(image_data)) {
                         new_image_data[strlen(image_data)] = '\0';
                     }

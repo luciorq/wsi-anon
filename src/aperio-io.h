@@ -1,3 +1,6 @@
+#ifndef HEADER_APERIO_IO_H
+#define HEADER_APERIO_IO_H
+
 #include "tiff-based-io.h"
 
 static const char DOT_SVS[] = ".svs";
@@ -15,3 +18,5 @@ char *override_image_description(char *result, char *delimiter);
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file);
 
 int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file, int32_t directory);
+
+#endif
