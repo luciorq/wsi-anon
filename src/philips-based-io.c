@@ -56,7 +56,7 @@ int32_t *get_height_and_width(const char *image_data) {
     size_t size_bytes_len = 0;
 
     // check structure for width and height
-    for (int32_t i = 0; i < decode_size[0]; i++) {
+    for (size_t i = 0; i < decode_size[0]; i++) {
 
         // check prefix of possible SOF section
         if (decoded_data[i] == 255         // xff
@@ -69,13 +69,13 @@ int32_t *get_height_and_width(const char *image_data) {
             pos = i + 5;
 
             // check suffix
-            for (int32_t j = pos; j < decode_size[0]; j++) {
+            for (size_t j = pos; j < decode_size[0]; j++) {
                 if (decoded_data[j] == 3 &&     // x03
                     decoded_data[j + 1] == 1) { // x01
 
                     bool is_suffix = false;
 
-                    for (int32_t z = j + 2; z < decode_size[0]; z++) {
+                    for (size_t z = j + 2; z < decode_size[0]; z++) {
 
                         // if another /x03/x01 was found, it is not SOF section
                         if (decoded_data[z] == 3 &&     // x03
@@ -112,7 +112,7 @@ int32_t *get_height_and_width(const char *image_data) {
 
     // if pos could not be found for either images or length of bytes are not equal, set width
     // and height to 1 in order to still anonymize image
-    if (pos == -1 || size_bytes_len % 2 != 0) {
+    if (pos > 0 || size_bytes_len % 2 != 0) {
         height = 1;
         width = 1;
     } else {

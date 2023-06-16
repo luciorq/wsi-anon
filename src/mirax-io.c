@@ -478,7 +478,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
     return 1;
 }
 
-void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length, const char *var) {
+void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length) {
 
     // iterate through every data file
     for (int32_t i = 0; i < length; i++) {
@@ -654,7 +654,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, 'X');
 
     // remove metadata in data dat files
-    remove_metadata_in_data_dat(path, data_filenames, f_count, MRXS_PROFILENAME);
+    remove_metadata_in_data_dat(path, data_filenames, f_count);
 
     // remove slide id in slidedat, indexfile and data files
     const char *slide_id = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);

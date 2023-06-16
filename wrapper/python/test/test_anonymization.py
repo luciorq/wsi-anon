@@ -181,3 +181,26 @@ def test_anonymize_file_format_only_label_hamamatsu(wsi_filepath, original_filen
     with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
         assert "macro" not in slide.associated_images
+
+
+@pytest.mark.parametrize(
+    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+    [
+        ("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
+        ("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), 
+    ],
+)
+def test_anonymize_file_format_basic_isyntax(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+    if result_filename.exists():
+        remove_file(str(result_filename.absolute()))
+
+    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+    assert result != -1
+
+    wait_until_exists(str(result_filename), 5)
+
+    # TODO: add some ninary checks here?
+    
+    cleanup(str(result_filename.absolute()))

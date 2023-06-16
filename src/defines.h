@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define UNUSED(x) (void)(x)
+
 // mirax
 #define MAX_CHAR_IN_LINE 100
 #define MRXS_ROOT_OFFSET_NONHIER 41
@@ -158,22 +160,22 @@ struct mirax_file {
 struct tiff_entry {
     uint16_t tag;
     uint16_t type;
-    uint64_t count;
+    uint32_t count;
     uint64_t offset;
     uint64_t start;
 };
 
 struct tiff_directory {
-    uint64_t count;
     struct tiff_entry *entries;
+    uint32_t count;
     uint64_t in_pointer_offset;
     uint64_t out_pointer_offset;
     uint64_t number;
 };
 
 struct tiff_file {
-    uint64_t used;
-    uint64_t size;
+    uint32_t used;
+    uint32_t size;
     struct tiff_directory *directories;
 };
 

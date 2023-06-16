@@ -85,6 +85,8 @@ int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 
 // wipes the label directory of ventana file by replacing bytes with zeros
 int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endian) {
+    // surpress unused compiler warning; TODO: please remove big_endian if this has no relevance here!
+    UNUSED(big_endian);
 
     int32_t tile_offsets = -1;
     int32_t tile_byte_counts = -1;
@@ -121,6 +123,8 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 // wipes and unlinks directory
 int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory, bool big_endian,
                                           bool disable_unlinking) {
+    // surpress compiler warning; remove when unlinking is implemented
+    UNUSED(disable_unlinking);
 
     struct tiff_directory dir = file->directories[directory];
 
@@ -138,10 +142,10 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
 
 // searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
-    char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
-    value = skip_first_and_last_char(value);
-    char *replacement = create_replacement_string(' ', strlen(value));
-    return replace_str(result, value, replacement);
+    const char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
+    const char *sliced_string = slice_str(value, 1, strlen(value) - 2);
+    char *replacement = create_replacement_string(' ', strlen(sliced_string));
+    return replace_str(result, sliced_string, replacement);
 }
 
 // anonymizes metadata in XMP Tags of ventana file

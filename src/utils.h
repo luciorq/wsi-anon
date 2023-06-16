@@ -41,7 +41,7 @@ const char *add_equals_sign(const char *str1, const char *str2);
 
 bool contains(const char *str1, const char *str2);
 
-int32_t get_size_to_substring(file_t *fp, char *substring);
+size_t get_size_to_substring(file_t *fp, char *substring);
 
 int32_t file_contains_value(file_t *fp, char *value);
 
@@ -53,12 +53,12 @@ int32_t *read_int32(file_t *fp);
 
 bool assert_value(file_t *fp, int32_t value);
 
+const char *slice_str(const char *value, size_t start, size_t end);
+
 // file operations
 const char *duplicate_file(const char *filename, const char *new_file_name, const char *file_extension);
 
 int32_t copy_file_v2(const char *src, const char *dest);
-
-int32_t copy_file(const char *src, const char *dest);
 
 int32_t copy_directory(const char *src, const char *dest);
 
@@ -70,8 +70,6 @@ uint16_t _swap_uint16(uint16_t value);
 uint32_t _swap_uint32(uint32_t value);
 
 uint64_t _swap_uint64(uint64_t value);
-
-char *skip_first_and_last_char(char *value);
 
 int32_t count_contains(const char *str1, const char *str2);
 
