@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.7
+
+* handle large (>4GB) NDPI files
+* override metadata in NDPI files
+
 ## 0.4.6
 
 * full Philips' TIFF support

@@ -14,7 +14,7 @@ Currently supported formats:
 | Roche Ventana | VS200, iScan Coreo | `*.bif` | - |
 | Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` `*.tiff`  | - |
 
-The library is implemented and tested under Linux (Ubuntu 20.04) and currently only experimental under Windows.
+**The library is implemented and tested under Linux (Ubuntu 20.04) and currently only experimental under Windows.**
 
 ## Publications
 

@@ -67,6 +67,36 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
     return -1;
 }
 
+// removes all metadata
+int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
+    for (uint32_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for (uint32_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+            if (entry.tag == TIFFTAG_DATETIME) {
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                char buffer[entry_size * entry.count];
+                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read tag DateTime.\n");
+                    return -1;
+                }
+
+                char *replacement = create_replacement_string('X', strlen(buffer));
+
+                file_seek(fp, entry.offset, SEEK_SET);
+
+                if (file_write(replacement, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not overwrite tag DateTime.\n");
+                    return -1;
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 // anonymizes hamamatsu file
 int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool keep_macro_image,
                          bool disable_unlinking, bool do_inplace) {
@@ -128,6 +158,8 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         // unlink the empty macro directory from file structure
         result = unlink_directory(fp, file, dir_count, true);
     }
+
+    remove_metadata_in_hamamatsu(fp, file);
 
     free_tiff_file(file);
     file_close(fp);

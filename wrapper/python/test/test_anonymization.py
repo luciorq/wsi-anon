@@ -88,8 +88,8 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
             for property in ["Filename", "User", "Date"]:
                 assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
         if "Hamamatsu" in wsi_filepath:
-            # ToDo: check for Hamamatsu metadata!
-            pass
+            for property in ["DateTime"]:
+                assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
         
         slide.close()
     except tiffslide.TiffFileError as e:
