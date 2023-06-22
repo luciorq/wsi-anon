@@ -128,9 +128,8 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset,
-                                           struct tiff_directory *first_directory, bool big_tiff, bool ndpi,
-                                           bool big_endian) {
+struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset, bool big_tiff,
+                                           bool ndpi, bool big_endian) {
     uint64_t offset = *dir_offset;
     *dir_offset = 0;
 
@@ -170,8 +169,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
 
         if (!value_size) {
-            fprintf(stderr, "Error: calculating value size failed.\n"); // ToDo: 1. error here in
-                                                                        // Windows for files <4GB
+            fprintf(stderr, "Error: calculating value size failed.\n");
             return NULL;
         }
 
@@ -278,13 +276,10 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     uint64_t in_pointer_offset = file_tell(fp);
     uint64_t diroff = read_uint(fp, big_tiff ? 8 : 4, big_endian);
     // reading the initial directory
-    struct tiff_directory *prev_dir = NULL;
-    struct tiff_directory *dir =
-        read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
+    struct tiff_directory *dir = read_tiff_directory(fp, &diroff, &in_pointer_offset, big_tiff, ndpi, big_endian);
 
     if (dir == NULL) {
-        fprintf(stderr,
-                "Error: Failed reading directory.\n"); // ToDo: 2. error here in Windows for files <4GB
+        fprintf(stderr, "Error: Failed reading directory.\n");
         return NULL;
     }
 
@@ -297,14 +292,13 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     while (diroff != 0) {
         uint64_t current_in_pointer_offset = file_tell(fp) - 8;
         struct tiff_directory *current_dir =
-            read_tiff_directory(fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
+            read_tiff_directory(fp, &diroff, &current_in_pointer_offset, big_tiff, ndpi, big_endian);
 
         if (current_dir == NULL) {
             fprintf(stderr, "Error: Failed reading directory.\n");
             return NULL;
         }
         insert_dir_into_tiff_file(file, current_dir);
-        prev_dir = current_dir;
     }
 
     return file;

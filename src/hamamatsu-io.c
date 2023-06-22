@@ -11,9 +11,7 @@ int32_t is_hamamatsu(const char *filename) {
     }
 
     // open file
-    // ToDo: fopen internally uses _lseek() instead of _lseeki64() thats why it is not able to
-    // handle files equal to or larger than 4GB
-    file_t *fp = file_open(filename, "r+"); // ---- error here for >=4GB ----
+    file_t *fp = file_open(filename, "r+");
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
         return result;

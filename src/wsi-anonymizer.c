@@ -12,8 +12,7 @@ int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
 int8_t check_file_format(const char *filename) {
     if (file_exists(filename)) {
         for (int8_t i = 0; i < num_of_formats - 2; i++) {
-            if (is_format_functions[i](filename)) { // ToDo: enters every is_<format> and returns 1
-                                                    // only if found, check for error cases
+            if (is_format_functions[i](filename)) {
                 return i;
             }
         }
@@ -29,7 +28,7 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
                                   bool disable_unlinking, bool do_inplace) {
     int32_t result = -1;
 
-    int8_t result_check_format = check_file_format(*filename); // ToDo fails here
+    int8_t result_check_format = check_file_format(*filename);
 
     if (result_check_format == num_of_formats - 1) {
         fprintf(stderr, "Error: File does not exist or is invalid.\n");
