@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.4.6
+
+* full Philips' TIFF support
+* refactor philips based formats
+
+## 0.4.5
+
+* bugfix for string contains function in utils (replaced by string.h's `strstr` function)
+
+## 0.4.4
+
+* quickfix for mirax file structure bug in Slidedat.ini
+* commented out closing of file handle that causes `corrupted size vs. prev_size` error in some cases
+
+## 0.4.3
+
+* bugfix for Aperio files with BigTiff structure
+* remove date and barcode from metadata in aperio file
+
+## 0.4.1 & 0.4.2
+
+* bugfix for writing out mirax Slidedat.ini file
+* bugfix of non hierarchical order in Slidedat.ini
+* keep preview in mirax format
+
+## 0.4.0
+
+- change AnonymizedStream API for easier path mapping to support multi-anonymization of WSI files with same names
+
+## 0.3.15
+
+- add download option for MIRAX under WASM
+- temporary disable unlinking option for .bif files
+- remove TIFFTAG_DATETIME for .bif
+- fix errors when anonymizing .isyntax under Ubuntu, Windows and WASM
+
+## 0.3.14
+
+- fix WASM bugs for ventana and isyntax
+- allow passing of directories for MIRAX
+- add download option for all file formats except MIRAX
+- handle 32-Bit integer limitation
+
+## 0.3.13
+
+* enabled mirax unlinking
+
+## 0.3.12
+
+* temporary disabled mirax unlinking due to bug for some format versions
+!! FIX AS SOON AS POSSIBLE !!
+
 ## 0.3.11
 
 - refactor code

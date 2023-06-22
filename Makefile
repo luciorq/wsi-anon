@@ -11,7 +11,7 @@ SO_NAME = libwsianon
 TEST_TARGET = utests
 
 CC       = gcc
-CFLAGS   = -Wall -I. -O2
+CFLAGS   = -Wall -I. -O2 -Wextra
 CFLAGS_DEBUG = -g -ggdb -O0 -Wall
 
 LFLAGS   = -Wall -I.
@@ -62,7 +62,7 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 wasm: makedirs $(BINDIR)/$(WASM_TARGET)
 
 $(BINDIR)/$(WASM_TARGET): makedirs
-	@$(EMCC) -Wall $(SOURCES_WASM) -Os -o $(BINDIR)/$(WASM_TARGET) --extern-pre-js wrapper/js/anonymized-stream.js -s WASM=1 -s ASYNCIFY -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]'
+	@$(EMCC) -Wall $(SOURCES_WASM) -Os -o $(BINDIR)/$(WASM_TARGET) --extern-pre-js wrapper/js/anonymized-stream.js -s WASM=1 -s WASM_BIGINT -s ALLOW_MEMORY_GROWTH=1 -s ASYNCIFY -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS='["cwrap"]'
 
 tests: makedirs
 	@$(CC) -o $(BINDIR)/$(TEST_TARGET) $(SOURCES_LIB) $(UNIT_TEST_FILES) -g $(LFLAGS_TESTS)
@@ -84,6 +84,6 @@ makedirs:
 
 .PHONY: clean
 clean:
-	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out
-	@rm -r $(OBJDIR) $(BINDIR)
+	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out || true
+	@rm -r $(OBJDIR) $(BINDIR) || true
 	@echo "Cleanup complete!"

@@ -8,20 +8,17 @@ extern char **str_split(char *a_str, const char a_delim);
 
 extern const char *get_filename_ext(const char *filename);
 
-extern char *get_empty_char_buffer(const char *x, uint64_t length, const char *prefix,
-                                   const char *suffix);
+extern char *create_pre_suffixed_char_array(const char x, uint64_t length, const char *prefix, const char *suffix);
 
 extern bool starts_with(const char *str, const char *pre);
 
-extern const char *get_string_between_delimiters(const char *buffer, const char *delimiter1,
-                                                 const char *delimiter2);
+extern const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);
 
 extern void remove_leading_spaces(char *str);
 
 extern const char *concat_path_filename(const char *path, const char *filename);
 
-extern const char *concat_path_filename_ext(const char *path, const char *filename,
-                                            const char *ext);
+extern const char *concat_path_filename_ext(const char *path, const char *filename, const char *ext);
 
 extern const char *get_filename_from_path(const char *path);
 
@@ -79,14 +76,14 @@ void test_get_filename_ext2() {
 void test_get_empty_char_buffer() {
     const char *prefix = strdup("\200");
     const char *suffix = strdup("\200");
-    const char *x_char = strdup("0");
-    const char *result = get_empty_char_buffer(x_char, 5, prefix, suffix);
+    const char x_char = '0';
+    const char *result = create_pre_suffixed_char_array(x_char, 5, prefix, suffix);
     CU_ASSERT_STRING_EQUAL(result, "\200000\200");
 }
 
 void test_get_empty_char_buffer_without_prefix() {
-    const char *x_char = strdup("0");
-    const char *result = get_empty_char_buffer(x_char, 5, NULL, NULL);
+    const char x_char = '0';
+    const char *result = create_pre_suffixed_char_array(x_char, 5, NULL, NULL);
     CU_ASSERT_STRING_EQUAL(result, "00000");
 }
 
@@ -195,28 +192,27 @@ void test_swap_uint64() {
 
 // ####################### test case setup ####################### //
 
-CU_TestInfo testcases1[] = {
-    {"Test [str_split] 1:", test_str_split1},
-    {"Test [str_split] 2:", test_str_split2},
-    {"Test [str_split] 3:", test_str_split3},
-    {"Test [get_filename_ext] 1:", test_get_filename_ext1},
-    {"Test [get_filename_ext] 2:", test_get_filename_ext2},
-    {"Test [get_empty_char_buffer]:", test_get_empty_char_buffer},
-    {"Test [get_empty_char_buffer]:", test_get_empty_char_buffer_without_prefix},
-    {"Test [starts_with] 1:", test_starts_with1},
-    {"Test [starts_with] 2:", test_starts_with2},
-    {"Test [get_string_between_delimiters] 1:", test_get_string_between_delimiters1},
-    {"Test [get_string_between_delimiters] 2:", test_get_string_between_delimiters2},
-    {"Test [remove_leading_spaces]:", test_remove_leading_spaces},
-    {"Test [concat_path_filename]:", test_concat_path_filename},
-    {"Test [get_filename_from_path]:", test_get_filename_from_path},
-    {"Test [int32_to_str]:", test_int32_to_str},
-    {"Test [number_of_digits]:", test_number_of_digits},
-    {"Test [add_square_brackets]:", test_add_square_brackets},
-    {"Test [add_equals_sign]:", test_add_equals_sign},
-    {"Test [contains] 1:", test_contains1},
-    {"Test [contains] 2:", test_contains2},
-    CU_TEST_INFO_NULL};
+CU_TestInfo testcases1[] = {{"Test [str_split] 1:", test_str_split1},
+                            {"Test [str_split] 2:", test_str_split2},
+                            {"Test [str_split] 3:", test_str_split3},
+                            {"Test [get_filename_ext] 1:", test_get_filename_ext1},
+                            {"Test [get_filename_ext] 2:", test_get_filename_ext2},
+                            {"Test [get_empty_char_buffer]:", test_get_empty_char_buffer},
+                            {"Test [get_empty_char_buffer]:", test_get_empty_char_buffer_without_prefix},
+                            {"Test [starts_with] 1:", test_starts_with1},
+                            {"Test [starts_with] 2:", test_starts_with2},
+                            {"Test [get_string_between_delimiters] 1:", test_get_string_between_delimiters1},
+                            {"Test [get_string_between_delimiters] 2:", test_get_string_between_delimiters2},
+                            {"Test [remove_leading_spaces]:", test_remove_leading_spaces},
+                            {"Test [concat_path_filename]:", test_concat_path_filename},
+                            {"Test [get_filename_from_path]:", test_get_filename_from_path},
+                            {"Test [int32_to_str]:", test_int32_to_str},
+                            {"Test [number_of_digits]:", test_number_of_digits},
+                            {"Test [add_square_brackets]:", test_add_square_brackets},
+                            {"Test [add_equals_sign]:", test_add_equals_sign},
+                            {"Test [contains] 1:", test_contains1},
+                            {"Test [contains] 2:", test_contains2},
+                            CU_TEST_INFO_NULL};
 
 CU_TestInfo testcases2[] = {{"Test [swap_uint16]:", test_swap_uint16},
                             {"Test [swap_uint32]:", test_swap_uint32},

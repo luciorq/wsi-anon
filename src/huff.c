@@ -31,14 +31,13 @@
 #endif
 
 #if __GNUC__
-#define JPEC_HUFF_NBITS(JPEC_nbits, JPEC_val)                                                      \
-    JPEC_nbits = (!JPEC_val) ? 0 : JPEC_INT_WIDTH - __builtin_clz(JPEC_val)
+#define JPEC_HUFF_NBITS(JPEC_nbits, JPEC_val) JPEC_nbits = (!JPEC_val) ? 0 : JPEC_INT_WIDTH - __builtin_clz(JPEC_val)
 #else
-#define JPEC_HUFF_NBITS(JPEC_nbits, JPEC_val)                                                      \
-    JPEC_nbits = 0;                                                                                \
-    while (val) {                                                                                  \
-        JPEC_nbits++;                                                                              \
-        val >>= 1;                                                                                 \
+#define JPEC_HUFF_NBITS(JPEC_nbits, JPEC_val)                                                                          \
+    JPEC_nbits = 0;                                                                                                    \
+    while (val) {                                                                                                      \
+        JPEC_nbits++;                                                                                                  \
+        val >>= 1;                                                                                                     \
     }
 #endif
 

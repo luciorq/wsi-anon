@@ -32,17 +32,18 @@ def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unli
     _wsi_anonymizer.anonymize_wsi.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool]
     _wsi_anonymizer.anonymize_wsi.restype = ctypes.c_void_p
 
+    filename = str(filename).replace(" ", "\\ ") # escape whitespaces if exist
     c_filename = filename.encode('utf-8')
     c_new_label_name = new_label_name.encode('utf-8')
 
+    result = -1
     with lock:
-        result =_wsi_anonymizer.anonymize_wsi(
+        result = _wsi_anonymizer.anonymize_wsi(
             c_filename, 
             c_new_label_name,
             keep_macro_image, 
             disable_unlinking, 
             do_inplace
         )
-
-        value = ctypes.cast(result, ctypes.c_char_p).value.decode('utf-8')
-        return value
+    
+    return result

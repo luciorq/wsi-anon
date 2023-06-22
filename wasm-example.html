@@ -6,23 +6,94 @@ import AnonymizedStream from './bin/wsi-anon.js';
 
 async function onAnonymizeWsi() {
   const files = document.getElementById("file-input").files;
+  const dir = document.getElementById("dir-input").files;
   const chunkSize = 10 * 1000*1000;
-  const anonStream = AnonymizedStream.create(files[0], chunkSize)
-  console.log("running anonymization ...");
+  var anonStream;
+
+  // check if file was passed
+  if (typeof files[0] !== 'undefined'){
+    anonStream = AnonymizedStream.create(files[0], chunkSize, files[0].name);
+    runAnonymization(anonStream);
+  }
+  // check if directory was passed, only for MIRAX files
+  else if (typeof dir[0] !== 'undefined'){
+    anonStream = AnonymizedStream.create(dir[0], chunkSize, dir[0].webkitRelativePath);
+    for(let i = 1; i < dir.length; i++){
+        AnonymizedStream.create(dir[i], chunkSize, dir[i].webkitRelativePath);
+    }
+    runAnonymization(anonStream);
+  }
+  else{
+    alert( "No file/directory selected!");
+  }
+}
+
+async function runAnonymization(anonStream){
+  console.log("Running anonymization...");
   try {
     await anonStream.anonymize();
-    console.log("done, stream can now be uploaded");
+    console.log("Done, stream can now be downloaded.");
   } catch (error) {
     alert(error);
   }
 }
 
+async function downloadWSI(){
+  // check for browser support
+  if(!("showSaveFilePicker" in self) ) {
+    abort("Unsupported browser");
+  }
+
+  // check if single files were anonymized
+  let files = document.getElementById("file-input").files;
+  const dirFiles = document.getElementById("dir-input").files;
+  if (typeof files[0] !== 'undefined'){
+    const stream = AnonymizedStream.retrieve(files[0].name)
+    await writeFile(stream, "_anonymized_wsi." + files[0].name.split('.')[files[0].name.split('.').length-1]);
+    console.log("Download done!");
+  }
+  else if (typeof dirFiles[0] !== 'undefined'){
+    const stream = AnonymizedStream.retrieve(dirFiles[0].webkitRelativePath)
+    await writeFile(stream, "_anonymized_wsi." + dirFiles[0].name.split('.')[1]);
+    for(let i = 1; i < dirFiles.length; i++){
+      const stream = AnonymizedStream.retrieve(dirFiles[i].webkitRelativePath)
+      await writeFile(stream, dirFiles[i].name);
+    }
+    console.log("Download done!");
+  }
+  else{
+    alert( "No files anonymized! Please anonymize files before downloading.");
+  }
+}
+
+// write stream to file 
+async function writeFile(stream, filename){
+  const handle = await showSaveFilePicker({suggestedName: filename});
+  const filestream = await handle.createWritable();
+  const writer = await filestream.getWriter();
+
+  while(true){
+    let result = await stream.read();
+    if (result.done){
+      break;
+    }
+    writer.write(result.value);
+  }
+  writer.close();
+}
+
 window.globalThis.onAnonymizeWsi = onAnonymizeWsi;
+window.globalThis.downloadWSI = downloadWSI;
 </script>
 <title>wsi-anon WASM example</title>
 </head>
 <body>
-<input id="file-input" type="file"></input>
-<button onclick="onAnonymizeWsi()">Anonymize WSI</button>
+<h2>WSI-Anon WASM</h2>
+<input id="file-input" type="file" accept=".svs,.mrxs,.ndpi,.tif,.bif,.isyntax,.tiff"></input>
+<p>(Accepted file formats: '.svs', '.ndpi', '.tif', '.bif', '.isyntax', '.tiff')</br></br></br></p>
+<input id="dir-input" type="file" webkitdirectory></input>
+<p>(ONLY for '.mrxs': please select the directory that only contains the '.mrxs' and the corresponding subfolder and upload them)</br></br></br></p>
 <p>Open the console to see the result!</p>
+<button onclick="onAnonymizeWsi()">Anonymize WSI</button>
+<button onclick="downloadWSI()">Download WSI</button>
 </body>

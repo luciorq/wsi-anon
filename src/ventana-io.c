@@ -53,7 +53,7 @@ int32_t is_ventana(const char *filename) {
 }
 
 // gets the label directory of ventana file
-int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
+int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 
     for (uint64_t i = 0; i < file->used; i++) {
 
@@ -64,15 +64,18 @@ int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read image description.\n");
+                    free(buffer);
                     return -1;
                 }
 
                 if (contains(buffer, "Label")) {
+                    free(buffer);
                     return i;
                 }
+                free(buffer);
             }
         }
     }
@@ -81,6 +84,8 @@ int32_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 
 // wipes the label directory of ventana file by replacing bytes with zeros
 int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endian) {
+    // surpress unused compiler warning; TODO: please remove big_endian if this has no relevance here!
+    UNUSED(big_endian);
 
     int32_t tile_offsets = -1;
     int32_t tile_byte_counts = -1;
@@ -103,7 +108,7 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
     file_seek(fp, tile_offsets, SEEK_SET);
 
     // fill strip with zeros
-    char *strip = get_empty_char_buffer("0", tile_byte_counts, NULL, NULL);
+    char *strip = create_pre_suffixed_char_array('0', tile_byte_counts, NULL, NULL);
     if (!file_write(strip, 1, tile_byte_counts, fp)) {
         fprintf(stderr, "Error: Wiping image data failed.\n");
         free(strip);
@@ -115,26 +120,31 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 }
 
 // wipes and unlinks directory
-int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_t directory,
-                                          bool big_endian, bool disable_unlinking) {
+int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory, bool big_endian,
+                                          bool disable_unlinking) {
+    // surpress compiler warning; remove when unlinking is implemented
+    UNUSED(disable_unlinking);
 
     struct tiff_directory dir = file->directories[directory];
 
     int32_t result = wipe_label_ventana(fp, &dir, big_endian);
 
+    // ToDo: check if unlinking for overview image (IFD 0) for .bif files is possible
+    /*
     if (result != -1 && !disable_unlinking) {
         result = unlink_directory(fp, file, directory, false);
     }
+    */
 
     return result;
 }
 
 // searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
 char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
-    char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
-    value = skip_first_and_last_char(value);
-    char *replacement = anonymize_string(" ", strlen(value));
-    return replace_str(result, value, replacement);
+    const char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
+    const char *sliced_string = slice_str(value, 1, strlen(value) - 2);
+    char *replacement = create_replacement_string(' ', strlen(sliced_string));
+    return replace_str(result, sliced_string, replacement);
 }
 
 // anonymizes metadata in XMP Tags of ventana file
@@ -146,13 +156,14 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
             struct tiff_entry entry = dir.entries[j];
 
-            // searches for XMP Tag in all directories
+            // searches for XMP Tag in all directories and removes metadata in it
             if (entry.tag == TIFFTAG_XMP) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read XMP Tag.\n");
+                    free(buffer);
                     return -1;
                 }
 
@@ -183,18 +194,16 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 if (contains(result, VENTANA_BUILDDATE1_ATT)) {
                     int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
                     for (int32_t i = 0; i <= count; i++) {
-                        const char *value =
-                            get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
-                        char *replacement = anonymize_string(" ", strlen(value));
+                        const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
+                        char *replacement = create_replacement_string(' ', strlen(value));
                         result = replace_str(result, value, replacement);
                     }
                     rewrite = true;
                 }
 
                 if (contains(result, VENTANA_BUILDDATE2_ATT)) {
-                    const char *value =
-                        get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
-                    char *replacement = anonymize_string(" ", strlen(value));
+                    const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
+                    char *replacement = create_replacement_string(' ', strlen(value));
                     result = replace_str(result, value, replacement);
                     rewrite = true;
                 }
@@ -214,9 +223,32 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(result, entry_size, entry.count, fp)) {
                         fprintf(stderr, "Error: changing XML Data in XMP Tag failed.\n");
+                        free(buffer);
                         return -1;
                     }
                 }
+                free(buffer);
+            }
+
+            // remove value in DATE_TIME tag
+            if (entry.tag == TIFFTAG_DATETIME) {
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read DATE_TIME Tag.\n");
+                    free(buffer);
+                    return -1;
+                }
+                char *replacement = create_replacement_string(' ', strlen(buffer));
+                buffer = replace_str(buffer, buffer, replacement);
+                file_seek(fp, entry.offset, SEEK_SET);
+                if (!file_write(buffer, entry_size, entry.count, fp)) {
+                    fprintf(stderr, "Error: changing data in DATE_TIME Tag failed.\n");
+                    free(buffer);
+                    return -1;
+                }
+                free(buffer);
             }
         }
     }
@@ -224,8 +256,8 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 }
 
 // anonymizes ventana file
-int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image,
-                       bool disable_unlinking, bool do_inplace) {
+int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                       bool do_inplace) {
 
     if (keep_macro_image) {
         fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
@@ -266,7 +298,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
         return -1;
     }
 
-    int32_t label_dir = get_ventana_label_dir(fp, file);
+    int64_t label_dir = get_ventana_label_dir(fp, file);
 
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find Image File Directory of Label image.\n");

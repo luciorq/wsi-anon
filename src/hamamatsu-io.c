@@ -39,23 +39,28 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
             if (temp_entry.tag == NDPI_SOURCELENS) {
                 int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
 
-                if (entry_size && temp_entry.type == FLOAT) {
-                    float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
-                    // we need to step 8 bytes from start pointer
-                    // to get the expected value
-                    uint64_t new_start = temp_entry.start + 8;
-                    if (file_seek(fp, new_start, SEEK_SET)) {
-                        fprintf(stderr, "Error: Failed to seek to offset %lu.\n", new_start);
-                        return -1;
-                    }
-                    if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
-                        fprintf(stderr, "Error: Failed to read entry value.\n");
-                        return -1;
-                    }
-                    fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
-                    if (*v_buffer == -1) {
-                        // we found the label directory
-                        return i;
+                if (entry_size) {
+
+                    if (temp_entry.type == FLOAT) {
+                        float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
+
+                        // we need to step 8 bytes from start pointer
+                        // to get the expected value
+                        uint64_t new_start = temp_entry.start + 8;
+                        if (file_seek(fp, new_start, SEEK_SET)) {
+                            fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
+                            return -1;
+                        }
+                        if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
+                            fprintf(stderr, "Error: Failed to read entry value.\n");
+                            return -1;
+                        }
+                        fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
+
+                        if (*v_buffer == -1) {
+                            // we found the label directory
+                            return i;
+                        }
                     }
                 }
             }
@@ -113,7 +118,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
 
     // wipe macro data from directory
     // check for JPEG SOI header in macro dir
-    result = wipe_directory(fp, &dir, true, big_endian, JPEG_SOI, NULL);
+    result = wipe_directory(fp, &dir, true, big_endian, big_tiff, JPEG_SOI, NULL);
 
     if (result != 0) {
         free_tiff_file(file);

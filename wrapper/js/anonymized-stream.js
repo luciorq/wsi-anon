@@ -1,6 +1,7 @@
 export default class AnonymizedStream {
-  constructor (original, chunkSize) {
+  constructor (original, chunkSize, path) {
     this.size = original.size
+    this._path = path
     this._original = original
     this._changes = []
     this._start = 0
@@ -12,29 +13,26 @@ export default class AnonymizedStream {
   // Public JS API (used by UI and WASM code)
 
   static create (file, chunkSize, path) {
-    const stream = new AnonymizedStream(file, chunkSize)
-    const filename = path ? path + '/' + file.name : file.name
-    AnonymizedStream._files[filename] = stream
+    const stream = new AnonymizedStream(file, chunkSize, path)
+    AnonymizedStream._files[path] = stream
     return stream
   }
 
-  static exists (filename) {
-    return Object.prototype.hasOwnProperty.call(AnonymizedStream._files, filename)
+  static exists (path) {
+    return Boolean(AnonymizedStream._files[path])
   }
 
-  static retrieve (filename, path) {
-    const filepath = path ? path + '/' + filename : filename
-    return AnonymizedStream._files[filepath]
+  static retrieve (path) {
+    return AnonymizedStream._files[path]
   }
 
-  static destroy (filename, path) {
-    const filepath = path ? path + '/' + filename : filename
-    delete AnonymizedStream._files[filepath]
+  static destroy (path) {
+    delete AnonymizedStream._files[path]
   }
 
   async anonymize () {
     const awi = Module.cwrap("wsi_anonymize", "number", ["string", "string", "number", "number"], { async: true })
-    const result = await awi(this._original.name, 'newlabel', false, false)
+    const result = await awi(this._path, 'newlabel', false, false)
     if (result != 0) {
       throw Error("Anonymization failed");
     }
@@ -42,23 +40,23 @@ export default class AnonymizedStream {
 
   addChanges (data, offset) {
     this._changes.push({
-      start: offset,
+      start: Number(offset),
       size: data.byteLength,
       data: data
     })
   }
 
   async getAnonymizedChunk (offset, size) {
-    const slice = this._original.slice(offset, offset + size)
+    const slice = this._original.slice(Number(offset), Number(offset) + size)
     const sliceData = await slice.arrayBuffer()
-    this._applyChanges(sliceData, offset)
+    this._applyChanges(sliceData, Number(offset))
     return sliceData
   }
 
 
   // ReadableStreamDefaultReader compliant API to be used in upload client
 
-  read () {
+  async read () {
     if (this._start === this.size) {
       const value = undefined
       const done = true
@@ -88,7 +86,7 @@ export default class AnonymizedStream {
       const changeSize = this._changes[i].size
       const changeEnd = changeStart + changeSize
       if ((changeStart < offset && changeEnd > offset) || (changeStart >= offset && changeStart < end)) {
-        console.log('applying changes...')
+        console.log('Applying changes...')
         const changeOffset = offset - changeStart
         const frontClip = Math.max(0, changeOffset)
         const tailClip = Math.max(0, (changeStart + changeSize) - (offset + bufferSize))
