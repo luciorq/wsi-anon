@@ -53,36 +53,6 @@ int32_t is_ventana(const char *filename) {
     return result;
 }
 
-// gets the label directory of ventana file
-int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
-
-    for (uint64_t i = 0; i < file->used; i++) {
-
-        struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                char *buffer = malloc(entry_size * entry.count);
-                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read image description.\n");
-                    free(buffer);
-                    return -1;
-                }
-
-                if (contains(buffer, "Label")) {
-                    free(buffer);
-                    return i;
-                }
-                free(buffer);
-            }
-        }
-    }
-    return -1;
-}
-
 // wipes the label directory of ventana file by replacing bytes with zeros
 int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endian) {
     // surpress unused compiler warning; TODO: please remove big_endian if this has no relevance here!
@@ -121,21 +91,17 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 }
 
 // wipes and unlinks directory
-int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory, bool big_endian,
+int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int32_t directory, bool big_endian,
                                           bool disable_unlinking) {
-    // surpress compiler warning; remove when unlinking is implemented
-    UNUSED(disable_unlinking);
 
     struct tiff_directory dir = file->directories[directory];
 
     int32_t result = wipe_label_ventana(fp, &dir, big_endian);
 
-    // ToDo: check if unlinking for overview image (IFD 0) for .bif files is possible
-    /*
+    // unlinking for image
     if (result != -1 && !disable_unlinking) {
         result = unlink_directory(fp, file, directory, false);
     }
-    */
 
     return result;
 }
@@ -293,7 +259,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
         return -1;
     }
 
-    int64_t label_dir = get_ventana_label_dir(fp, file);
+    int32_t label_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Label");
 
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find Image File Directory of Label image.\n");
