@@ -189,12 +189,13 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
         bool is_value = (value_size * count <= read_size);
 
         if (ndpi) {
-            if (file_seek(fp, offset + (12L * entry_count) + (4L * i) + 6L, SEEK_SET) != 0) {
-                fprintf(stderr, "Error: cannot seek to value/offset extension.\n");
+            uint64_t extension = (12L * entry_count) + (4L * i) + 6L;
+            if (file_seek(fp, offset + extension, SEEK_SET) != 0) {
+                fprintf(stderr, "Error: cannot seek to offset extension.\n");
                 return NULL;
             }
             if (file_read(value + 4, 4, 1, fp) != 1) {
-                fprintf(stderr, "Error: cannot read value/offset extension.\n");
+                fprintf(stderr, "Error: cannot read offset extension.\n");
                 return NULL;
             }
             if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
@@ -202,8 +203,9 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
                 memcpy(&result, value + 4, sizeof(result));
                 tiff_dir->ndpi_high_bits = result;
             }
-            if (file_seek(fp, offset + (12L * (i + 1)) + 2L, SEEK_SET) != 0) {
-                fprintf(stderr, "Error: seeking back to IFD start failed.\n");
+            uint64_t dir_start = (12L * (i + 1)) + 2L;
+            if (file_seek(fp, offset + dir_start, SEEK_SET) != 0) {
+                fprintf(stderr, "Error: cannot seek to IFD start.\n");
                 return NULL;
             }
         }
