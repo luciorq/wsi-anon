@@ -389,7 +389,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             // Fix NDPI offset in case file is larger than 4GB
             // convert to uint64, add high bits of ndpi dir to UINT32_MAX
             // add the strip offset to this in order to get the actual offset
-            if (dir->ndpi_high_bits) {
+            if (ndpi && dir->ndpi_high_bits) {
                 new_offset = ((uint64_t)UINT32_MAX + dir->ndpi_high_bits) + (uint64_t)strip_offsets[i];
             }
 

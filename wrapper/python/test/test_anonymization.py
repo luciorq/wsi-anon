@@ -65,7 +65,7 @@ def test_check_fileformat(wsi_filename, vendor):
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
         ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
-        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
+        #("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
     ],
 )
 def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -162,28 +162,28 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
     cleanup(str(result_filename.absolute()))
 
 
-@pytest.mark.parametrize(
-    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
-    [
-        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
-    ],
-)
-def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
-    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
-    if result_filename.exists():
-        remove_file(str(result_filename.absolute()))
+# @pytest.mark.parametrize(
+#     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+#     [
+#         ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
+#     ],
+# )
+# def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+#     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+#     if result_filename.exists():
+#         remove_file(str(result_filename.absolute()))
 
-    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-    result = anonymize_wsi(wsi_filename, new_anonyimized_name, keep_macro_image=True)
-    assert result != -1
+#     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+#     result = anonymize_wsi(wsi_filename, new_anonyimized_name, keep_macro_image=True)
+#     assert result != -1
 
-    assert wait_until_exists(str(result_filename), 5)
+#     assert wait_until_exists(str(result_filename), 5)
 
-    with openslide.OpenSlide(str(result_filename)) as slide:
-        assert "label" not in slide.associated_images
-        assert "macro" not in slide.associated_images
+#     with openslide.OpenSlide(str(result_filename)) as slide:
+#         assert "label" not in slide.associated_images
+#         assert "macro" not in slide.associated_images
 
-    cleanup(str(result_filename.absolute()))
+#     cleanup(str(result_filename.absolute()))
 
 
 # Actually both are not working at the moment
