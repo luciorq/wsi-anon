@@ -161,6 +161,28 @@ char *replace_str(const char *original_str, const char *replace_str, const char 
     return result;
 }
 
+void replace_str_inplace(char *original_str, const char *replace_str, const char *with_str) {
+    int length_original_str = strlen(original_str);
+    int length_replace_str = strlen(replace_str);
+    int length_with_str = strlen(with_str);
+
+    if (length_replace_str != length_with_str) {
+        fprintf(stderr, "Error: The lengths of the string to replace and the replacment string do not match.\n");
+        return;
+    }
+
+    char *pos = strstr(original_str, replace_str);
+
+    if (pos == NULL) {
+        fprintf(stderr, "Error: The substring was not found in the string.\n");
+        return;
+    }
+
+    memmove(pos + length_with_str, pos + length_replace_str,
+            length_original_str - (pos - original_str) - length_replace_str + 1);
+    memcpy(pos, with_str, length_with_str);
+}
+
 bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
 }
