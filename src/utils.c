@@ -167,14 +167,14 @@ void replace_str_inplace(char *original_str, const char *replace_str, const char
     int length_with_str = strlen(with_str);
 
     if (length_replace_str != length_with_str) {
-        fprintf(stderr, "Error: The lengths of the string to replace and the replacment string do not match.\n");
+        // lengths do not match so we simply return
         return;
     }
 
     char *pos = strstr(original_str, replace_str);
 
     if (pos == NULL) {
-        fprintf(stderr, "Error: The substring was not found in the string.\n");
+        // string was not found
         return;
     }
 

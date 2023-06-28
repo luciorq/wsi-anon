@@ -154,6 +154,7 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
     return result;
 }
 
+// searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
 void wipe_xmp_data(char *str, const char *attr, const char *del, const char replacement) {
     while ((str = strstr(str, attr)) != NULL) {
         int length_attr = strlen(attr);
@@ -162,17 +163,6 @@ void wipe_xmp_data(char *str, const char *attr, const char *del, const char repl
             *str++ = replacement;
         }
     }
-}
-
-// searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
-void wipe_xmp_data_BAK(char *str, const char *delimiter1, const char *delimiter2, const char rep_char) {
-    const char *value = get_string_between_delimiters(str, delimiter1, delimiter2);
-    if (strlen(value) == 0) {
-        return;
-    }
-    const char *sliced_string = slice_str(value, 0, strlen(value) - 1);
-    char *replacement = create_replacement_string(rep_char, strlen(sliced_string));
-    replace_str_inplace(str, sliced_string, replacement);
 }
 
 // checks if an attribute is included in the xml string and subsequently checks if single or
