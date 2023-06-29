@@ -98,35 +98,32 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir) {
         }
     }
 
-    int32_t offsets = -1;
-    int32_t byte_counts = -1;
+    int32_t size_offsets;
+    int32_t size_lengths;
+    uint64_t *strip_offsets = read_pointer64_by_tag(fp, dir, offset_tag, false, big_endian, &size_offsets);
+    uint64_t *strip_lengths = read_pointer64_by_tag(fp, dir, byte_count_tag, false, big_endian, &size_lengths);
 
-    for (uint64_t i = 0; i < dir->count; i++) {
-        struct tiff_entry entry = dir->entries[i];
+    if (strip_offsets == NULL || strip_lengths == NULL) {
+        fprintf(stderr, "Error: Could not retrieve strip offset and length.\n");
+        return -1;
+    }
 
-        if (entry.tag == offset_tag) {
-            offsets = entry.offset;
-        } else if (entry.tag == byte_count_tag) {
-            byte_counts = entry.count;
+    if (size_offsets != size_lengths) {
+        fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+        return -1;
+    }
+
+    for (int32_t i = 0; i < size_offsets; i++) {
+        file_seek(fp, strip_offsets[i], SEEK_SET);
+
+        char *strip = create_pre_suffixed_char_array('0', strip_lengths[i], NULL, NULL);
+        if (!file_write(strip, 1, strip_lengths[i], fp)) {
+            fprintf(stderr, "Error: Wiping image data failed.\n");
+            free(strip);
+            return -1;
         }
-    }
-
-    if (offsets == -1 || byte_counts == -1) {
-        fprintf(stderr, "Error: Could not retrieve offsets or byte counts for label image.\n");
-        return -1;
-    }
-
-    file_seek(fp, offsets, SEEK_SET);
-
-    // fill strip with zeros
-    char *strip = create_pre_suffixed_char_array('0', byte_counts, NULL, NULL);
-    if (!file_write(strip, 1, byte_counts, fp)) {
-        fprintf(stderr, "Error: Wiping image data failed.\n");
         free(strip);
-        return -1;
     }
-    free(strip);
-
     return 0;
 }
 
