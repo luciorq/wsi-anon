@@ -11,7 +11,7 @@ int32_t is_aperio(const char *filename) {
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+");
+    fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -147,7 +147,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     file_t *fp;
-    fp = file_open(*filename, "r+");
+    fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;

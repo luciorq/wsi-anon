@@ -12,7 +12,7 @@ int32_t is_ventana(const char *filename) {
         return result;
     }
 
-    file_t *fp = file_open(filename, "r+");
+    file_t *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -275,7 +275,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, is_bif ? DOT_BIF : DOT_TIF);
     }
 
-    file_t *fp = file_open(*filename, "r+");
+    file_t *fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;

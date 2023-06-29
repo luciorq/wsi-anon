@@ -11,7 +11,7 @@ int32_t is_philips_tiff(const char *filename) {
     }
 
     file_t *fp;
-    fp = file_open(filename, "r+");
+    fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -214,7 +214,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
     }
 
     file_t *fp;
-    fp = file_open(*filename, "r+");
+    fp = file_open(*filename, "rb+");
 
     // philips tiff files can be stored as single-tiff TIFF or BigTIFF format
     bool big_tiff = false;
