@@ -55,7 +55,7 @@ const char *get_filename_ext(const char *filename) {
 
 int32_t file_exists(const char *filename) {
     file_t *file;
-    if ((file = file_open(filename, "r"))) {
+    if ((file = file_open(filename, "rb+"))) {
         file_close(file);
         return 1;
     }
@@ -159,6 +159,28 @@ char *replace_str(const char *original_str, const char *replace_str, const char 
 
     strcpy(tmp, original_str);
     return result;
+}
+
+void replace_str_inplace(char *original_str, const char *replace_str, const char *with_str) {
+    int length_original_str = strlen(original_str);
+    int length_replace_str = strlen(replace_str);
+    int length_with_str = strlen(with_str);
+
+    if (length_replace_str != length_with_str) {
+        // lengths do not match so we simply return
+        return;
+    }
+
+    char *pos = strstr(original_str, replace_str);
+
+    if (pos == NULL) {
+        // string was not found
+        return;
+    }
+
+    memmove(pos + length_with_str, pos + length_replace_str,
+            length_original_str - (pos - original_str) - length_replace_str + 1);
+    memcpy(pos, with_str, length_with_str);
 }
 
 bool starts_with(const char *str, const char *pre) {

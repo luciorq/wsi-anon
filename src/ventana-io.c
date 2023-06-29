@@ -12,7 +12,7 @@ int32_t is_ventana(const char *filename) {
         return result;
     }
 
-    file_t *fp = file_open(filename, "r+");
+    file_t *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");
@@ -88,29 +88,43 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
     // surpress unused compiler warning; TODO: please remove big_endian if this has no relevance here!
     UNUSED(big_endian);
 
-    int32_t tile_offsets = -1;
-    int32_t tile_byte_counts = -1;
+    int32_t offset_tag = TIFFTAG_TILEOFFSETS;
+    int32_t byte_count_tag = TIFFTAG_TILEBYTECOUNTS;
+
+    for (uint64_t i = 0; i < dir->count; i++) {
+        struct tiff_entry entry = dir->entries[i];
+        // the label image might be saved strip-based instead of tile-based
+        // so we have to search for the respective tiff tags to distinguish
+        if (entry.tag == TIFFTAG_STRIPOFFSETS) {
+            offset_tag = TIFFTAG_STRIPOFFSETS;
+            byte_count_tag = TIFFTAG_STRIPBYTECOUNTS;
+            break;
+        }
+    }
+
+    int32_t offsets = -1;
+    int32_t byte_counts = -1;
 
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
 
-        if (entry.tag == TIFFTAG_TILEOFFSETS) {
-            tile_offsets = entry.offset;
-        } else if (entry.tag == TIFFTAG_TILEBYTECOUNTS) {
-            tile_byte_counts = entry.count;
+        if (entry.tag == offset_tag) {
+            offsets = entry.offset;
+        } else if (entry.tag == byte_count_tag) {
+            byte_counts = entry.count;
         }
     }
 
-    if (tile_offsets == -1 || tile_byte_counts == -1) {
-        fprintf(stderr, "Error: Could not retrieve tile offsets or tile byte counts.\n");
+    if (offsets == -1 || byte_counts == -1) {
+        fprintf(stderr, "Error: Could not retrieve offsets or byte counts for label image.\n");
         return -1;
     }
 
-    file_seek(fp, tile_offsets, SEEK_SET);
+    file_seek(fp, offsets, SEEK_SET);
 
     // fill strip with zeros
-    char *strip = create_pre_suffixed_char_array('0', tile_byte_counts, NULL, NULL);
-    if (!file_write(strip, 1, tile_byte_counts, fp)) {
+    char *strip = create_pre_suffixed_char_array('0', byte_counts, NULL, NULL);
+    if (!file_write(strip, 1, byte_counts, fp)) {
         fprintf(stderr, "Error: Wiping image data failed.\n");
         free(strip);
         return -1;
@@ -141,11 +155,36 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
 }
 
 // searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
-char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2) {
-    const char *value = get_string_between_delimiters(result, delimiter1, delimiter2);
-    const char *sliced_string = slice_str(value, 1, strlen(value) - 2);
-    char *replacement = create_replacement_string(' ', strlen(sliced_string));
-    return replace_str(result, sliced_string, replacement);
+void wipe_xmp_data(char *str, const char *attr, const char *del, const char replacement) {
+    while ((str = strstr(str, attr)) != NULL) {
+        int length_attr = strlen(attr);
+        str += length_attr;
+        while (*str != *del && *str != '\0') {
+            *str++ = replacement;
+        }
+    }
+}
+
+// checks if an attribute is included in the xml string and subsequently checks if single or
+// double quotes are used to define the value of the key; when the given key is found, the
+// string within the quotes is wiped with a replacement char
+int32_t anonymize_xmp_attribute_if_exists(char *str, const char *attr, const char replacement) {
+    if (contains(str, attr)) {
+        char *delimiters = "\"\'\0"; // could be other delimiters than "" and ''?
+        char del;
+        while ((del = *delimiters++) != '\0') {
+            size_t l = strlen(attr) + 2;
+            char ex_attr[l];
+            strcpy(ex_attr, attr);
+            ex_attr[l - 2] = del;
+            ex_attr[l - 1] = '\0';
+            if (contains(str, ex_attr)) {
+                wipe_xmp_data(str, &ex_attr[0], &del, replacement);
+                return 1;
+            }
+        }
+    }
+    return -1;
 }
 
 // anonymizes metadata in XMP Tags of ventana file
@@ -171,52 +210,14 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 char *result = buffer;
                 bool rewrite = false;
 
-                if (contains(result, VENTANA_BASENAME_ATT)) {
-                    result = wipe_xmp_data(result, VENTANA_BASENAME_ATT, " ");
-                    rewrite = true;
-                }
+                char metadata_attributes[][15] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
+                                                  VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
+                                                  VENTANA_BARCODE2D_ATT};
 
-                if (contains(result, VENTANA_FILENAME_ATT)) {
-                    result = wipe_xmp_data(result, VENTANA_FILENAME_ATT, " ");
-                    rewrite = true;
-                }
-
-                if (contains(result, VENTANA_UNITNUMBER_ATT)) {
-                    result = wipe_xmp_data(result, VENTANA_UNITNUMBER_ATT, " ");
-                    rewrite = true;
-                }
-
-                if (contains(result, VENTANA_USERNAME_ATT)) {
-                    result = wipe_xmp_data(result, VENTANA_USERNAME_ATT, " ");
-                    rewrite = true;
-                }
-
-                // checks if attribute occurs more than once in directory
-                if (contains(result, VENTANA_BUILDDATE1_ATT)) {
-                    int32_t count = count_contains(result, VENTANA_BUILDDATE1_ATT);
-                    for (int32_t i = 0; i <= count; i++) {
-                        const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE1_ATT, "\'");
-                        char *replacement = create_replacement_string(' ', strlen(value));
-                        result = replace_str(result, value, replacement);
+                for (size_t i = 0; i < sizeof(metadata_attributes) / sizeof(metadata_attributes[0]); i++) {
+                    if (anonymize_xmp_attribute_if_exists(result, metadata_attributes[i], ' ')) {
+                        rewrite = true;
                     }
-                    rewrite = true;
-                }
-
-                if (contains(result, VENTANA_BUILDDATE2_ATT)) {
-                    const char *value = get_string_between_delimiters(result, VENTANA_BUILDDATE2_ATT, "\"");
-                    char *replacement = create_replacement_string(' ', strlen(value));
-                    result = replace_str(result, value, replacement);
-                    rewrite = true;
-                }
-
-                if (contains(result, VENTANA_BARCODE1D_ATT)) {
-                    result = wipe_xmp_data(result, VENTANA_BARCODE1D_ATT, " ");
-                    rewrite = true;
-                }
-
-                if (contains(result, VENTANA_BARCODE2D_ATT)) {
-                    result = wipe_xmp_data(result, VENTANA_BARCODE2D_ATT, " ");
-                    rewrite = true;
                 }
 
                 // alters XML data of XMP tag
@@ -274,7 +275,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, is_bif ? DOT_BIF : DOT_TIF);
     }
 
-    file_t *fp = file_open(*filename, "r+");
+    file_t *fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;

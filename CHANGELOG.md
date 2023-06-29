@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.7
+
+* extended support for ventana dp600 format
+
 ## 0.4.6
 
 * full Philips' TIFF support
