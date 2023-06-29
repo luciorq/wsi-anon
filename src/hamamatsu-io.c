@@ -126,6 +126,9 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         file_close(fp);
         return -1;
     }
+    
+    // remove metadata
+    remove_metadata_in_hamamatsu(fp, file);
 
     // find the macro directory
     int32_t dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
@@ -152,8 +155,6 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         // unlink the empty macro directory from file structure
         result = unlink_directory(fp, file, dir_count, true);
     }
-
-    remove_metadata_in_hamamatsu(fp, file);
 
     free_tiff_file(file);
     file_close(fp);
