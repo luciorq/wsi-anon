@@ -17,6 +17,8 @@ char *create_replacement_string(const char x, uint64_t length);
 
 char *replace_str(const char *original_str, const char *replace_str, const char *with_str);
 
+void replace_str_inplace(char *original_str, const char *replace_str, const char *with_str);
+
 bool starts_with(const char *str, const char *pre);
 
 const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);

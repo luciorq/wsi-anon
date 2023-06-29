@@ -52,8 +52,7 @@
 #define VENTANA_BARCODE1D_ATT "Barcode1D="
 #define VENTANA_BARCODE2D_ATT "Barcode2D="
 #define VENTANA_BASENAME_ATT "BaseName="
-#define VENTANA_BUILDDATE1_ATT "BuildDate=\'"
-#define VENTANA_BUILDDATE2_ATT "BuildDate=\""
+#define VENTANA_BUILDDATE_ATT "BuildDate="
 
 // philips based (Philips' iSyntax and TIFF)
 #define PHILIPS_DELIMITER_STR "\"IString\""

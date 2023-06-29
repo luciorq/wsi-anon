@@ -10,14 +10,8 @@ int32_t is_hamamatsu(const char *filename) {
         return result;
     }
 
-    // open file
-    file_t *fp = file_open(filename, "r+");
-    if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
-        return result;
-    }
-
     // check if ndpi tiff tags are present
+    file_t *fp = file_open(filename, "rb+");
     bool big_tiff = false;
     bool big_endian = false;
     result = check_file_header(fp, &big_endian, &big_tiff);
@@ -111,7 +105,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     }
 
     file_t *fp;
-    fp = file_open(*filename, "r+");
+    fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
     bool big_endian = false;

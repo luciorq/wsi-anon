@@ -20,7 +20,7 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir);
 int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory,
                                           bool disable_unlinking);
 
-char *wipe_xmp_data(char *result, char *delimiter1, char *delimiter2);
+void wipe_xmp_data(char *str, const char *delimiter1, const char *delimiter2, const char rep_char);
 
 int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file);
 

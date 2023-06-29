@@ -1,9 +1,13 @@
 # Changelog
 
-## 0.4.7
+## 0.4.8
 
 * handle large (>4GB) NDPI files
 * override metadata in NDPI files
+
+## 0.4.7
+
+* extended support for ventana dp600 format
 
 ## 0.4.6
 
