@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.8
+
+* bugfix for wiping label data of ventana tif/bif files
+    * only first strip/tile war overwritten
+
 ## 0.4.7
 
 * extended support for ventana dp600 format
