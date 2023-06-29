@@ -126,7 +126,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         file_close(fp);
         return -1;
     }
-    
+
     // remove metadata
     remove_metadata_in_hamamatsu(fp, file);
 
