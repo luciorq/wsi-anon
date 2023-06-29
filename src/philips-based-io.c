@@ -52,7 +52,7 @@ int32_t *get_height_and_width(const char *image_data) {
     unsigned char *decoded_data = b64_decode_ex(image_data, *decode_size, &decode_size[0]);
 
     // offset and length of bytes for width and height
-    size_t pos = -1;
+    size_t offset = 0;
     size_t size_bytes_len = 0;
 
     // check structure for width and height
@@ -66,10 +66,10 @@ int32_t *get_height_and_width(const char *image_data) {
             && decoded_data[i + 4] == 8) { // x08
 
             // prefix length
-            pos = i + 5;
+            offset = i + 5;
 
             // check suffix
-            for (size_t j = pos; j < decode_size[0]; j++) {
+            for (size_t j = offset; j < decode_size[0]; j++) {
                 if (decoded_data[j] == 3 &&     // x03
                     decoded_data[j + 1] == 1) { // x01
 
@@ -110,17 +110,17 @@ int32_t *get_height_and_width(const char *image_data) {
     int32_t height;
     int32_t width;
 
-    // if pos could not be found for either images or length of bytes are not equal, set width
+    // if offset could not be found for either images or length of bytes are not equal, set width
     // and height to 1 in order to still anonymize image
-    if (pos < 0 || size_bytes_len % 2 != 0) {
+    if (offset == 0 || size_bytes_len % 2 != 0) {
         height = 1;
         width = 1;
     } else {
 
         // set values
         for (int32_t i = 0; i < div; i++) {
-            width_arr[i] = decoded_data[pos + i];
-            height_arr[i] = decoded_data[pos + div + i];
+            width_arr[i] = decoded_data[offset + i];
+            height_arr[i] = decoded_data[offset + div + i];
         }
 
         // convert bytes into int
