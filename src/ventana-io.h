@@ -15,9 +15,9 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
 // additional functions
 int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file);
 
-int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir);
+int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endian);
 
-int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory,
+int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory, bool big_endian,
                                           bool disable_unlinking);
 
 void wipe_xmp_data(char *str, const char *delimiter1, const char *delimiter2, const char rep_char);
