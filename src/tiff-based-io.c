@@ -186,9 +186,8 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
             return NULL;
         }
 
-        bool is_value = (value_size * count <= read_size);
-
         if (ndpi) {
+            bool is_value = (value_size * count <= read_size);
             uint64_t extension = (12L * entry_count) + (4L * i) + 6L;
             if (file_seek(fp, offset + extension, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to offset extension.\n");
@@ -208,10 +207,6 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
                 fprintf(stderr, "Error: cannot seek to IFD start.\n");
                 return NULL;
             }
-        }
-
-        if (is_value) {
-            fix_byte_order(value, value_size, count, big_endian);
         }
 
         if (big_tiff || ndpi) {
@@ -391,7 +386,11 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             // Fix NDPI offset in case file is larger than 4GB
             // convert to uint64, add high bits of ndpi dir to UINT32_MAX
             // add the strip offset to this in order to get the actual offset
-            if (ndpi && dir->ndpi_high_bits) {
+            int64_t current_pos = file_tell(fp);
+            file_seek(fp, 0, SEEK_END);
+            int64_t size = file_tell(fp);
+            file_seek(fp, current_pos, SEEK_SET);
+            if (ndpi && (size > UINT32_MAX)) {
                 new_offset = ((uint64_t)UINT32_MAX + dir->ndpi_high_bits) + (uint64_t)strip_offsets[i];
             }
 

@@ -159,7 +159,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        #("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
     ],
 )
 def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):

@@ -20,7 +20,7 @@ int32_t is_hamamatsu(const char *filename) {
     return (result == 0);
 }
 
-// retrieve the label directory from the tiff file structure
+// retrieve the macro directory in order to wipe label image from the tiff file structure
 int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory temp_dir = file->directories[i];
@@ -32,27 +32,24 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
                 int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
 
                 if (entry_size) {
+                    float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
 
-                    if (entry_size && temp_entry.type == FLOAT) {
-                        float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
+                    // we need to step 8 bytes from start pointer
+                    // to get the expected value
+                    uint64_t new_start = temp_entry.start + 8;
+                    if (file_seek(fp, new_start, SEEK_SET)) {
+                        fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
+                        return -1;
+                    }
+                    if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
+                        fprintf(stderr, "Error: Failed to read entry value.\n");
+                        return -1;
+                    }
+                    fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
 
-                        // we need to step 8 bytes from start pointer
-                        // to get the expected value
-                        uint64_t new_start = temp_entry.start + 8;
-                        if (file_seek(fp, new_start, SEEK_SET)) {
-                            fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
-                            return -1;
-                        }
-                        if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
-                            fprintf(stderr, "Error: Failed to read entry value.\n");
-                            return -1;
-                        }
-                        fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
-
-                        if (*v_buffer == -1) {
-                            // we found the label directory
-                            return i;
-                        }
+                    // SourceLens equals -1 if macro directory containing the label image was found
+                    if (*v_buffer == -1) {
+                        return i;
                     }
                 }
             }
@@ -82,13 +79,13 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
                 file_seek(fp, entry.offset, SEEK_SET);
 
                 if (file_write(replacement, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not overwrite tag DateTime.\n");
+                    fprintf(stderr, "Error: Could not overwrite metadata in file.\n");
                     return -1;
                 }
             }
         }
     }
-    return 1;
+    return 0;
 }
 
 // anonymizes hamamatsu file
@@ -100,6 +97,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     }
 
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
+
     if (!do_inplace) {
         *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);
     }
@@ -128,7 +126,12 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     }
 
     // remove metadata
-    remove_metadata_in_hamamatsu(fp, file);
+    result = remove_metadata_in_hamamatsu(fp, file);
+    if (result != 0) {
+        free_tiff_file(file);
+        file_close(fp);
+        return -1;
+    }
 
     // find the macro directory
     int32_t dir_count = get_hamamatsu_macro_dir(file, fp, big_endian);
