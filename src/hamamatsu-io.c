@@ -31,7 +31,7 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
             if (temp_entry.tag == NDPI_SOURCELENS) {
                 int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
 
-                if (entry_size) {
+                if (entry_size && temp_entry.type == FLOAT) {
                     float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
 
                     // we need to step 8 bytes from start pointer
