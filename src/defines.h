@@ -82,6 +82,8 @@
 // hamamatsu
 #define NDPI_FORMAT_FLAG 65420
 #define NDPI_SOURCELENS 65421
+#define NDPI_BIT_EXTENSION 4
+#define NDPI_ENTRY_EXTENSION 12
 
 typedef enum {
     TIFF_NOTYPE = 0,
@@ -170,6 +172,7 @@ struct tiff_directory {
     uint64_t in_pointer_offset;
     uint64_t out_pointer_offset;
     uint64_t number;
+    uint32_t ndpi_high_bits;
 };
 
 struct tiff_file {

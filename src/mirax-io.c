@@ -413,7 +413,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
     file_t *fp = file_open(indexdat_filename, "rb+");
 
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not read index.dat file.\n");
+        fprintf(stderr, "Error: Could not open index.dat file.\n");
         return -1;
     }
 
@@ -555,6 +555,7 @@ char *strndup(const char *s1, size_t n) {
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                      bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
+
     const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
 
     if (!do_inplace) {
@@ -589,7 +590,6 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         const char *temp_datafile_key = concat_wildcard_string_int32(FILE_, i);
         const char *temp_datafile_name = get_value_from_ini_file(ini, DATAFILE, temp_datafile_key);
         data_filenames[i] = temp_datafile_name;
-        // printf("%i: %s\n", i, temp_datafile_name);
     }
 
     struct mirax_file *mirax_file = get_mirax_file_structure(ini, l_count);

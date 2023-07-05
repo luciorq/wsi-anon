@@ -17,6 +17,7 @@ int32_t is_isyntax(const char *filename) {
 
         // if file could not be opened
         if (fp == NULL) {
+            fprintf(stderr, "Error: Could not open iSyntax file.\n");
             return result;
         }
 
@@ -137,14 +138,6 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
         int32_t height = 1;
         int32_t width = 1;
 
-        // remove comments in order to set height and width to actual dimensions of image
-        /*
-        int32_t *dim = get_height_and_width(image_data);
-        height = dim[0];
-        width = dim[1];
-        free(dim);
-        */
-
         // alloc with height and width and fill with 255 for a white image
         unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
         memset(white_image, 255, height * width);
@@ -203,6 +196,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
     // if file could not be opened
     if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open iSyntax file.\n");
         return -1;
     }
 

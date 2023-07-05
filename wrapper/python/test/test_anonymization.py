@@ -65,7 +65,6 @@ def test_check_fileformat(wsi_filename, vendor):
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
         ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
-        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
     ],
 )
 def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -87,10 +86,6 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
         if "Aperio" in wsi_filepath:
             for property in ["Filename", "User", "Date"]:
                 assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
-        if "Hamamatsu" in wsi_filepath:
-            # ToDo: check for Hamamatsu metadata!
-            pass
-        
         slide.close()
     except tiffslide.TiffFileError as e:
         assert False
@@ -101,6 +96,7 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
         ("/data/Ventana/", "OS-2", "anon-ventana", "bif"),
         #("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
     ],
@@ -121,13 +117,17 @@ def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filenam
 
         if "MIRAX" in wsi_filepath:
             assert "macro" not in slide.associated_images
-
             for property in ["SLIDE_NAME", "PROJECT_NAME", "SLIDE_CREATIONDATETIME"]:
                 assert all(c == "X" for c in slide.properties[f"mirax.GENERAL.{property}"])
             assert all(c == "0" for c in slide.properties[f"mirax.GENERAL.SLIDE_ID"])
+
         if "Ventana" in wsi_filepath:
             for property in ["UnitNumber", "UserName", "BuildDate"]:
                 assert all(c == " " for c in slide.properties[f"ventana.{property}"])
+
+        if "Hamamatsu" in wsi_filepath:
+            for property in ["DateTime"]:
+                assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
 
     cleanup(str(result_filename.absolute()))
 
@@ -142,25 +142,19 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
     if result_filename.exists():
         remove_file(str(result_filename.absolute()))
-
+    
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
     result = anonymize_wsi(filename=wsi_filename, new_label_name=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
     assert result != -1
     
     assert wait_until_exists(str(result_filename), 5)
 
-    try:
-        slide = tiffslide.TiffSlide(result_filename)
+    with openslide.OpenSlide(str(result_filename)) as slide:
         associated_images = slide.associated_images
         assert "label" not in associated_images
         assert "macro" in associated_images
-        
-        slide.close()
-    except tiffslide.TiffFileError as e:
-        assert False
 
     cleanup(str(result_filename.absolute()))
-
 
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
@@ -190,7 +184,7 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        #(r"/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
+        #("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
         #("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), 
     ],
 )

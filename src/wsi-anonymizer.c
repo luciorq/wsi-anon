@@ -10,8 +10,7 @@ int32_t (*handle_format_functions[])(const char **filename, const char *new_labe
 int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
 
 int8_t check_file_format(const char *filename) {
-
-    if (file_exists(filename) == 1) {
+    if (file_exists(filename)) {
         for (int8_t i = 0; i < num_of_formats - 2; i++) {
             if (is_format_functions[i](filename)) {
                 return i;

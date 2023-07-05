@@ -120,7 +120,7 @@ uint32_t get_size_of_value(uint16_t type, uint32_t *count) {
 
 uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
     // we need to fix the ndpi offset to prevent the pointer from overflowing
-    uint64_t new_offset = (directory_offset & ~(uint64_t)UINT64_MAX) | (offset & UINT32_MAX);
+    uint64_t new_offset = (directory_offset & ~(uint64_t)UINT32_MAX) | (offset & UINT32_MAX);
     if (new_offset >= directory_offset) {
         new_offset = min(new_offset - UINT32_MAX - 1, new_offset);
     }
@@ -128,15 +128,14 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset,
-                                           struct tiff_directory *first_directory, bool big_tiff, bool ndpi,
-                                           bool big_endian) {
+struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset, bool big_tiff,
+                                           bool ndpi, bool big_endian) {
     uint64_t offset = *dir_offset;
     *dir_offset = 0;
 
     // seek to directory offset
     if (file_seek(fp, offset, SEEK_SET) != 0) {
-        fprintf(stderr, "Error: seeking to offset failed\n");
+        fprintf(stderr, "Error: seeking to offset failed.\n");
         return NULL;
     }
 
@@ -153,7 +152,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
         struct tiff_entry *entry = (struct tiff_entry *)malloc(sizeof(struct tiff_entry));
 
         if (entry == NULL) {
-            fprintf(stderr, "Error: could not allocate memory for entry\n");
+            fprintf(stderr, "Error: could not allocate memory for entry.\n");
             return NULL;
         }
 
@@ -168,21 +167,46 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
 
         // calculate the size of the entry value
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
-
-        if (!value_size) {
-            fprintf(stderr, "Error: calculating value size failed\n");
+        if (!value_size || count > (SIZE_MAX / value_size)) {
+            fprintf(stderr, "Error: failed to determine valid parameters to read value from file.\n");
             return NULL;
         }
 
         // read entry value to array
-        uint8_t value[big_tiff ? 8 : 4];
-        if (file_read(value, sizeof(value), 1, fp) != 1) {
-            fprintf(stderr, "Error: reading value to array failed\n");
+        uint8_t value[(big_tiff || ndpi) ? 8 : 4];
+        uint8_t read_size = big_tiff ? 8 : 4;
+        if (file_read(value, read_size, 1, fp) != 1) {
+            fprintf(stderr, "Error: reading value to array failed.\n");
             return NULL;
         }
 
-        if (big_tiff) {
-            // big tiff offset pointer reserves 8 bytes
+        if (ndpi) {
+            bool is_value = (value_size * count <= read_size);
+            if (file_seek(fp,
+                          offset + (NDPI_ENTRY_EXTENSION * entry_count) + (NDPI_BIT_EXTENSION * i) +
+                              (NDPI_ENTRY_EXTENSION / 2),
+                          SEEK_SET) != 0) {
+                fprintf(stderr, "Error: cannot seek to offset extension.\n");
+                return NULL;
+            }
+            if (file_read(value + NDPI_BIT_EXTENSION, NDPI_BIT_EXTENSION, 1, fp) != 1) {
+                fprintf(stderr, "Error: cannot read offset extension.\n");
+                return NULL;
+            }
+            if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
+                uint32_t result;
+                memcpy(&result, value + NDPI_BIT_EXTENSION, sizeof(result));
+                tiff_dir->ndpi_high_bits = result;
+            }
+            uint64_t dir_start = (NDPI_ENTRY_EXTENSION * (i + 1)) + (NDPI_BIT_EXTENSION / 2);
+            if (file_seek(fp, offset + dir_start, SEEK_SET) != 0) {
+                fprintf(stderr, "Error: cannot seek to IFD start.\n");
+                return NULL;
+            }
+        }
+
+        if (big_tiff || ndpi) {
+            // big tiff or ndpi offset pointer reserves 8 bytes
             memcpy(&entry->offset, value, 8);
             fix_byte_order(&entry->offset, sizeof(entry->offset), 1, big_endian);
         } else {
@@ -192,24 +216,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
             fix_byte_order(&offset32, sizeof(offset32), 1, big_endian);
             entry->offset = offset32;
         }
-        if (ndpi) {
-            struct tiff_entry *first_entry_of_dir = NULL;
-            if (first_directory) {
-                // retrieve the first entry of the first directory
-                for (uint64_t j = 0; j < first_directory->count; j++) {
-                    if (first_directory->entries[j].tag == tag) {
-                        first_entry_of_dir = &first_directory->entries[j];
-                        break;
-                    }
-                }
-            }
 
-            // fix the ndpi offset if we are in the first directory
-            // or the offsets diverge
-            if (!first_entry_of_dir || first_entry_of_dir->offset != entry->offset) {
-                entry->offset = fix_ndpi_offset(offset, entry->offset);
-            }
-        }
         entries[i] = *entry;
     }
 
@@ -262,9 +269,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     uint64_t in_pointer_offset = file_tell(fp);
     uint64_t diroff = read_uint(fp, big_tiff ? 8 : 4, big_endian);
     // reading the initial directory
-    struct tiff_directory *prev_dir = NULL;
-    struct tiff_directory *dir =
-        read_tiff_directory(fp, &diroff, &in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
+    struct tiff_directory *dir = read_tiff_directory(fp, &diroff, &in_pointer_offset, big_tiff, ndpi, big_endian);
 
     if (dir == NULL) {
         fprintf(stderr, "Error: Failed reading directory.\n");
@@ -280,14 +285,13 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
     while (diroff != 0) {
         uint64_t current_in_pointer_offset = file_tell(fp) - 8;
         struct tiff_directory *current_dir =
-            read_tiff_directory(fp, &diroff, &current_in_pointer_offset, prev_dir, big_tiff, ndpi, big_endian);
+            read_tiff_directory(fp, &diroff, &current_in_pointer_offset, big_tiff, ndpi, big_endian);
 
         if (current_dir == NULL) {
             fprintf(stderr, "Error: Failed reading directory.\n");
             return NULL;
         }
         insert_dir_into_tiff_file(file, current_dir);
-        prev_dir = current_dir;
     }
 
     return file;
@@ -372,7 +376,21 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
         }
 
         for (int32_t i = 0; i < size_offsets; i++) {
-            file_seek(fp, strip_offsets[i], SEEK_SET);
+
+            uint64_t new_offset = strip_offsets[i];
+
+            // Fix NDPI offset in case file is larger than 4GB
+            // convert to uint64, add high bits of ndpi dir to UINT32_MAX
+            // add the strip offset to this in order to get the actual offset
+            int64_t current_pos = file_tell(fp);
+            file_seek(fp, 0, SEEK_END);
+            int64_t size = file_tell(fp);
+            file_seek(fp, current_pos, SEEK_SET);
+            if (ndpi && (size > UINT32_MAX)) {
+                new_offset = ((uint64_t)UINT32_MAX + dir->ndpi_high_bits) + (uint64_t)strip_offsets[i];
+            }
+
+            file_seek(fp, new_offset, SEEK_SET);
 
             if (prefix != NULL) {
                 if (check_prefix(fp, prefix) != 0) {

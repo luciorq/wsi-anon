@@ -1,9 +1,14 @@
 # Changelog
 
+## 0.4.9
+
+* handle large (>4GB) NDPI files
+* override metadata in NDPI files
+
 ## 0.4.8
 
 * bugfix for wiping label data of ventana tif/bif files
-    * only first strip/tile war overwritten
+* only first strip/tile war overwritten
 
 ## 0.4.7
 

@@ -11,10 +11,10 @@ Currently supported formats:
 | Leica Aperio | AT20, GT450 | `*.svs` `*.tif` | - |
 | Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
 | 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
-| Roche Ventana | VS200, iScan Coreo | `*.bif` | - |
+| Roche Ventana | VS200, iScan Coreo, DP 600 | `*.bif` `*.tif`| - |
 | Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` `*.tiff`  | - |
 
-The library is implemented and tested under Linux (Ubuntu 20.04) and currently only experimental under Windows.
+**The library is implemented and tested under Linux (Ubuntu 20.04) and currently only experimental under Windows.**
 
 ## Publications
 
