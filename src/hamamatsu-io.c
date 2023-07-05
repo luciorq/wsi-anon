@@ -82,6 +82,7 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
                     fprintf(stderr, "Error: Could not overwrite metadata in file.\n");
                     return -1;
                 }
+                return 0;
             }
         }
     }

@@ -80,14 +80,6 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
                     int32_t height = 1;
                     int32_t width = 1;
 
-                    // remove comments in order to set height and width to actual dimensions of image
-                    /*
-                    int32_t *dim = get_height_and_width(image_data);
-                    height = dim[0];
-                    width = dim[1];
-                    free(dim);
-                    */
-
                     // alloc with height and width and fill with 255 for a white image
                     unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
                     memset(white_image, 255, height * width);

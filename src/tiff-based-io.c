@@ -167,14 +167,8 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
 
         // calculate the size of the entry value
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
-
-        if (!value_size) {
-            fprintf(stderr, "Error: calculating value size failed.\n");
-            return NULL;
-        }
-
-        if (count > SIZE_MAX / value_size) {
-            fprintf(stderr, "Error: value count too large.\n");
+        if (!value_size || count > (SIZE_MAX / value_size)) {
+            fprintf(stderr, "Error: failed to determine valid parameters to read value from file.\n");
             return NULL;
         }
 
@@ -188,21 +182,23 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
 
         if (ndpi) {
             bool is_value = (value_size * count <= read_size);
-            uint64_t extension = (12L * entry_count) + (4L * i) + 6L;
-            if (file_seek(fp, offset + extension, SEEK_SET) != 0) {
+            if (file_seek(fp,
+                          offset + (NDPI_ENTRY_EXTENSION * entry_count) + (NDPI_BIT_EXTENSION * i) +
+                              (NDPI_ENTRY_EXTENSION / 2),
+                          SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to offset extension.\n");
                 return NULL;
             }
-            if (file_read(value + 4, 4, 1, fp) != 1) {
+            if (file_read(value + NDPI_BIT_EXTENSION, NDPI_BIT_EXTENSION, 1, fp) != 1) {
                 fprintf(stderr, "Error: cannot read offset extension.\n");
                 return NULL;
             }
             if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
                 uint32_t result;
-                memcpy(&result, value + 4, sizeof(result));
+                memcpy(&result, value + NDPI_BIT_EXTENSION, sizeof(result));
                 tiff_dir->ndpi_high_bits = result;
             }
-            uint64_t dir_start = (12L * (i + 1)) + 2L;
+            uint64_t dir_start = (NDPI_ENTRY_EXTENSION * (i + 1)) + (NDPI_BIT_EXTENSION / 2);
             if (file_seek(fp, offset + dir_start, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to IFD start.\n");
                 return NULL;
