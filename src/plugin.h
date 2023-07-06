@@ -22,7 +22,7 @@
 int32_t is_format(const char *filename);
 
 // implements the anonymization for the added format
-int32_t handle_format(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                      bool do_inplace);
+int32_t handle_format(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                      bool keep_macro_image, bool disable_unlinking, bool do_inplace);
 
 #endif

@@ -144,7 +144,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
         remove_file(str(result_filename.absolute()))
     
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-    result = anonymize_wsi(filename=wsi_filename, new_label_name=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
+    result = anonymize_wsi(filename=wsi_filename, new_filename=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
     assert result != -1
     
     assert wait_until_exists(str(result_filename), 5)

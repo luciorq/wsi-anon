@@ -271,7 +271,7 @@ int32_t delete_record_from_index_file(const char *filename, int32_t record, int3
 // the associated folder with the image data
 // return new path name of image data folder
 // filename will be modified to new filename
-const char *duplicate_mirax_filedata(const char *filename, const char *new_label_name, const char *file_extension) {
+const char *duplicate_mirax_filedata(const char *filename, const char *new_filename, const char *file_extension) {
     // retrive filename from whole file path
     const char *_filename = get_filename_from_path(filename);
 
@@ -292,33 +292,33 @@ const char *duplicate_mirax_filedata(const char *filename, const char *new_label
     old_filename_wo_ext[diff2] = '\0';
 
     // now we can concat the new filename
-    if (new_label_name == NULL) {
+    if (new_filename == NULL) {
         // if no label is given, we give the file a generic name
         char dummy_prefix[] = "ANONYMIZED_";
         char *temp_label_name = (char *)malloc(strlen(dummy_prefix) + strlen(old_filename_wo_ext) + 1);
         strcpy(temp_label_name, dummy_prefix);
         strcat(temp_label_name, old_filename_wo_ext);
         // concat string
-        new_label_name = temp_label_name;
+        new_filename = temp_label_name;
     }
-    const char *new_filename = concat_path_filename_ext(path, new_label_name, file_extension);
+    const char *concat_filename = concat_path_filename_ext(path, new_filename, file_extension);
 
-    if (file_exists(new_filename)) {
+    if (file_exists(concat_filename)) {
         return NULL;
     }
 
-    int32_t copy_result = copy_file_v2(filename, new_filename);
+    int32_t copy_result = copy_file_v2(filename, concat_filename);
     // we copy the file in our current directory
     if (copy_result != 0) {
         return NULL;
     }
 
-    filename = new_filename;
+    filename = concat_filename;
 
     // copy mirax directory
-    char *new_path = (char *)malloc(strlen(path) + strlen(new_label_name) + 1);
+    char *new_path = (char *)malloc(strlen(path) + strlen(new_filename) + 1);
     strcpy(new_path, path);
-    strcat(new_path, new_label_name);
+    strcat(new_path, new_filename);
 
     char *old_path = (char *)malloc(strlen(path) + strlen(old_filename_wo_ext) + 1);
     strcpy(old_path, path);
@@ -552,14 +552,14 @@ char *strndup(const char *s1, size_t n) {
     return copy;
 }
 
-int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                     bool do_inplace) {
+int32_t handle_mirax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                     bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
     fprintf(stdout, "Anonymize Mirax WSI...\n");
 
     const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
 
     if (!do_inplace) {
-        path = duplicate_mirax_filedata(*filename, new_label_name, DOT_MRXS_EXT);
+        path = duplicate_mirax_filedata(*filename, new_filename, DOT_MRXS_EXT);
 
         if (path == NULL || filename == NULL) {
             fprintf(stderr, "Error: File with stated filename already exists. Remove file or set "
@@ -646,12 +646,12 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
 
     // remove metadata in slidedata ini
     printf("Removing metadata in Slidedat.ini...\n");
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, 'X');
-    anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, 'X');
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, 'X');
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, 'X');
-    anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, 'X');
-    anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, 'X');
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, *pseudonym_metadata);
+    anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, *pseudonym_metadata);
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, *pseudonym_metadata);
+    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, *pseudonym_metadata);
+    anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, *pseudonym_metadata);
+    anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, *pseudonym_metadata);
 
     // remove metadata in data dat files
     remove_metadata_in_data_dat(path, data_filenames, f_count);

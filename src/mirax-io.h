@@ -8,8 +8,8 @@
 // main functions
 int32_t is_mirax(const char *filename);
 
-int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                     bool do_inplace);
+int32_t handle_mirax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                     bool keep_macro_image, bool disable_unlinking, bool do_inplace);
 
 // additional functions
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count);
@@ -26,7 +26,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
 
 int32_t delete_record_from_index_file(const char *filename, int32_t record, int32_t all_records);
 
-const char *duplicate_mirax_filedata(const char *filename, const char *new_label_name, const char *file_extension);
+const char *duplicate_mirax_filedata(const char *filename, const char *new_filename, const char *file_extension);
 
 struct mirax_layer *delete_level_by_id(struct mirax_layer *layer, int32_t level_id);
 

@@ -55,6 +55,6 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag, cons
 
 int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32_t tag, const char *value);
 
-const char *duplicate_file(const char *filename, const char *new_label_name, const char *file_extension);
+const char *duplicate_file(const char *filename, const char *new_filename, const char *file_extension);
 
 #endif

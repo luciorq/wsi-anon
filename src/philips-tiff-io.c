@@ -123,7 +123,7 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
 }
 
 // anonymizes metadata from Philips' TIFF file
-int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
+int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -151,37 +151,39 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
 
                 // replaced with arbitrary value
                 if (contains(result, PHILIPS_SERIAL_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT);
+                    result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT, pseudonym);
                     rewrite = true;
                 }
 
                 // wipes complete section of given attribute
                 if (contains(result, PHILIPS_SLOT_ATT)) {
-                    result = wipe_section_of_attribute(result, PHILIPS_SLOT_ATT);
+                    result = wipe_section_of_attribute(
+                        result, PHILIPS_SLOT_ATT); // ToDo: check if pseudonym can be used here instead of blanks
                     rewrite = true;
                 }
 
                 // wipes complete section of given attribute
                 if (contains(result, PHILIPS_RACK_ATT)) {
-                    result = wipe_section_of_attribute(result, PHILIPS_RACK_ATT);
+                    result = wipe_section_of_attribute(
+                        result, PHILIPS_RACK_ATT); // ToDo: check if pseudonym can be used here instead of blanks
                     rewrite = true;
                 }
 
                 // replace with arbitrary value
                 if (contains(result, PHILIPS_OPERID_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT);
+                    result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT, pseudonym);
                     rewrite = true;
                 }
 
                 // replace with arbitrary value
                 if (contains(result, PHILIPS_BARCODE_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT);
+                    result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT, pseudonym);
                     rewrite = true;
                 }
 
                 // replace with arbitrary value
                 if (contains(result, PHILIPS_SOURCE_FILE_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_SOURCE_FILE_ATT);
+                    result = anonymize_value_of_attribute(result, PHILIPS_SOURCE_FILE_ATT, pseudonym);
                     rewrite = true;
                 }
 
@@ -204,13 +206,13 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
 }
 
 // anonymize Philips' TIFF
-int32_t handle_philips_tiff(const char **filename, const char *new_label_name, bool keep_macro_image,
-                            bool disable_unlinking, bool do_inplace) {
+int32_t handle_philips_tiff(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                            bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
 
     fprintf(stdout, "Anonymize Philips' TIFF WSI...\n");
 
     if (!do_inplace) {
-        *filename = duplicate_file(*filename, new_label_name, DOT_TIFF);
+        *filename = duplicate_file(*filename, new_filename, DOT_TIFF);
     }
 
     file_t *fp;
@@ -297,7 +299,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
     }
 
     // remove metadata
-    anonymize_philips_metadata(fp, file);
+    anonymize_philips_metadata(fp, file, pseudonym_metadata);
 
     // clean up
     file_close(fp);

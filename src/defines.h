@@ -103,14 +103,7 @@ typedef enum {
     TIFF_LONG8 = 16,
     TIFF_SLONG8 = 17,
     TIFF_IFD8 = 18
-} TIFFDataType;
-
-#define ASCII 2
-#define SHORT 3
-#define LONG 4
-#define FLOAT 11
-#define DOUBLE 12
-#define LONG8 16
+} TIFF_DATATYPE;
 
 #define JPEG_SOI "\xff\xd8\xff\xe0\0"
 #define JPEG_EOI "\xff\xd9\0"

@@ -28,15 +28,15 @@ const char *get_value_from_attribute(char *buffer, char *attribute) {
     }
 }
 
-// searches for attribute and replaces its value with equal amount of X's
-char *anonymize_value_of_attribute(char *buffer, char *attribute) {
+// searches for attribute and replaces its value with the given pseudoynm
+char *anonymize_value_of_attribute(char *buffer, char *attribute, const char *pseudonym) {
     const char *value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
     value = get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL),
                                           PHILIPS_ATT_END);
 
     // check for empty String
     if (strcmp(value, "") != 0) {
-        char replace_with = 'X';
+        char replace_with = *pseudonym;
         char *replacement = create_replacement_string(replace_with, strlen(value));
         return replace_str(buffer, value, replacement);
     }

@@ -208,7 +208,9 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                                                   VENTANA_BARCODE2D_ATT};
 
                 for (size_t i = 0; i < sizeof(metadata_attributes) / sizeof(metadata_attributes[0]); i++) {
-                    if (anonymize_xmp_attribute_if_exists(result, metadata_attributes[i], ' ')) {
+                    if (anonymize_xmp_attribute_if_exists(
+                            result, metadata_attributes[i],
+                            ' ')) { // ToDo: check if pseudonym can be used here instead of blanks
                         rewrite = true;
                     }
                 }
@@ -251,11 +253,15 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 }
 
 // anonymizes ventana file
-int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                       bool do_inplace) {
+int32_t handle_ventana(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                       bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
 
     if (keep_macro_image) {
         fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
+    }
+
+    if (strcmp(pseudonym_metadata, "X") != 0) {
+        fprintf(stderr, "Error: Cannot specify pseudonym for metadata in Ventana file.\n");
     }
 
     fprintf(stdout, "Anonymize Ventana WSI...\n");
@@ -265,7 +271,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
     bool is_bif = strcmp(ext, BIF) == 0;
 
     if (!do_inplace) {
-        *filename = duplicate_file(*filename, new_label_name, is_bif ? DOT_BIF : DOT_TIF);
+        *filename = duplicate_file(*filename, new_filename, is_bif ? DOT_BIF : DOT_TIF);
     }
 
     file_t *fp = file_open(*filename, "rb+");

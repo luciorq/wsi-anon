@@ -31,7 +31,7 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
             if (temp_entry.tag == NDPI_SOURCELENS) {
                 int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
 
-                if (entry_size && temp_entry.type == FLOAT) {
+                if (entry_size && temp_entry.type == TIFF_FLOAT) {
                     float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
 
                     // we need to step 8 bytes from start pointer
@@ -59,7 +59,7 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
 }
 
 // removes all metadata
-int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint32_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint32_t j = 0; j < dir.count; j++) {
@@ -74,7 +74,7 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
                     return -1;
                 }
 
-                char *replacement = create_replacement_string('X', strlen(buffer));
+                char *replacement = create_replacement_string(*pseudonym, strlen(buffer));
 
                 file_seek(fp, entry.offset, SEEK_SET);
 
@@ -90,8 +90,8 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
 }
 
 // anonymizes hamamatsu file
-int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool keep_macro_image,
-                         bool disable_unlinking, bool do_inplace) {
+int32_t handle_hamamatsu(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                         bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
 
     if (keep_macro_image) {
         fprintf(stderr, "Error: Macro image will be wiped if found.\n");
@@ -100,7 +100,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
 
     if (!do_inplace) {
-        *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);
+        *filename = duplicate_file(*filename, new_filename, DOT_NDPI);
     }
 
     file_t *fp;
@@ -127,7 +127,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
     }
 
     // remove metadata
-    result = remove_metadata_in_hamamatsu(fp, file);
+    result = remove_metadata_in_hamamatsu(fp, file, pseudonym_metadata);
     if (result != 0) {
         free_tiff_file(file);
         file_close(fp);

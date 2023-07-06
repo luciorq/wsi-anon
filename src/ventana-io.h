@@ -9,8 +9,8 @@ static const char DOT_BIF[] = ".bif";
 // main functions
 int32_t is_ventana(const char *filename);
 
-int32_t handle_ventana(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                       bool do_inplace);
+int32_t handle_ventana(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                       bool keep_macro_image, bool disable_unlinking, bool do_inplace);
 
 // additional functions
 int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file);

@@ -36,7 +36,7 @@ int32_t is_isyntax(const char *filename) {
 }
 
 // anonymizes metadata from iSyntax file
-int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
+int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size, const char *pseudonym) {
 
     // gets only XML header
     char *buffer = (char *)malloc(header_size);
@@ -61,31 +61,33 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 
     // replaced with arbitrary value
     if (contains(result, PHILIPS_SERIAL_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT);
+        result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT, pseudonym);
         rewrite = true;
     }
 
     // wipes complete section of given attribute
     if (contains(result, PHILIPS_SLOT_ATT)) {
-        result = wipe_section_of_attribute(result, PHILIPS_SLOT_ATT);
+        result = wipe_section_of_attribute(
+            result, PHILIPS_SLOT_ATT); // ToDo: check if pseudonym can be used here instead of blanks
         rewrite = true;
     }
 
     // wipes complete section of given attribute
     if (contains(result, PHILIPS_RACK_ATT)) {
-        result = wipe_section_of_attribute(result, PHILIPS_RACK_ATT);
+        result = wipe_section_of_attribute(
+            result, PHILIPS_RACK_ATT); // ToDo: check if pseudonym can be used here instead of blanks
         rewrite = true;
     }
 
     // replace with arbitrary value
     if (contains(result, PHILIPS_OPERID_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT);
+        result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT, pseudonym);
         rewrite = true;
     }
 
     // replace with arbitrary value
     if (contains(result, PHILIPS_BARCODE_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT);
+        result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT, pseudonym);
         rewrite = true;
     }
 
@@ -179,8 +181,8 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
 }
 
 // anonymize iSyntax file
-int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                       bool do_inplace) {
+int32_t handle_isyntax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                       bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
 
     if (disable_unlinking) {
         fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
@@ -189,7 +191,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
     fprintf(stdout, "Anonymize iSyntax WSI...\n");
 
     if (!do_inplace) {
-        *filename = duplicate_file(*filename, new_label_name, DOT_ISYNTAX);
+        *filename = duplicate_file(*filename, new_filename, DOT_ISYNTAX);
     }
 
     file_t *fp = file_open(*filename, "rb+");
@@ -218,7 +220,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         }
     }
 
-    anonymize_isyntax_metadata(fp, header_size);
+    anonymize_isyntax_metadata(fp, header_size, pseudonym_metadata);
 
     // clean up
     file_close(fp);

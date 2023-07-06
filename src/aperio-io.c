@@ -47,18 +47,18 @@ int32_t is_aperio(const char *filename) {
 }
 
 // searches for tags in image description Data and replaces its values with equal amount of X's
-char *override_image_description(char *result, char *delimiter) {
+char *override_image_description(char *result, char *delimiter, const char *pseudonym) {
     const char *value = get_string_between_delimiters(result, delimiter, "|");
     // check if tag is not an empty string
     if (value[0] != '\0') {
-        char *replacement = create_replacement_string('X', strlen(value));
+        char *replacement = create_replacement_string(*pseudonym, strlen(value));
         result = replace_str(result, value, replacement);
     }
     return result;
 }
 
 // removes all metadata
-int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint32_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint32_t j = 0; j < dir.count; j++) {
@@ -78,22 +78,22 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
                 char *result = buffer;
 
                 if (contains(result, APERIO_FILENAME_TAG)) {
-                    result = override_image_description(result, APERIO_FILENAME_TAG);
+                    result = override_image_description(result, APERIO_FILENAME_TAG, pseudonym);
                     rewrite = true;
                 }
 
                 if (contains(result, APERIO_USER_TAG)) {
-                    result = override_image_description(result, APERIO_USER_TAG);
+                    result = override_image_description(result, APERIO_USER_TAG, pseudonym);
                     rewrite = true;
                 }
 
                 if (contains(result, APERIO_DATE_TAG)) {
-                    result = override_image_description(result, APERIO_DATE_TAG);
+                    result = override_image_description(result, APERIO_DATE_TAG, pseudonym);
                     rewrite = true;
                 }
 
                 if (contains(result, APERIO_BARCODE_TAG)) {
-                    result = override_image_description(result, APERIO_BARCODE_TAG);
+                    result = override_image_description(result, APERIO_BARCODE_TAG, pseudonym);
                     rewrite = true;
                 }
 
@@ -133,8 +133,8 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
 }
 
 // anonymizes aperio file
-int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
-                      bool do_inplace) {
+int32_t handle_aperio(const char **filename, const char *new_filename, const char *pseudonym_metadata,
+                      bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
 
     const char *ext = get_filename_ext(*filename);
@@ -143,7 +143,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 
     if (!do_inplace) {
         // check if filename is svs or tif here
-        *filename = duplicate_file(*filename, new_label_name, is_svs ? DOT_SVS : DOT_TIF);
+        *filename = duplicate_file(*filename, new_filename, is_svs ? DOT_SVS : DOT_TIF);
     }
 
     file_t *fp;
@@ -218,7 +218,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
     }
 
-    remove_metadata_in_aperio(fp, file);
+    remove_metadata_in_aperio(fp, file, pseudonym_metadata);
 
     if (!disable_unlinking) {
         unlink_directory(fp, file, label_dir, false);
