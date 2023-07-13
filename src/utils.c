@@ -113,8 +113,15 @@ char *create_replacement_string(const char x, uint64_t length) {
 
     char *result = (char *)malloc(length + 1);
 
-    for (int32_t start = 0; (uint64_t)start < length; start++) {
-        result[start] = x;
+    if (x == '\0') {
+        srand(time(NULL));
+        for (int32_t start = 0; (uint64_t)start < length; start++) {
+            result[start] = *(int32_to_str(rand() % (9 - 1)));
+        }
+    } else {
+        for (int32_t start = 0; (uint64_t)start < length; start++) {
+            result[start] = x;
+        }
     }
 
     result[length] = '\0';

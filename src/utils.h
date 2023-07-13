@@ -3,6 +3,7 @@
 
 #include "defines.h"
 #include "file-api.h"
+#include "time.h"
 
 // string and int operations
 char **str_split(char *a_str, const char a_delim);
