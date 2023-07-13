@@ -14,6 +14,8 @@ int32_t file_exists(const char *filename);
 
 char *create_pre_suffixed_char_array(const char x, uint64_t length, const char *prefix, const char *suffix);
 
+char *create_random_string(uint64_t length);
+
 char *create_replacement_string(const char x, uint64_t length);
 
 char *replace_str(const char *original_str, const char *replace_str, const char *with_str);

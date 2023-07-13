@@ -658,7 +658,7 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
 
     // remove slide id in slidedat, indexfile and data files
     const char *slide_id = get_value_from_ini_file(ini, GENERAL, SLIDE_ID);
-    const char *replacement = anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_ID, '\0');
+    const char *replacement = create_random_slide_id(ini, GENERAL, SLIDE_ID);
     const char *slide_version = get_value_from_ini_file(ini, GENERAL, SLIDE_VERSION);
     int32_t size = strlen(slide_version) + strlen(slide_id) + 1;
     replace_slide_id_in_indexdat(path, index_filename, slide_id, replacement, size);

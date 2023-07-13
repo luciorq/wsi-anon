@@ -21,6 +21,8 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
 const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
                                               const char c);
 
+const char *create_random_slide_id(struct ini_file *ini_file, const char *group_name, const char *key);
+
 void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key);
 
 void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key);
