@@ -3,6 +3,7 @@
 
 #include "defines.h"
 #include "file-api.h"
+#include "time.h"
 
 // string and int operations
 char **str_split(char *a_str, const char a_delim);
@@ -12,6 +13,8 @@ const char *get_filename_ext(const char *filename);
 int32_t file_exists(const char *filename);
 
 char *create_pre_suffixed_char_array(const char x, uint64_t length, const char *prefix, const char *suffix);
+
+char *create_random_string(uint64_t length);
 
 char *create_replacement_string(const char x, uint64_t length);
 

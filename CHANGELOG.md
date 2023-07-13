@@ -4,6 +4,10 @@
 
 * add full pseudonomyization supports
 
+## 0.4.10
+
+* bugfix that correctly overwrites SLIDE_ID with random number in slidedat.ini and Data files for MIRAX format
+
 ## 0.4.9
 
 * handle large (>4GB) NDPI files
