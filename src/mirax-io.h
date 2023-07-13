@@ -9,7 +9,7 @@
 int32_t is_mirax(const char *filename);
 
 int32_t handle_mirax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                     bool keep_macro_image, bool disable_unlinking, bool do_inplace);
+                     struct anon_configuration configuration);
 
 // additional functions
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count);

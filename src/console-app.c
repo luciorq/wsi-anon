@@ -22,6 +22,8 @@ void print_help_message() {
 
 int32_t main(int32_t argc, char *argv[]) {
     bool only_check = false;
+    bool overwrite_label = false; // TODO: set this value accordingly
+    bool overwrite_macro = false; // TODO: set this value accordingly
     bool keep_macro_image = false;
     bool disable_unlinking = false;
     bool do_inplace = false;
@@ -84,21 +86,30 @@ int32_t main(int32_t argc, char *argv[]) {
 
     if (only_check) {
         if (filename != NULL) {
-            int8_t format = check_file_format(filename);
-            fprintf(stdout, "Vendor: [%s]\n", VENDOR_STRINGS[format]);
+            // TODO: implement rest of logic for get_wsi_data
+            struct wsi_data wsi_data = get_wsi_data(filename);
+            // TODO: print out the rest of information (label and macro dims if available and metadata)
+            fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data.format]);
+            // TODO: handle invalid/unknown formats
+            fprintf(stdout, "Metadata:\n");
+            fprintf(stdout, "   %s %s\n", wsi_data.metadata[0].key, wsi_data.metadata[0].value);
+            fprintf(stdout, "   %s %s\n", wsi_data.metadata[1].key, wsi_data.metadata[1].value);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);
         }
     } else {
         if (filename != NULL) {
+            // TODO: set bools for label and macro accordingly
+            // TODO: check if configuration needs to be a pointer
+            // TODO: adjust all function calls of anonymize_wsi (and similar calls) accordingly
+            struct anon_configuration configuration = {
+                overwrite_label,  overwrite_macro,   strcmp(pseudonym_metadata, "X") == 0 ? false : true,
+                keep_macro_image, disable_unlinking, do_inplace};
             if (new_filename != NULL) {
-                anonymize_wsi(filename, new_filename, pseudonym_metadata, keep_macro_image, disable_unlinking,
-                              do_inplace);
+                anonymize_wsi(filename, new_filename, pseudonym_metadata, configuration);
             } else {
-                // TODO: new file name (old_filename + tag)
-                anonymize_wsi(filename, "_anonymized_wsi", pseudonym_metadata, keep_macro_image, disable_unlinking,
-                              do_inplace);
+                anonymize_wsi(filename, "_anonymized_wsi", pseudonym_metadata, configuration);
             }
             fprintf(stdout, "Done.\n");
         } else {

@@ -85,7 +85,7 @@ make wasm
 
 ### Console Application
 
-Check for slide vendor:
+Check for slide vendor and all data that will be anonymized:
 
 ```bash
 ./wsi-anon.out "/path/to/wsi.tif" -c
@@ -99,7 +99,8 @@ Anonymize slide:
 
 Type `-h` or `--help` for help. Further CLI parameters are:
 
-* `-n "label-name"`: File will be renamed to the given label name
+* `-n "new-filename"`: File will be renamed to the given name
+* `-p "X"`: All metadata in file will be overwritten with given value
 * `-u` : Disables the unlinking of associated image data (default: associated image will be unlinked)
 * `-i` : Enable in-place anonymization (default: copy of the file will be created)
 

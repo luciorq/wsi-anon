@@ -57,6 +57,59 @@ char *override_image_description(char *result, char *delimiter, const char *pseu
     return result;
 }
 
+/*
+struct metadata {
+    const char *key;
+    const char *value;
+};
+
+// TODO: members are incomplete --> view concept again or comment in members below!!
+struct all_metadata {
+    struct metadata **metadata;
+    //size_t length;
+};
+
+// TODO: members are incomplete --> view concept again or comment in members below!!
+struct wsi_data {
+    int8_t format;
+    const char *filename;
+    //struct associated_image_data **label;
+    //struct associated_image_data **macro;
+    struct all_metadata **metadata;
+};
+
+
+STUDENT* students = malloc(numStudents * sizeof *students);
+    for (x = 0; x < numStudents; x++){
+        students[x].firstName=(char*)malloc(sizeof(char*));
+        scanf("%s",students[x].firstName);
+        students[x].lastName=(char*)malloc(sizeof(char*));
+        scanf("%s",students[x].lastName);
+        scanf("%d",&students[x].day);
+        scanf("%d",&students[x].month);
+        scanf("%d",&students[x].year);
+    }
+
+
+*/
+
+struct metadata *get_metadata_in_aperio() {
+    // TODO: open and read file here
+    // TODO: replace 2 with actual number of metadata that was found in the file
+    // TODO: check if strndup isn't more efficient
+    // TODO: iterate through all metadata
+    // TODO: get correct value
+    // TODO: handle pointer warnings
+    // TODO: run til all metadata was found
+    int8_t NUM_OF_ENTRIES = 2;
+    struct metadata *metadata = malloc(NUM_OF_ENTRIES * sizeof(*metadata));
+    for (int8_t i = 0; i < NUM_OF_ENTRIES; i++) {
+        metadata[i].key = APERIO_FILENAME_TAG;
+        metadata[i].value = "TEST";
+    }
+    return metadata;
+}
+
 // removes all metadata
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint32_t i = 0; i < file->used; i++) {
@@ -134,14 +187,15 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
 
 // anonymizes aperio file
 int32_t handle_aperio(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                      bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    fprintf(stdout, "Anonymize Aperio WSI...\n");
+                      struct anon_configuration configuration) {
+
+    fprintf(stdout, "Anonymizing Aperio WSI...\n");
 
     const char *ext = get_filename_ext(*filename);
 
     bool is_svs = strcmp(ext, SVS) == 0;
 
-    if (!do_inplace) {
+    if (!configuration.do_inplace) {
         // check if filename is svs or tif here
         *filename = duplicate_file(*filename, new_filename, is_svs ? DOT_SVS : DOT_TIF);
     }
@@ -192,7 +246,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 
     // delete macro image
     int32_t macro_dir = -1;
-    if (!keep_macro_image) {
+    if (!configuration.keep_macro_image) {
         if (_is_aperio_gt450 == 1) {
             macro_dir = get_aperio_gt450_dir_by_name(file, MACRO);
         } else {
@@ -220,7 +274,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 
     remove_metadata_in_aperio(fp, file, pseudonym_metadata);
 
-    if (!disable_unlinking) {
+    if (!configuration.disable_unlinking) {
         unlink_directory(fp, file, label_dir, false);
         unlink_directory(fp, file, macro_dir, false);
     }

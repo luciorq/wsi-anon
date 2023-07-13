@@ -91,15 +91,15 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file, const c
 
 // anonymizes hamamatsu file
 int32_t handle_hamamatsu(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                         bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
+                         struct anon_configuration configuration) {
 
-    if (keep_macro_image) {
+    if (configuration.keep_macro_image) {
         fprintf(stderr, "Error: Macro image will be wiped if found.\n");
     }
 
-    fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
+    fprintf(stdout, "Anonymizing Hamamatsu WSI...\n");
 
-    if (!do_inplace) {
+    if (!configuration.do_inplace) {
         *filename = duplicate_file(*filename, new_filename, DOT_NDPI);
     }
 
@@ -155,7 +155,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_filename, const 
         return result;
     }
 
-    if (!disable_unlinking) {
+    if (!configuration.disable_unlinking) {
         // unlink the empty macro directory from file structure
         result = unlink_directory(fp, file, dir_count, true);
     }

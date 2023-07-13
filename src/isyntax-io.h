@@ -7,7 +7,7 @@
 int32_t is_isyntax(const char *filename);
 
 int32_t handle_isyntax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                       bool keep_macro_image, bool disable_unlinking, bool do_inplace);
+                       struct anon_configuration configuration);
 
 // additional functions
 int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size, const char *pseudonym);

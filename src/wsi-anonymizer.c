@@ -4,10 +4,10 @@ int32_t (*is_format_functions[])(const char *filename) = {&is_aperio,  &is_hamam
                                                           &is_ventana, &is_isyntax,   &is_philips_tiff};
 
 int32_t (*handle_format_functions[])(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                                     bool keep_macro_image, bool disable_unlinking, bool do_inplace) = {
+                                     struct anon_configuration configuration) = {
     &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax, &handle_philips_tiff};
 
-int8_t num_of_formats = sizeof(VENDOR_STRINGS) / sizeof(char *);
+int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
 
 int8_t check_file_format(const char *filename) {
     if (file_exists(filename)) {
@@ -24,8 +24,15 @@ int8_t check_file_format(const char *filename) {
     }
 }
 
+struct wsi_data get_wsi_data(const char *filename) {
+    // TODO: create function pointer array for metadata and run for every format
+    struct wsi_data wsi_data = {check_file_format(filename), filename, get_metadata_in_aperio()};
+    return wsi_data;
+}
+
 int32_t anonymize_wsi_with_result(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                                  bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
+                                  struct anon_configuration configuration) {
+
     int32_t result = -1;
 
     int8_t result_check_format = check_file_format(*filename);
@@ -37,20 +44,21 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_filenam
         fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
         return result;
     } else {
-        result = handle_format_functions[result_check_format](filename, new_filename, pseudonym_metadata,
-                                                              keep_macro_image, disable_unlinking, do_inplace);
+        result =
+            handle_format_functions[result_check_format](filename, new_filename, pseudonym_metadata, configuration);
         return result;
     }
 }
 
 int32_t anonymize_wsi_inplace(const char *filename, const char *new_filename, const char *pseudonym_metadata,
                               bool keep_macro_image, bool disable_unlinking) {
-    return anonymize_wsi_with_result(&filename, new_filename, pseudonym_metadata, keep_macro_image, disable_unlinking,
-                                     true);
+    // TODO: replace the first two values accordingly
+    struct anon_configuration configuration = {
+        false, false, strcmp(pseudonym_metadata, "X") == 0 ? false : true, keep_macro_image, disable_unlinking, true};
+    return anonymize_wsi_with_result(&filename, new_filename, pseudonym_metadata, configuration);
 }
 
 int32_t anonymize_wsi(const char *filename, const char *new_filename, const char *pseudonym_metadata,
-                      bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    return anonymize_wsi_with_result(&filename, new_filename, pseudonym_metadata, keep_macro_image, disable_unlinking,
-                                     do_inplace);
+                      struct anon_configuration configuration) {
+    return anonymize_wsi_with_result(&filename, new_filename, pseudonym_metadata, configuration);
 }

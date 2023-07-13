@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+* add full pseudonomyization supports
+
 ## 0.4.9
 
 * handle large (>4GB) NDPI files

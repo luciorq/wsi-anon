@@ -553,12 +553,13 @@ char *strndup(const char *s1, size_t n) {
 }
 
 int32_t handle_mirax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                     bool keep_macro_image, bool disable_unlinking, bool do_inplace) {
-    fprintf(stdout, "Anonymize Mirax WSI...\n");
+                     struct anon_configuration configuration) {
+
+    fprintf(stdout, "Anonymizing Mirax WSI...\n");
 
     const char *path = strndup(*filename, strlen(*filename) - strlen(DOT_MRXS_EXT));
 
-    if (!do_inplace) {
+    if (!configuration.do_inplace) {
         path = duplicate_mirax_filedata(*filename, new_filename, DOT_MRXS_EXT);
 
         if (path == NULL || filename == NULL) {
@@ -600,7 +601,7 @@ int32_t handle_mirax(const char **filename, const char *new_filename, const char
         delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
 
     // delete macro image
-    if (!keep_macro_image) {
+    if (!configuration.keep_macro_image) {
         result =
             delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
     }
@@ -609,7 +610,7 @@ int32_t handle_mirax(const char **filename, const char *new_filename, const char
     result = delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
 
     // unlink directory
-    if (!disable_unlinking) {
+    if (!configuration.disable_unlinking) {
         // THIS IS A QUICKFIX!
         // The order of label/macro images etc. actually matters in the file structure of the
         // Slidedat.ini
@@ -639,7 +640,7 @@ int32_t handle_mirax(const char **filename, const char *new_filename, const char
         }
 
         // unlink macro image
-        if (!keep_macro_image) {
+        if (!configuration.keep_macro_image) {
             wipe_delete_unlink(path, ini, index_filename, mirax_file, SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
         }
     }
@@ -672,7 +673,7 @@ int32_t handle_mirax(const char **filename, const char *new_filename, const char
     free(mirax_file);
     free(ini);
 
-    if (!do_inplace) {
+    if (!configuration.do_inplace) {
         // override with new filename
         *filename = path;
     }

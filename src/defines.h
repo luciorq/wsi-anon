@@ -174,4 +174,29 @@ struct tiff_file {
     struct tiff_directory *directories;
 };
 
+struct metadata {
+    const char *key;
+    const char *value;
+};
+
+// TODO: members are incomplete --> view concept again or comment in members below!!
+struct wsi_data {
+    int8_t format;
+    const char *filename;
+    // struct associated_image_data **label;
+    // struct associated_image_data **macro;
+    struct metadata *metadata;
+};
+
+// TODO: find out if this even makes any sense? all data (except for macro) overwritten?
+// TODO: is overwrite_metadata not redundant if flag is set?
+struct anon_configuration {
+    bool overwrite_label;
+    bool overwrite_macro;
+    bool overwrite_metadata;
+    bool keep_macro_image;
+    bool disable_unlinking;
+    bool do_inplace;
+};
+
 #endif
