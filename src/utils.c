@@ -105,6 +105,24 @@ char *create_pre_suffixed_char_array(const char fill_character, uint64_t length,
     return result;
 }
 
+char *create_random_string(uint64_t length) {
+    if (length < 1) {
+        fprintf(stderr, "Error: Length smaller 1.\n");
+        return NULL;
+    }
+
+    char *result = (char *)malloc(length + 1);
+
+    srand(time(NULL));
+    for (int32_t start = 0; (uint64_t)start < length; start++) {
+        result[start] = *(int32_to_str(rand() % (9 - 1)));
+    }
+
+    result[length] = '\0';
+
+    return result;
+}
+
 char *create_replacement_string(const char x, uint64_t length) {
     if (length < 1) {
         fprintf(stderr, "Error: Length smaller 1.\n");
