@@ -93,7 +93,7 @@ STUDENT* students = malloc(numStudents * sizeof *students);
 
 */
 
-struct metadata *get_metadata_in_aperio() {
+struct metadata **get_metadata_in_aperio() {
     // TODO: open and read file here
     // TODO: replace 2 with actual number of metadata that was found in the file
     // TODO: check if strndup isn't more efficient
@@ -101,13 +101,15 @@ struct metadata *get_metadata_in_aperio() {
     // TODO: get correct value
     // TODO: handle pointer warnings
     // TODO: run til all metadata was found
-    int8_t NUM_OF_ENTRIES = 2;
-    struct metadata *metadata = malloc(NUM_OF_ENTRIES * sizeof(*metadata));
-    for (int8_t i = 0; i < NUM_OF_ENTRIES; i++) {
-        metadata[i].key = APERIO_FILENAME_TAG;
-        metadata[i].value = "TEST";
+    int8_t num_of_entries = 2;
+    struct metadata **all_metadata = malloc(num_of_entries * sizeof(struct metadata));
+    for (int8_t metadata_id = 0; metadata_id < num_of_entries; metadata_id++) {
+        struct metadata *metadata = malloc(sizeof(*metadata));
+        metadata->key = APERIO_FILENAME_TAG;
+        metadata->value = concat_str("TEST", int32_to_str(metadata_id));
+        all_metadata[metadata_id] = metadata;
     }
-    return metadata;
+    return all_metadata;
 }
 
 // removes all metadata

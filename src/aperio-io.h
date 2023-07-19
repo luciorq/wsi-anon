@@ -15,7 +15,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 // additional functions
 char *override_image_description(char *result, char *delimiter, const char *pseudonym);
 
-struct metadata *get_metadata_in_aperio();
+struct metadata **get_metadata_in_aperio();
 
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file, const char *pseudonym);
 

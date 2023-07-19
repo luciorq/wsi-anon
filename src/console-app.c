@@ -20,6 +20,15 @@ void print_help_message() {
     fprintf(stderr, "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
 
+void print_metadata(struct wsi_data *wsi_data) {
+    // TODO: print out the rest of information (label and macro dims if available and metadata)
+    fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
+    // TODO: handle invalid/unknown formats
+    fprintf(stdout, "Metadata:\n");
+    fprintf(stdout, "   %s %s\n", wsi_data->metadata[0]->key, wsi_data->metadata[0]->value);
+    fprintf(stdout, "   %s %s\n", wsi_data->metadata[1]->key, wsi_data->metadata[1]->value);
+}
+
 int32_t main(int32_t argc, char *argv[]) {
     bool only_check = false;
     bool overwrite_label = false; // TODO: set this value accordingly
@@ -87,13 +96,8 @@ int32_t main(int32_t argc, char *argv[]) {
     if (only_check) {
         if (filename != NULL) {
             // TODO: implement rest of logic for get_wsi_data
-            struct wsi_data wsi_data = get_wsi_data(filename);
-            // TODO: print out the rest of information (label and macro dims if available and metadata)
-            fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data.format]);
-            // TODO: handle invalid/unknown formats
-            fprintf(stdout, "Metadata:\n");
-            fprintf(stdout, "   %s %s\n", wsi_data.metadata[0].key, wsi_data.metadata[0].value);
-            fprintf(stdout, "   %s %s\n", wsi_data.metadata[1].key, wsi_data.metadata[1].value);
+            struct wsi_data *wsi_data = get_wsi_data(filename);
+            print_metadata(wsi_data);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);

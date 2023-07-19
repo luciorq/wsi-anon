@@ -185,7 +185,7 @@ struct wsi_data {
     const char *filename;
     // struct associated_image_data **label;
     // struct associated_image_data **macro;
-    struct metadata *metadata;
+    struct metadata **metadata;
 };
 
 // TODO: find out if this even makes any sense? all data (except for macro) overwritten?
