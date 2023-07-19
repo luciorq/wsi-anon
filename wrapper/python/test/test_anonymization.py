@@ -7,8 +7,8 @@ import pytest
 import openslide
 import tiffslide
 
+# replace check_file_format with get_wsi_data function in wsi-anonymizer.c
 from ..wsianon import check_file_format, anonymize_wsi, Vendor
-
 
 lock = threading.Lock()
 
@@ -57,6 +57,7 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
     ],
 )
 def test_check_fileformat(wsi_filename, vendor):
+    # replace check_file_format with get_wsi_data function in wsi-anonymizer.c
     file_format = check_file_format(wsi_filename)
     assert file_format == vendor
 

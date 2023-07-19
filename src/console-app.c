@@ -94,10 +94,10 @@ int32_t main(int32_t argc, char *argv[]) {
 
     if (only_check) {
         if (filename != NULL) {
-            // TODO: implement rest of logic for get_wsi_data
             struct wsi_data *wsi_data = get_wsi_data(filename);
+            // if format is supported and valid
             if (wsi_data->metadata_attributes != NULL) {
-                // TODO: print out the rest of information (label and macro dims if available and metadata
+                // TODO: print out the rest of information (label and macro dims if available
                 print_metadata(wsi_data);
             }
             // handles invalid or unsupported file formats
@@ -105,6 +105,7 @@ int32_t main(int32_t argc, char *argv[]) {
                 fprintf(stderr, "Error: %s format\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
                 exit(EXIT_FAILURE);
             }
+            free(wsi_data);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);

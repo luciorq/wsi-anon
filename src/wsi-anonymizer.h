@@ -14,6 +14,7 @@ static const char *VENDOR_AND_FORMAT_STRINGS[] = {"Leica Aperio",  "Hamamatsu", 
                                                   "Roche Ventana", "Philips’ iSyntax", "Philips' TIFF",
                                                   "Unknown",       "Invalid"};
 
+// TODO: remove this
 extern int8_t check_file_format(const char *filename);
 
 extern struct wsi_data *get_wsi_data(const char *filename);

@@ -20,10 +20,12 @@ _wsi_anonymizer = ctypes.cdll.LoadLibrary(libname)
 
 def check_file_format(filename):
     global _wsi_anonymizer
+    # replace check_file_format with get_wsi_data function in wsi-anonymizer.c
     _wsi_anonymizer.check_file_format.argtypes = [ctypes.c_char_p]
 
     c_filename = filename.encode('utf-8')
 
+    # replace check_file_format with get_wsi_data function in wsi-anonymizer.c
     result = _wsi_anonymizer.check_file_format(ctypes.c_char_p(c_filename))
     return Vendor(result)
 

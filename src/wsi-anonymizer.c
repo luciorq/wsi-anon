@@ -1,5 +1,6 @@
 #include "wsi-anonymizer.h"
 
+// TODO: remove this
 int32_t (*is_format_functions[])(const char *filename) = {&is_aperio,  &is_hamamatsu, &is_mirax,
                                                           &is_ventana, &is_isyntax,   &is_philips_tiff};
 
@@ -7,10 +8,12 @@ int32_t (*handle_format_functions[])(const char **filename, const char *new_file
                                      struct anon_configuration *configuration) = {
     &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax, &handle_philips_tiff};
 
+// TODO: implement functions for other formats and add here
 struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {&get_wsi_data_aperio};
 
 int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
 
+// TODO: remove this
 int8_t check_file_format(const char *filename) {
     if (file_exists(filename)) {
         for (int8_t i = 0; i < num_of_formats - 2; i++) {
@@ -27,7 +30,6 @@ int8_t check_file_format(const char *filename) {
 }
 
 struct wsi_data *get_wsi_data(const char *filename) {
-    // TODO: create function pointer array for metadata and run for every format
     if (file_exists(filename)) {
         for (int8_t i = 0; i < num_of_formats - 2; i++) {
             struct wsi_data *wsi_data = get_wsi_data_functions[i](filename);
@@ -36,13 +38,11 @@ struct wsi_data *get_wsi_data(const char *filename) {
             }
         }
         // unknown format
-        // return num_of_formats - 2;
         struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
         wsi_data->format = num_of_formats - 2;
         return wsi_data;
     } else {
         // invalid format
-        // return num_of_formats - 1;
         struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
         wsi_data->format = num_of_formats - 1;
         return wsi_data;
@@ -54,17 +54,19 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_filenam
 
     int32_t result = -1;
 
-    int8_t result_check_format = check_file_format(*filename);
+    struct wsi_data *wsi_data = get_wsi_data(*filename);
 
-    if (result_check_format == num_of_formats - 1) {
+    if (wsi_data->format == num_of_formats - 1) {
         fprintf(stderr, "Error: File does not exist or is invalid.\n");
+        free(wsi_data);
         return result;
-    } else if (result_check_format == num_of_formats - 2) {
+    } else if (wsi_data->format == num_of_formats - 2) {
         fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
+        free(wsi_data);
         return result;
     } else {
-        result =
-            handle_format_functions[result_check_format](filename, new_filename, pseudonym_metadata, configuration);
+        result = handle_format_functions[wsi_data->format](filename, new_filename, pseudonym_metadata, configuration);
+        free(wsi_data);
         return result;
     }
 }
