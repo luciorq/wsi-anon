@@ -182,15 +182,15 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
 
 // anonymize iSyntax file
 int32_t handle_isyntax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                       struct anon_configuration configuration) {
+                       struct anon_configuration *configuration) {
 
-    if (configuration.disable_unlinking) {
+    if (configuration->disable_unlinking) {
         fprintf(stderr, "Error: Cannot disable unlinking in iSyntax file.\n");
     }
 
     fprintf(stdout, "Anonymizing iSyntax WSI...\n");
 
-    if (!configuration.do_inplace) {
+    if (!configuration->do_inplace) {
         *filename = duplicate_file(*filename, new_filename, DOT_ISYNTAX);
     }
 
@@ -212,7 +212,7 @@ int32_t handle_isyntax(const char **filename, const char *new_filename, const ch
     }
 
     // remove macro image
-    if (!configuration.keep_macro_image) {
+    if (!configuration->keep_macro_image) {
         result = wipe_isyntax_image_data(fp, header_size, PHILIPS_MACROIMAGE);
 
         if (result == -1) {

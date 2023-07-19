@@ -254,9 +254,9 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
 // anonymizes ventana file
 int32_t handle_ventana(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                       struct anon_configuration configuration) {
+                       struct anon_configuration *configuration) {
 
-    if (configuration.keep_macro_image) {
+    if (configuration->keep_macro_image) {
         fprintf(stderr, "Error: Cannot keep macro image in Ventana file.\n");
     }
 
@@ -270,7 +270,7 @@ int32_t handle_ventana(const char **filename, const char *new_filename, const ch
 
     bool is_bif = strcmp(ext, BIF) == 0;
 
-    if (!configuration.do_inplace) {
+    if (!configuration->do_inplace) {
         *filename = duplicate_file(*filename, new_filename, is_bif ? DOT_BIF : DOT_TIF);
     }
 
@@ -306,7 +306,7 @@ int32_t handle_ventana(const char **filename, const char *new_filename, const ch
         return -1;
     }
 
-    result = wipe_and_unlink_ventana_directory(fp, file, label_dir, big_endian, configuration.disable_unlinking);
+    result = wipe_and_unlink_ventana_directory(fp, file, label_dir, big_endian, configuration->disable_unlinking);
 
     if (result == -1) {
         free_tiff_file(file);

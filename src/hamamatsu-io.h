@@ -10,7 +10,7 @@ static const char NDPI[] = "ndpi";
 int32_t is_hamamatsu(const char *filename);
 
 int32_t handle_hamamatsu(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                         struct anon_configuration configuration);
+                         struct anon_configuration *configuration);
 
 // additinonal functions
 int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian);

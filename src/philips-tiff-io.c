@@ -207,11 +207,11 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const cha
 
 // anonymize Philips' TIFF
 int32_t handle_philips_tiff(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                            struct anon_configuration configuration) {
+                            struct anon_configuration *configuration) {
 
     fprintf(stdout, "Anonymizing Philips' TIFF WSI...\n");
 
-    if (!configuration.do_inplace) {
+    if (!configuration->do_inplace) {
         *filename = duplicate_file(*filename, new_filename, DOT_TIFF);
     }
 
@@ -263,7 +263,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_filename, con
 
     int32_t macro_dir = -1;
 
-    if (!configuration.keep_macro_image) {
+    if (!configuration->keep_macro_image) {
         // remove MACROIMAGE in ImageDescription XML
         result = wipe_philips_image_data(fp, file, PHILIPS_MACROIMAGE);
 
@@ -291,7 +291,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_filename, con
     }
 
     // unlinking
-    if (!configuration.disable_unlinking) {
+    if (!configuration->disable_unlinking) {
         fprintf(stderr, "Error: Unlinking in Philips' TIFF file currently not supported.\n");
         // ToDo: find out why unlinking of macro directory does not properly work
         // unlink_directory(fp, file, macro_dir, false);

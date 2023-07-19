@@ -22,6 +22,6 @@ extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_filen
                                      bool keep_macro_image, bool disable_unlinking);
 
 extern int32_t anonymize_wsi(const char *filename, const char *new_filename, const char *pseudonym_metadata,
-                             struct anon_configuration configuration);
+                             struct anon_configuration *configuration);
 
 #endif

@@ -11,7 +11,7 @@ char *get_app_name() {
 void print_help_message() {
     fprintf(stderr, "Usage: %s [FILE] [-OPTIONS]\n\n", get_app_name());
     fprintf(stderr, "OPTIONS:\n");
-    fprintf(stderr, "-c     Only check file for vendor format\n");
+    fprintf(stderr, "-c     Only check file for vendor format and metadata\n");
     fprintf(stderr, "-n     Specify new filename (e.g. -n \"NEW_FILENAME\")\n");
     fprintf(stderr, "-p     Specify pseudonym letter for all metadata (e.g. -p \"X\")\n");
     fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
@@ -109,14 +109,19 @@ int32_t main(int32_t argc, char *argv[]) {
             // TODO: set bools for label and macro accordingly
             // TODO: check if configuration needs to be a pointer
             // TODO: adjust all function calls of anonymize_wsi (and similar calls) accordingly
-            struct anon_configuration configuration = {
-                overwrite_label,  overwrite_macro,   strcmp(pseudonym_metadata, "X") == 0 ? false : true,
-                keep_macro_image, disable_unlinking, do_inplace};
+            struct anon_configuration *configuration = malloc(sizeof(*configuration));
+            configuration->overwrite_label = overwrite_label;
+            configuration->overwrite_macro = overwrite_macro;
+            configuration->overwrite_metadata = strcmp(pseudonym_metadata, "X") == 0 ? false : true;
+            configuration->keep_macro_image = keep_macro_image;
+            configuration->disable_unlinking = disable_unlinking;
+            configuration->do_inplace = do_inplace;
             if (new_filename != NULL) {
                 anonymize_wsi(filename, new_filename, pseudonym_metadata, configuration);
             } else {
                 anonymize_wsi(filename, "_anonymized_wsi", pseudonym_metadata, configuration);
             }
+            free(configuration);
             fprintf(stdout, "Done.\n");
         } else {
             fprintf(stderr, "No file for anonymization selected.\n");

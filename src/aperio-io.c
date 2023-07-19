@@ -57,43 +57,7 @@ char *override_image_description(char *result, char *delimiter, const char *pseu
     return result;
 }
 
-/*
-struct metadata {
-    const char *key;
-    const char *value;
-};
-
-// TODO: members are incomplete --> view concept again or comment in members below!!
-struct all_metadata {
-    struct metadata **metadata;
-    //size_t length;
-};
-
-// TODO: members are incomplete --> view concept again or comment in members below!!
-struct wsi_data {
-    int8_t format;
-    const char *filename;
-    //struct associated_image_data **label;
-    //struct associated_image_data **macro;
-    struct all_metadata **metadata;
-};
-
-
-STUDENT* students = malloc(numStudents * sizeof *students);
-    for (x = 0; x < numStudents; x++){
-        students[x].firstName=(char*)malloc(sizeof(char*));
-        scanf("%s",students[x].firstName);
-        students[x].lastName=(char*)malloc(sizeof(char*));
-        scanf("%s",students[x].lastName);
-        scanf("%d",&students[x].day);
-        scanf("%d",&students[x].month);
-        scanf("%d",&students[x].year);
-    }
-
-
-*/
-
-struct metadata *get_metadata_in_aperio() {
+struct metadata *get_metadata_in_aperio(const char *filename) {
     // TODO: open and read file here
     // TODO: replace 2 with actual number of metadata that was found in the file
     // TODO: check if strndup isn't more efficient
@@ -102,10 +66,10 @@ struct metadata *get_metadata_in_aperio() {
     // TODO: handle pointer warnings
     // TODO: run til all metadata was found
     int8_t num_of_entries = 3;
-    struct metadata *metadata = malloc(sizeof(struct metadata));
-    struct metadata_attribute **metadata_attributes = malloc(num_of_entries * sizeof(struct metadata_attribute));
+    struct metadata *metadata = malloc(sizeof(*metadata));
+    struct metadata_attribute **metadata_attributes = malloc(num_of_entries * sizeof(*metadata_attributes));
     for (int8_t metadata_id = 0; metadata_id < num_of_entries; metadata_id++) {
-        struct metadata_attribute *single_attribute = malloc(sizeof(metadata));
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
         single_attribute->key = APERIO_FILENAME_TAG;
         single_attribute->value = concat_str("TEST ", int32_to_str(metadata_id));
         metadata_attributes[metadata_id] = single_attribute;
@@ -192,7 +156,7 @@ int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file,
 
 // anonymizes aperio file
 int32_t handle_aperio(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                      struct anon_configuration configuration) {
+                      struct anon_configuration *configuration) {
 
     fprintf(stdout, "Anonymizing Aperio WSI...\n");
 
@@ -200,7 +164,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 
     bool is_svs = strcmp(ext, SVS) == 0;
 
-    if (!configuration.do_inplace) {
+    if (!configuration->do_inplace) {
         // check if filename is svs or tif here
         *filename = duplicate_file(*filename, new_filename, is_svs ? DOT_SVS : DOT_TIF);
     }
@@ -251,7 +215,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 
     // delete macro image
     int32_t macro_dir = -1;
-    if (!configuration.keep_macro_image) {
+    if (!configuration->keep_macro_image) {
         if (_is_aperio_gt450 == 1) {
             macro_dir = get_aperio_gt450_dir_by_name(file, MACRO);
         } else {
@@ -279,7 +243,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 
     remove_metadata_in_aperio(fp, file, pseudonym_metadata);
 
-    if (!configuration.disable_unlinking) {
+    if (!configuration->disable_unlinking) {
         unlink_directory(fp, file, label_dir, false);
         unlink_directory(fp, file, macro_dir, false);
     }

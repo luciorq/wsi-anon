@@ -10,7 +10,7 @@ static const char DOT_BIF[] = ".bif";
 int32_t is_ventana(const char *filename);
 
 int32_t handle_ventana(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                       struct anon_configuration configuration);
+                       struct anon_configuration *configuration);
 
 // additional functions
 int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file);
