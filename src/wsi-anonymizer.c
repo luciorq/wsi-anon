@@ -9,7 +9,7 @@ int32_t (*handle_format_functions[])(const char **filename, const char *new_file
     &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax, &handle_philips_tiff};
 
 // TODO: implement functions for other formats and add here
-struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {&get_wsi_data_aperio};
+struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {&get_wsi_data_aperio, &get_wsi_data_hamamatsu};
 
 int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
 

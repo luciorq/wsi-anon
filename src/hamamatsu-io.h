@@ -15,6 +15,10 @@ int32_t handle_hamamatsu(const char **filename, const char *new_filename, const 
 // additinonal functions
 int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian);
 
+struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file);
+
+struct wsi_data *get_wsi_data_hamamatsu(const char *filename);
+
 int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file, const char *pseudonym);
 
 #endif

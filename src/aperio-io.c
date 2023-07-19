@@ -1,5 +1,6 @@
 #include "aperio-io.h"
 
+// TODO: delete this (obsolete)
 // checks if file is aperio
 int32_t is_aperio(const char *filename) {
     int32_t result = 0;
@@ -69,7 +70,7 @@ struct metadata_attribute *get_attribute(const char *buffer, const char *delimit
     return NULL;
 }
 
-struct metadata *get_metadata(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
     struct metadata_attribute **attributes = malloc(sizeof(**attributes));
     int8_t metadata_id = 0;
@@ -80,7 +81,7 @@ struct metadata *get_metadata(file_t *fp, struct tiff_file *file) {
         for (uint32_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
 
-            // Entry with ImageDescription tag contains all metadata
+            // entry with ImageDescription tag contains all metadata
             if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
 
                 // get requested image tag from file
@@ -110,6 +111,8 @@ struct metadata *get_metadata(file_t *fp, struct tiff_file *file) {
             }
         }
     }
+
+    // add all found metadata
     struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
     metadata_attributes->attributes = attributes;
     metadata_attributes->length = metadata_id;
@@ -127,12 +130,11 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     }
 
     // opens file
-    file_t *fp;
-    fp = file_open(filename, "rb+");
+    file_t *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
+        fprintf(stderr, "Error: Could not open Aperio file.\n");
         return NULL;
     }
 
@@ -146,7 +148,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
         return NULL;
     }
 
-    // recreates tiff file structure
+    // creates tiff file structure
     struct tiff_file *file;
     file = read_tiff_file(fp, big_tiff, false, big_endian);
 
@@ -167,16 +169,9 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     }
 
     // gets all metadata
-    struct metadata *metadata_attributes = get_metadata(fp, file);
+    struct metadata *metadata_attributes = get_metadata_aperio(fp, file);
 
-    // checks result
-    // TODO: check if result of metadata is NULL if members are not initalized
-    if (metadata_attributes == NULL) {
-        fprintf(stderr, "Error: Could not find metadata of Aperio file.\n");
-        return NULL;
-    }
-
-    // is aperio
+    // is Aperio
     // TODO: replace format value and handle more efficiently
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
     wsi_data->format = 0;
@@ -188,7 +183,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     return wsi_data;
 }
 
-// TODO: make use of get_metadata function
+// TODO: make use of get_metadata_aperio function
 // removes all metadata
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint32_t i = 0; i < file->used; i++) {

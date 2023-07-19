@@ -21,10 +21,14 @@ void print_help_message() {
 
 void print_metadata(struct wsi_data *wsi_data) {
     fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
-    fprintf(stdout, "Metadata found:\n");
-    for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
-        fprintf(stdout, "%15s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
-                wsi_data->metadata_attributes->attributes[metadata_id]->value);
+    if (wsi_data->metadata_attributes->length != 0) {
+        fprintf(stdout, "Metadata found:\n");
+        for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
+            fprintf(stdout, "%15s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
+                    wsi_data->metadata_attributes->attributes[metadata_id]->value);
+        }
+    } else {
+        fprintf(stdout, "No metadata found.\n");
     }
 }
 

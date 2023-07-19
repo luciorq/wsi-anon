@@ -17,7 +17,7 @@ char *override_image_description(char *result, char *delimiter, const char *pseu
 
 struct metadata_attribute *get_attribute(const char *buffer, const char *delimiter1, const char *delimiter2);
 
-struct metadata *get_metadata(file_t *fp, struct tiff_file *file);
+struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file);
 
 struct wsi_data *get_wsi_data_aperio(const char *filename);
 
