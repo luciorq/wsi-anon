@@ -57,28 +57,138 @@ char *override_image_description(char *result, char *delimiter, const char *pseu
     return result;
 }
 
-struct metadata *get_metadata_in_aperio(const char *filename) {
-    // TODO: open and read file here
-    // TODO: replace 2 with actual number of metadata that was found in the file
-    // TODO: check if strndup isn't more efficient
-    // TODO: iterate through all metadata
-    // TODO: get correct value
-    // TODO: handle pointer warnings
-    // TODO: run til all metadata was found
-    int8_t num_of_entries = 3;
-    struct metadata *metadata = malloc(sizeof(*metadata));
-    struct metadata_attribute **metadata_attributes = malloc(num_of_entries * sizeof(*metadata_attributes));
-    for (int8_t metadata_id = 0; metadata_id < num_of_entries; metadata_id++) {
+struct metadata_attribute *get_attribute(const char *buffer, const char *delimiter1, const char *delimiter2) {
+    const char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = APERIO_FILENAME_TAG;
-        single_attribute->value = concat_str("TEST ", int32_to_str(metadata_id));
-        metadata_attributes[metadata_id] = single_attribute;
+        single_attribute->key = delimiter1;
+        single_attribute->value = strdup(value);
+        return single_attribute;
     }
-    metadata->attributes = metadata_attributes;
-    metadata->length = num_of_entries;
-    return metadata;
+    return NULL;
 }
 
+struct metadata *get_metadata(file_t *fp, struct tiff_file *file) {
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
+    int8_t metadata_id = 0;
+
+    // iterate over directories in tiff file
+    for (uint32_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for (uint32_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+
+            // Entry with ImageDescription tag contains all metadata
+            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
+
+                // get requested image tag from file
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                // read content of ImageDescription into buffer
+                char buffer[entry_size * entry.count];
+                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read tag image description.\n");
+                    return NULL;
+                }
+
+                // all metadata
+                static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_DATE_TAG,
+                                                            APERIO_BARCODE_TAG};
+
+                // checks for all metadata
+                // TODO: check for NULL values
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                    if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+                        struct metadata_attribute *single_attribute =
+                            get_attribute(buffer, METADATA_ATTRIBUTES[i], "|");
+                        attributes[metadata_id++] = single_attribute;
+                    }
+                }
+            }
+        }
+    }
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+struct wsi_data *get_wsi_data_aperio(const char *filename) {
+    // gets file extension
+    int32_t result = 0;
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, SVS) != 0 && strcmp(ext, TIF) != 0) {
+        return NULL;
+    }
+
+    // opens file
+    file_t *fp;
+    fp = file_open(filename, "rb+");
+
+    // checks if file was successfully opened
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open tiff file.\n");
+        return NULL;
+    }
+
+    // checks file details
+    bool big_tiff = false;
+    bool big_endian = false;
+    result = check_file_header(fp, &big_endian, &big_tiff);
+
+    // checks result
+    if (result != 0) {
+        return NULL;
+    }
+
+    // recreates tiff file structure
+    struct tiff_file *file;
+    file = read_tiff_file(fp, big_tiff, false, big_endian);
+
+    // checks result
+    if (file == NULL) {
+        fprintf(stderr, "Error: Could not read tiff file.\n");
+        file_close(fp);
+        return NULL;
+    }
+
+    // checks tag value to determine if file is actually Aperio
+    result = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Aperio");
+
+    // checks result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not find aperio label directory.\n");
+        return NULL;
+    }
+
+    // gets all metadata
+    struct metadata *metadata_attributes = get_metadata(fp, file);
+
+    // checks result
+    // TODO: check if result of metadata is NULL if members are not initalized
+    if (metadata_attributes == NULL) {
+        fprintf(stderr, "Error: Could not find metadata of Aperio file.\n");
+        return NULL;
+    }
+
+    // is aperio
+    // TODO: replace format value and handle more efficiently
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = 0;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    file_close(fp);
+    return wsi_data;
+}
+
+// TODO: make use of get_metadata function
 // removes all metadata
 int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint32_t i = 0; i < file->used; i++) {

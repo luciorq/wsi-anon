@@ -26,10 +26,7 @@ int8_t check_file_format(const char *filename) {
 
 struct wsi_data *get_wsi_data(const char *filename) {
     // TODO: create function pointer array for metadata and run for every format
-    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-    wsi_data->format = check_file_format(filename);
-    wsi_data->filename = filename;
-    wsi_data->metadata_attributes = get_metadata_in_aperio(filename);
+    struct wsi_data *wsi_data = get_wsi_data_aperio(filename);
     return wsi_data;
 }
 

@@ -24,7 +24,7 @@ void print_metadata(struct wsi_data *wsi_data) {
     // TODO: print out the rest of information (label and macro dims if available and metadata)
     // TODO: handle invalid/unknown formats
     fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
-    fprintf(stdout, "Metadata:\n");
+    fprintf(stdout, "Metadata found:\n");
     for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
         fprintf(stdout, "   %s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
                 wsi_data->metadata_attributes->attributes[metadata_id]->value);
