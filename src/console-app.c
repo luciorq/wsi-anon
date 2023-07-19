@@ -25,8 +25,10 @@ void print_metadata(struct wsi_data *wsi_data) {
     fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
     // TODO: handle invalid/unknown formats
     fprintf(stdout, "Metadata:\n");
-    fprintf(stdout, "   %s %s\n", wsi_data->metadata[0]->key, wsi_data->metadata[0]->value);
-    fprintf(stdout, "   %s %s\n", wsi_data->metadata[1]->key, wsi_data->metadata[1]->value);
+    for (size_t metadata_id = 0; metadata_id < wsi_data->all_metadata->length; metadata_id++) {
+        fprintf(stdout, "   %s %s\n", wsi_data->all_metadata->metadata[metadata_id]->key,
+                wsi_data->all_metadata->metadata[metadata_id]->value);
+    }
 }
 
 int32_t main(int32_t argc, char *argv[]) {

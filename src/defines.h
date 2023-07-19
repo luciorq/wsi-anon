@@ -179,13 +179,18 @@ struct metadata {
     const char *value;
 };
 
+struct all_metadata {
+    struct metadata **metadata;
+    size_t length;
+};
+
 // TODO: members are incomplete --> view concept again or comment in members below!!
 struct wsi_data {
     int8_t format;
     const char *filename;
     // struct associated_image_data **label;
     // struct associated_image_data **macro;
-    struct metadata **metadata;
+    struct all_metadata *all_metadata;
 };
 
 // TODO: find out if this even makes any sense? all data (except for macro) overwritten?
