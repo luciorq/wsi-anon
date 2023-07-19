@@ -70,10 +70,8 @@ struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
         for (uint32_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
 
-            // entry with Datetime tag contains all metadata
+            // entry with Datetime tag contains metadata
             if (entry.tag == TIFFTAG_DATETIME) {
-
-                // get requested image tag from file
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 

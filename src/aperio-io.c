@@ -58,7 +58,7 @@ char *override_image_description(char *result, char *delimiter, const char *pseu
     return result;
 }
 
-struct metadata_attribute *get_attribute(const char *buffer, const char *delimiter1, const char *delimiter2) {
+struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *delimiter1, const char *delimiter2) {
     const char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
     // check if tag is not an empty string
     if (value[0] != '\0') {
@@ -83,8 +83,6 @@ struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
 
             // entry with ImageDescription tag contains all metadata
             if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-
-                // get requested image tag from file
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
@@ -104,7 +102,7 @@ struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(buffer, METADATA_ATTRIBUTES[i])) {
                         struct metadata_attribute *single_attribute =
-                            get_attribute(buffer, METADATA_ATTRIBUTES[i], "|");
+                            get_attribute_aperio(buffer, METADATA_ATTRIBUTES[i], "|");
                         attributes[metadata_id++] = single_attribute;
                     }
                 }
@@ -159,7 +157,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
         return NULL;
     }
 
-    // checks tag value to determine if file is actually Aperio
+    // checks tag value in order to determine if file is actually Aperio
     result = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Aperio");
 
     // checks result

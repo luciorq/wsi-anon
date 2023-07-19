@@ -10,6 +10,7 @@
 #include "plugin.h"
 #include "ventana-io.h"
 
+// TODO: consider moving this somewhere else (maybe defines.h?)
 static const char *VENDOR_AND_FORMAT_STRINGS[] = {"Leica Aperio",  "Hamamatsu",        "3DHistech Mirax",
                                                   "Roche Ventana", "Philips’ iSyntax", "Philips' TIFF",
                                                   "Unknown",       "Invalid"};

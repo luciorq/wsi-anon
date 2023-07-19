@@ -22,6 +22,12 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
 
 void wipe_xmp_data(char *str, const char *delimiter1, const char *delimiter2, const char rep_char);
 
+struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute);
+
+struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file);
+
+struct wsi_data *get_wsi_data_ventana(const char *filename);
+
 int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file);
 
 #endif

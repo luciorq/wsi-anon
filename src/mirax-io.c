@@ -478,6 +478,11 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
     return 1;
 }
 
+// TODO: continue here
+struct wsi_data *get_wsi_data_mirax(const char *filename){
+    return NULL;
+}
+
 void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length) {
 
     // iterate through every data file
