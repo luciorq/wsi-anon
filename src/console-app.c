@@ -22,12 +22,12 @@ void print_help_message() {
 
 void print_metadata(struct wsi_data *wsi_data) {
     // TODO: print out the rest of information (label and macro dims if available and metadata)
-    fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
     // TODO: handle invalid/unknown formats
+    fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
     fprintf(stdout, "Metadata:\n");
-    for (size_t metadata_id = 0; metadata_id < wsi_data->all_metadata->length; metadata_id++) {
-        fprintf(stdout, "   %s %s\n", wsi_data->all_metadata->metadata[metadata_id]->key,
-                wsi_data->all_metadata->metadata[metadata_id]->value);
+    for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
+        fprintf(stdout, "   %s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
+                wsi_data->metadata_attributes->attributes[metadata_id]->value);
     }
 }
 

@@ -174,13 +174,13 @@ struct tiff_file {
     struct tiff_directory *directories;
 };
 
-struct metadata {
+struct metadata_attribute {
     const char *key;
     const char *value;
 };
 
-struct all_metadata {
-    struct metadata **metadata;
+struct metadata {
+    struct metadata_attribute **attributes;
     size_t length;
 };
 
@@ -190,7 +190,7 @@ struct wsi_data {
     const char *filename;
     // struct associated_image_data **label;
     // struct associated_image_data **macro;
-    struct all_metadata *all_metadata;
+    struct metadata *metadata_attributes;
 };
 
 // TODO: find out if this even makes any sense? all data (except for macro) overwritten?
