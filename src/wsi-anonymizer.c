@@ -7,6 +7,8 @@ int32_t (*handle_format_functions[])(const char **filename, const char *new_file
                                      struct anon_configuration *configuration) = {
     &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax, &handle_philips_tiff};
 
+struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {&get_wsi_data_aperio};
+
 int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
 
 int8_t check_file_format(const char *filename) {
@@ -26,8 +28,25 @@ int8_t check_file_format(const char *filename) {
 
 struct wsi_data *get_wsi_data(const char *filename) {
     // TODO: create function pointer array for metadata and run for every format
-    struct wsi_data *wsi_data = get_wsi_data_aperio(filename);
-    return wsi_data;
+    if (file_exists(filename)) {
+        for (int8_t i = 0; i < num_of_formats - 2; i++) {
+            struct wsi_data *wsi_data = get_wsi_data_functions[i](filename);
+            if (wsi_data != NULL) {
+                return wsi_data;
+            }
+        }
+        // unknown format
+        // return num_of_formats - 2;
+        struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+        wsi_data->format = num_of_formats - 2;
+        return wsi_data;
+    } else {
+        // invalid format
+        // return num_of_formats - 1;
+        struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+        wsi_data->format = num_of_formats - 1;
+        return wsi_data;
+    }
 }
 
 int32_t anonymize_wsi_with_result(const char **filename, const char *new_filename, const char *pseudonym_metadata,

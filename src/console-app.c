@@ -17,16 +17,13 @@ void print_help_message() {
     fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
     fprintf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
     fprintf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
-    fprintf(stderr, "       Note: For file formats using JPEG compression this does not work currently.\n\n");
 }
 
 void print_metadata(struct wsi_data *wsi_data) {
-    // TODO: print out the rest of information (label and macro dims if available and metadata)
-    // TODO: handle invalid/unknown formats
     fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
     fprintf(stdout, "Metadata found:\n");
     for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
-        fprintf(stdout, "   %s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
+        fprintf(stdout, "%15s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
                 wsi_data->metadata_attributes->attributes[metadata_id]->value);
     }
 }
@@ -99,7 +96,15 @@ int32_t main(int32_t argc, char *argv[]) {
         if (filename != NULL) {
             // TODO: implement rest of logic for get_wsi_data
             struct wsi_data *wsi_data = get_wsi_data(filename);
-            print_metadata(wsi_data);
+            if (wsi_data->metadata_attributes != NULL) {
+                // TODO: print out the rest of information (label and macro dims if available and metadata
+                print_metadata(wsi_data);
+            }
+            // handles invalid or unsupported file formats
+            else {
+                fprintf(stderr, "Error: %s format\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
+                exit(EXIT_FAILURE);
+            }
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);
