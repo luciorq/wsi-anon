@@ -1,5 +1,6 @@
 #include "philips-tiff-io.h"
 
+// TODO: remove this (obsolete)
 // checks if file is Philips TIFF
 int32_t is_philips_tiff(const char *filename) {
     int32_t result = 0;
@@ -122,6 +123,132 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
     return 0;
 }
 
+struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attribute) {
+    const char *value = get_value_from_attribute(buffer, attribute);
+    // check if value of attribute is not an empty string
+    if (value[0] != '\0') {
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = attribute;
+        single_attribute->value = strdup(value);
+        return single_attribute;
+    }
+    return NULL;
+}
+
+struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
+    int8_t metadata_id = 0;
+
+    // iterate over directories in tiff file
+    for (uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for (uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+
+            // entry with ImageDescription tag contains all metadata
+            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                // read content of ImageDescription into buffer
+                char *buffer = (char *)malloc(entry.count * entry_size);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read tag image description.\n");
+                    return NULL;
+                }
+
+                // all metadata
+                static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT,   PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
+                                                      PHILIPS_RACK_ATT,       PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
+                                                      PHILIPS_SOURCE_FILE_ATT};
+
+                // checks for all metadata
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                    if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+                        struct metadata_attribute *single_attribute =
+                            get_attribute_philips_tiff(buffer, METADATA_ATTRIBUTES[i]);
+                        if (single_attribute != NULL) {
+                            attributes[metadata_id++] = single_attribute;
+                        }
+                    }
+                }
+                free(buffer);
+            }
+        }
+    }
+    // add all found metadata
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
+    // gets file extension
+    int32_t result = 0;
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, TIFF) != 0) {
+        return NULL;
+    }
+
+    // opens file
+    file_t *fp = file_open(filename, "rb+");
+
+    // checks if file was successfully opened
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open Philips' TIFF file.\n");
+        return NULL;
+    }
+
+    // checks file details
+    bool big_tiff = false;
+    bool big_endian = false;
+    result = check_file_header(fp, &big_endian, &big_tiff);
+
+    // checks result
+    if (result != 0) {
+        return NULL;
+    }
+
+    // creates tiff file structure
+    struct tiff_file *file;
+    file = read_tiff_file(fp, big_tiff, false, big_endian);
+
+    // checks result
+    if (file == NULL) {
+        fprintf(stderr, "Error: Could not read tiff file.\n");
+        file_close(fp);
+        return NULL;
+    }
+
+    // checks if the Software tag starts with Philips
+    result = tag_value_contains(fp, file, TIFFTAG_SOFTWARE, "Philips");
+
+    // checks result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not find Philips value in Software tag.\n");
+        return NULL;
+    }
+
+    // gets all metadata
+    struct metadata *metadata_attributes = get_metadata_philips_tiff(fp, file);
+
+    // is Philips' TIFF
+    // TODO: replace format value and handle more efficiently
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = 5;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    file_close(fp);
+    return wsi_data;
+}
+
+// TODO: make use of get_wsi_data_philips_tiff function
 // anonymizes metadata from Philips' TIFF file
 int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const char *pseudonym) {
     for (uint64_t i = 0; i < file->used; i++) {

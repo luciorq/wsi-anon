@@ -10,7 +10,8 @@ int32_t (*handle_format_functions[])(const char **filename, const char *new_file
 
 // TODO: implement functions for other formats and add here
 struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {
-    &get_wsi_data_aperio, &get_wsi_data_hamamatsu, &get_wsi_data_mirax, &get_wsi_data_ventana, &get_wsi_data_isyntax};
+    &get_wsi_data_aperio,  &get_wsi_data_hamamatsu, &get_wsi_data_mirax,
+    &get_wsi_data_ventana, &get_wsi_data_isyntax,   &get_wsi_data_philips_tiff};
 
 int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
 
@@ -92,7 +93,7 @@ int32_t anonymize_wsi(const char *filename, const char *new_filename, const char
 
 /*
 TODO: rewrite plugin.h text at the top
-TODO: refactor beginning part (from start to read_tiff_file) of get_wsi_data_x functions for aperio, hamamatsu, ventana
-formats
+TODO: refactor beginning part (from start to read_tiff_file) of get_wsi_data_x functions for aperio, hamamatsu, ventana,
+philips tiff formats
 TODO: check for TIFFTAG_DATETIME in get_wsi_data_aperio
 */

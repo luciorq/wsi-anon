@@ -16,6 +16,12 @@ int32_t handle_philips_tiff(const char **filename, const char *new_filename, con
 // additional functions
 int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_type);
 
+struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attribute);
+
+struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file);
+
+struct wsi_data *get_wsi_data_philips_tiff(const char *filename);
+
 int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const char *pseudonym);
 
 #endif
