@@ -98,12 +98,13 @@ struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
                                                             APERIO_BARCODE_TAG};
 
                 // checks for all metadata
-                // TODO: check for NULL values
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(buffer, METADATA_ATTRIBUTES[i])) {
                         struct metadata_attribute *single_attribute =
                             get_attribute_aperio(buffer, METADATA_ATTRIBUTES[i], "|");
-                        attributes[metadata_id++] = single_attribute;
+                        if (single_attribute != NULL) {
+                            attributes[metadata_id++] = single_attribute;
+                        }
                     }
                 }
             }

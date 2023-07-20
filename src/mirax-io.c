@@ -479,7 +479,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
 }
 
 // TODO: continue here
-struct wsi_data *get_wsi_data_mirax(const char *filename){
+struct wsi_data *get_wsi_data_mirax(const char *filename) {
     return NULL;
 }
 

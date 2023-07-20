@@ -183,7 +183,7 @@ int32_t anonymize_xmp_attribute_if_exists(char *str, const char *attr, const cha
     return -1;
 }
 
-struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute){
+struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute) {
     char *delimiters = "\"\'\0";
     char del;
     while ((del = *delimiters++) != '\0') {
@@ -207,7 +207,7 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
     struct metadata_attribute **attributes = malloc(sizeof(**attributes));
     int8_t metadata_id = 0;
-    
+
     // iterate over directories in tiff file
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
@@ -218,7 +218,7 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
             if (entry.tag == TIFFTAG_XMP) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-                
+
                 // read content of XMP into buffer
                 char *buffer = malloc(entry_size * entry.count);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
@@ -228,16 +228,18 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
                 }
 
                 // all metadata
-                static const char *METADATA_ATTRIBUTES[] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
-                                                  VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
-                                                  VENTANA_BARCODE2D_ATT};
-                
+                static const char *METADATA_ATTRIBUTES[] = {
+                    VENTANA_BASENAME_ATT,  VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT, VENTANA_USERNAME_ATT,
+                    VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT, VENTANA_BARCODE2D_ATT};
+
                 // checks for all metadata
-                // TODO: check for NULL values
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
-                    if (contains(buffer, METADATA_ATTRIBUTES[i])){
-                        struct metadata_attribute *single_attribute = get_attribute_ventana(buffer, METADATA_ATTRIBUTES[i]);
-                        attributes[metadata_id++] = single_attribute;
+                    if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+                        struct metadata_attribute *single_attribute =
+                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES[i]);
+                        if (single_attribute != NULL) {
+                            attributes[metadata_id++] = single_attribute;
+                        }
                     }
                 }
                 free(buffer);
@@ -264,7 +266,7 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
             }
         }
     }
-    
+
     // add all found metadata
     struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
     metadata_attributes->attributes = attributes;
@@ -324,19 +326,15 @@ struct wsi_data *get_wsi_data_ventana(const char *filename) {
         return NULL;
     }
 
-    // --- add metadata function here ---
-
     // gets all metadata
     struct metadata *metadata_attributes = get_metadata_ventana(fp, file);
 
-    // is Aperio
+    // is Ventana
     // TODO: replace format value and handle more efficiently
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
     wsi_data->format = 3;
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
-
-    // --- add metadata function here ---
 
     // cleanup
     file_close(fp);

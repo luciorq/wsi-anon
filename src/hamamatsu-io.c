@@ -83,9 +83,13 @@ struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
                 }
 
                 // add metadata
+                // TODO: first line is encoded wrongly
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
                 single_attribute->key = "Datetime";
                 single_attribute->value = strdup(buffer);
+                if (single_attribute != NULL) {
+                    attributes[metadata_id++] = single_attribute;
+                }
             }
         }
     }
