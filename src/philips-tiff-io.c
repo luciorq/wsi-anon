@@ -136,8 +136,14 @@ struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attrib
 }
 
 struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
+    // all metadata
+    static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT,   PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
+                                          PHILIPS_RACK_ATT,       PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
+                                          PHILIPS_SOURCE_FILE_ATT};
+
     // initialize metadata_attribute struct
-    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -157,11 +163,6 @@ struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
                     fprintf(stderr, "Error: Could not read tag image description.\n");
                     return NULL;
                 }
-
-                // all metadata
-                static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT,   PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
-                                                      PHILIPS_RACK_ATT,       PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
-                                                      PHILIPS_SOURCE_FILE_ATT};
 
                 // checks for all metadata
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {

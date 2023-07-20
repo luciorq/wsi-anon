@@ -46,15 +46,6 @@ struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) 
 }
 
 struct metadata *get_metadata_isyntax(file_t *fp, int32_t header_size) {
-    // read content of XML header into buffer
-    char *buffer = malloc(header_size);
-    file_seek(fp, 0, SEEK_SET);
-    if (file_read(buffer, header_size, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read XML header of iSyntax file.\n");
-        return NULL;
-    }
-
     // all metadata
     static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT, PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
                                           PHILIPS_RACK_ATT,     PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
@@ -63,6 +54,15 @@ struct metadata *get_metadata_isyntax(file_t *fp, int32_t header_size) {
     struct metadata_attribute **attributes =
         malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
     int8_t metadata_id = 0;
+
+    // read content of XML header into buffer
+    char *buffer = malloc(header_size);
+    file_seek(fp, 0, SEEK_SET);
+    if (file_read(buffer, header_size, 1, fp) != 1) {
+        free(buffer);
+        fprintf(stderr, "Error: Could not read XML header of iSyntax file.\n");
+        return NULL;
+    }
 
     // checks for all metadata
     for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
@@ -122,8 +122,6 @@ struct wsi_data *get_wsi_data_isyntax(const char *filename) {
     wsi_data->format = 4;
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
-
-    // TODO: find bug corrupted size vs. prez_size
 
     // cleanup
     file_close(fp);

@@ -15,7 +15,7 @@ int32_t handle_aperio(const char **filename, const char *new_filename, const cha
 // additional functions
 char *override_image_description(char *result, char *delimiter, const char *pseudonym);
 
-struct metadata_attribute *get_attribute(const char *buffer, const char *delimiter1, const char *delimiter2);
+struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *delimiter1, const char *delimiter2);
 
 struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file);
 

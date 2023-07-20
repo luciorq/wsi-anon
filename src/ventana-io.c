@@ -204,8 +204,14 @@ struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attri
 }
 
 struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
+    // all metadata
+    static const char *METADATA_ATTRIBUTES[] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
+                                                VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
+                                                VENTANA_BARCODE2D_ATT};
+
     // initialize metadata_attribute struct
-    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -226,11 +232,6 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
                     free(buffer);
                     return NULL;
                 }
-
-                // all metadata
-                static const char *METADATA_ATTRIBUTES[] = {
-                    VENTANA_BASENAME_ATT,  VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT, VENTANA_USERNAME_ATT,
-                    VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT, VENTANA_BARCODE2D_ATT};
 
                 // checks for all metadata
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {

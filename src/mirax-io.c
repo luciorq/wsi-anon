@@ -478,9 +478,93 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
     return 1;
 }
 
-// TODO: continue here
-struct wsi_data *get_wsi_data_mirax(const char *filename) {
+struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
+                                               const char *metadata_key) {
+    // iterate over groups in ini file
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
+        struct ini_group *group = &ini_file->groups[i];
+        // check for group
+        if (strcmp(group->group_identifier, group_name) == 0) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
+                struct ini_entry *entry = &group->entries[j];
+                // if metadata_key was found
+                if (strcmp(entry->key, metadata_key) == 0) {
+                    struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+                    single_attribute->key = metadata_key;
+                    single_attribute->value = strdup((*entry).value);
+                    return single_attribute;
+                }
+            }
+        }
+    }
     return NULL;
+}
+
+struct metadata *get_metadata_mirax(struct ini_file *ini_file) {
+    // all groups
+    static const char *GROUPS[] = {GENERAL, NONHIERLAYER_0_SECTION, NONHIERLAYER_1_SECTION};
+
+    // all metadata
+    static const char *METADATA_ATTRIBUTES[] = {
+        SLIDE_NAME, PROJECT_NAME, SLIDE_ID, SLIDE_CREATIONDATETIME, SLIDE_UTC_CREATIONDATETIME, SCANNER_HARDWARE_ID};
+
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
+    int8_t metadata_id = 0;
+
+    // checks for all metadata
+    for (size_t i = 0; i < sizeof(GROUPS) / sizeof(GROUPS[0]); i++) {
+        for (size_t j = 0; j < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); j++) {
+            struct metadata_attribute *single_attribute =
+                get_attribute_mirax(ini_file, GROUPS[i], METADATA_ATTRIBUTES[j]);
+            if (single_attribute != NULL) {
+                attributes[metadata_id++] = single_attribute;
+            }
+        }
+    }
+
+    // add all found metadata
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+struct wsi_data *get_wsi_data_mirax(const char *filename) {
+    // gets file extension
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, MRXS_EXT) != 0) {
+        NULL;
+    }
+
+    // open ini file
+    const char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
+    struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
+
+    // check if file was successfully read
+    if (ini == NULL) {
+        fprintf(stderr, "Error: Could not read Slidedat.ini.\n");
+        return NULL;
+    }
+
+    // gets all metadata in Slidedat.ini
+    struct metadata *metadata_attributes = get_metadata_mirax(ini);
+
+    // TODO: get profilename in data files
+
+    // is MIRAX
+    // TODO: replace format value and handle more efficiently
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = 2;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    free(ini);
+    return wsi_data;
 }
 
 void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length) {

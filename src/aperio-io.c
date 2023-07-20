@@ -71,8 +71,13 @@ struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *
 }
 
 struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
+    // all metadata
+    static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_DATE_TAG,
+                                                APERIO_BARCODE_TAG};
+
     // initialize metadata_attribute struct
-    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -92,10 +97,6 @@ struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
                     fprintf(stderr, "Error: Could not read tag image description.\n");
                     return NULL;
                 }
-
-                // all metadata
-                static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_DATE_TAG,
-                                                            APERIO_BARCODE_TAG};
 
                 // checks for all metadata
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {

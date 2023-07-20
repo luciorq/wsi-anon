@@ -61,7 +61,8 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
 
 struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
-    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
+    // TODO: find better value to determine size for malloc of metadata
+    struct metadata_attribute **attributes = malloc(sizeof(**attributes) * 15);
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -83,7 +84,6 @@ struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
                 }
 
                 // add metadata
-                // TODO: first line is encoded wrongly
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
                 single_attribute->key = "Datetime";
                 single_attribute->value = strdup(buffer);

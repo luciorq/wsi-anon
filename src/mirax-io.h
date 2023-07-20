@@ -42,6 +42,13 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
 
 struct wsi_data *get_wsi_data_mirax(const char *filename);
 
+struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
+                                               const char *metadata_key);
+
+struct metadata *get_metadata_mirax(struct ini_file *ini_file);
+
+struct wsi_data *get_wsi_data_mirax(const char *filename);
+
 void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length);
 
 int32_t wipe_data_in_index_file(const char *path, const char *index_filename, struct mirax_level *level_to_delete,
