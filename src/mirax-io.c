@@ -10,6 +10,7 @@ static const char SLIDE_ID[] = "SLIDE_ID";
 static const char SLIDE_VERSION[] = "SLIDE_VERSION";
 static const char SLIDE_CREATIONDATETIME[] = "SLIDE_CREATIONDATETIME";
 static const char SLIDE_UTC_CREATIONDATETIME[] = "SLIDE_UTC_CREATIONDATETIME";
+static const char PROFILENAME[] = "ProfileName=\"";
 static const char NONHIERLAYER_0_SECTION[] = "NONHIERLAYER_0_SECTION";
 static const char NONHIERLAYER_1_SECTION[] = "NONHIERLAYER_1_SECTION";
 static const char SCANNER_HARDWARE_ID[] = "SCANNER_HARDWARE_ID";
@@ -500,20 +501,22 @@ struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const 
     return NULL;
 }
 
-struct metadata *get_metadata_mirax(struct ini_file *ini_file) {
+struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file, const char **data_filenames,
+                                    int32_t num_of_datafiles) {
     // all groups
     static const char *GROUPS[] = {GENERAL, NONHIERLAYER_0_SECTION, NONHIERLAYER_1_SECTION};
 
     // all metadata
     static const char *METADATA_ATTRIBUTES[] = {
-        SLIDE_NAME, PROJECT_NAME, SLIDE_ID, SLIDE_CREATIONDATETIME, SLIDE_UTC_CREATIONDATETIME, SCANNER_HARDWARE_ID};
+        SLIDE_NAME,          PROJECT_NAME, SLIDE_ID, SLIDE_CREATIONDATETIME, SLIDE_UTC_CREATIONDATETIME,
+        SCANNER_HARDWARE_ID, PROFILENAME};
 
     // initialize metadata_attribute struct
     struct metadata_attribute **attributes =
         malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
     int8_t metadata_id = 0;
 
-    // checks for all metadata
+    // checks for all metadata in Slidedat.ini
     for (size_t i = 0; i < sizeof(GROUPS) / sizeof(GROUPS[0]); i++) {
         for (size_t j = 0; j < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); j++) {
             struct metadata_attribute *single_attribute =
@@ -522,6 +525,40 @@ struct metadata *get_metadata_mirax(struct ini_file *ini_file) {
                 attributes[metadata_id++] = single_attribute;
             }
         }
+    }
+
+    // iterate through every data file
+    bool found_profilename = false;
+    for (int32_t i = 0; i < num_of_datafiles && !found_profilename; i++) {
+        // open data_file[i]
+        const char *datadat_filename = concat_path_filename(path, data_filenames[i]);
+        file_t *fp = file_open(datadat_filename, "rb+");
+
+        // if file does not exist terminate loop
+        if (fp == NULL) {
+            break;
+        }
+
+        // malloc buffer as big as slide version and slide id
+        char *buffer = (char *)malloc(MRXS_MAX_SIZE_DATA_DAT);
+
+        // read file
+        if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
+            // check for ProfileName
+            if (contains(buffer, PROFILENAME)) {
+                const char *value = get_string_between_delimiters(buffer, PROFILENAME, "\"");
+                struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+                single_attribute->key = PROFILENAME;
+                single_attribute->value = strdup(value);
+                if (single_attribute != NULL) {
+                    attributes[metadata_id++] = single_attribute;
+                }
+                found_profilename = true;
+            }
+        }
+        // cleanup
+        free(buffer);
+        file_close(fp);
     }
 
     // add all found metadata
@@ -537,23 +574,39 @@ struct wsi_data *get_wsi_data_mirax(const char *filename) {
 
     // check for valid file extension
     if (strcmp(ext, MRXS_EXT) != 0) {
-        NULL;
+        return NULL;
     }
 
     // open ini file
     const char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
     struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
 
-    // check if file was successfully read
+    // check if ini file was successfully read
     if (ini == NULL) {
-        fprintf(stderr, "Error: Could not read Slidedat.ini.\n");
         return NULL;
     }
 
-    // gets all metadata in Slidedat.ini
-    struct metadata *metadata_attributes = get_metadata_mirax(ini);
+    // get number of files
+    const char *file_count = get_value_from_ini_file(ini, DATAFILE, FILE_COUNT);
+    if (file_count == NULL) {
+        fprintf(stderr, "Error: No index file specified.\n");
+        return NULL;
+    }
 
-    // TODO: get profilename in data files
+    // cast file count
+    int32_t f_count;
+    sscanf(file_count, "%d", &f_count);
+
+    // get data.dat filenames for metadata
+    const char **data_filenames = (const char **)malloc((f_count + 1) * sizeof(char *));
+    for (int32_t i = 0; i < f_count; i++) {
+        const char *temp_datafile_key = concat_wildcard_string_int32(FILE_, i);
+        const char *temp_datafile_name = get_value_from_ini_file(ini, DATAFILE, temp_datafile_key);
+        data_filenames[i] = temp_datafile_name;
+    }
+
+    // gets all metadata in Slidedat.ini
+    struct metadata *metadata_attributes = get_metadata_mirax(path, ini, data_filenames, f_count);
 
     // is MIRAX
     // TODO: replace format value and handle more efficiently
@@ -587,8 +640,8 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
         // read file
         if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
             // check for ProfileName
-            if (contains(buffer, MRXS_PROFILENAME)) {
-                const char *value = get_string_between_delimiters(buffer, MRXS_PROFILENAME, "\"");
+            if (contains(buffer, PROFILENAME)) {
+                const char *value = get_string_between_delimiters(buffer, PROFILENAME, "\"");
                 char *replacement = create_replacement_string('X', strlen(value));
                 buffer = replace_str(buffer, value, replacement);
             }

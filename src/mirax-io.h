@@ -45,7 +45,8 @@ struct wsi_data *get_wsi_data_mirax(const char *filename);
 struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
                                                const char *metadata_key);
 
-struct metadata *get_metadata_mirax(struct ini_file *ini_file);
+struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file, const char **data_filenames,
+                                    int32_t num_of_datafiles);
 
 struct wsi_data *get_wsi_data_mirax(const char *filename);
 
