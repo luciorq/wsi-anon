@@ -16,7 +16,6 @@
 #define MRXS_ROOT_OFFSET_NONHIER 41
 #define MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET 4
 #define MRXS_MAX_SIZE_DATA_DAT 1000
-#define MRXS_PROFILENAME "ProfileName=\""
 
 // tiff endianness
 #define TIFF_BIGENDIAN 0x4d4d
@@ -179,6 +178,25 @@ struct tiff_file {
     uint32_t used;
     uint32_t size;
     struct tiff_directory *directories;
+};
+
+struct metadata_attribute {
+    const char *key;
+    const char *value;
+};
+
+struct metadata {
+    struct metadata_attribute **attributes;
+    size_t length;
+};
+
+// TODO: members are incomplete --> view concept again or comment in members below!!
+struct wsi_data {
+    int8_t format;
+    const char *filename;
+    // struct associated_image_data **label;
+    // struct associated_image_data **macro;
+    struct metadata *metadata_attributes;
 };
 
 #endif

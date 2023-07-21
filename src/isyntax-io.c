@@ -1,8 +1,6 @@
 #include "isyntax-io.h"
 
-static const char ISYNTAX_EXT[] = "isyntax";
-static const char DOT_ISYNTAX[] = ".isyntax";
-
+// TODO: delete this (obsolete)
 // checks iSyntax file format
 int32_t is_isyntax(const char *filename) {
 
@@ -35,6 +33,102 @@ int32_t is_isyntax(const char *filename) {
     }
 }
 
+struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) {
+    const char *value = get_value_from_attribute(buffer, attribute);
+    // check if value of attribute is not an empty string
+    if (value[0] != '\0') {
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = attribute;
+        single_attribute->value = strdup(value);
+        return single_attribute;
+    }
+    return NULL;
+}
+
+struct metadata *get_metadata_isyntax(file_t *fp, int32_t header_size) {
+    // all metadata
+    static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT, PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
+                                          PHILIPS_RACK_ATT,     PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
+
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
+    int8_t metadata_id = 0;
+
+    // read content of XML header into buffer
+    char *buffer = malloc(header_size);
+    file_seek(fp, 0, SEEK_SET);
+    if (file_read(buffer, header_size, 1, fp) != 1) {
+        free(buffer);
+        fprintf(stderr, "Error: Could not read XML header of iSyntax file.\n");
+        return NULL;
+    }
+
+    // checks for all metadata
+    for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+        if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+            struct metadata_attribute *single_attribute = get_attribute_isyntax(buffer, METADATA_ATTRIBUTES[i]);
+            if (single_attribute != NULL) {
+                attributes[metadata_id++] = single_attribute;
+            }
+        }
+    }
+
+    // add all found metadata
+    free(buffer);
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+struct wsi_data *get_wsi_data_isyntax(const char *filename) {
+    // gets file extension
+    int32_t result = 0;
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, ISYNTAX_EXT) != 0) {
+        return NULL;
+    }
+
+    // opens file
+    file_t *fp = file_open(filename, "rb+");
+
+    // check if file was successfully opened
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open iSyntax file.\n");
+        return NULL;
+    }
+
+    // checks root node in order to determine if file is actually iSyntax
+    result = file_contains_value(fp, ISYNTAX_ROOTNODE);
+
+    // checks result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not find root node in iSyntax file.\n");
+        return NULL;
+    }
+
+    // get header size
+    size_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
+
+    // gets all metadata
+    struct metadata *metadata_attributes = get_metadata_isyntax(fp, header_size);
+
+    // is iSyntax
+    // TODO: replace format value and handle more efficiently
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = 4;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    file_close(fp);
+    return wsi_data;
+}
+
+// TODO: make use of get_wsi_data
 // anonymizes metadata from iSyntax file
 int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 

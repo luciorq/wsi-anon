@@ -3,8 +3,17 @@
 
 #include "philips-based-io.h"
 
+static const char ISYNTAX_EXT[] = "isyntax";
+static const char DOT_ISYNTAX[] = ".isyntax";
+
 // main functions
 int32_t is_isyntax(const char *filename);
+
+struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute);
+
+struct metadata *get_metadata_isyntax(file_t *fp, int32_t header_size);
+
+struct wsi_data *get_wsi_data_isyntax(const char *filename);
 
 int32_t handle_isyntax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                        bool do_inplace);

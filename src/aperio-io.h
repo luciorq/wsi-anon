@@ -7,7 +7,14 @@ static const char DOT_SVS[] = ".svs";
 static const char SVS[] = "svs";
 
 // main functions
+// TODO: remove this
 int32_t is_aperio(const char *filename);
+
+struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *delimiter1, const char *delimiter2);
+
+struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file);
+
+struct wsi_data *get_wsi_data_aperio(const char *filename);
 
 int32_t handle_aperio(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                       bool do_inplace);

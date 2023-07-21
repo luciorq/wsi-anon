@@ -1,5 +1,6 @@
 #include "ventana-io.h"
 
+// TODO: remove this (obsolete)
 // checks if file is in ventana format
 int32_t is_ventana(const char *filename) {
     int32_t result = 0;
@@ -50,6 +51,165 @@ int32_t is_ventana(const char *filename) {
     // is ventana
     file_close(fp);
     return result;
+}
+
+struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute) {
+    char *delimiters = "\"\'\0";
+    char del;
+    while ((del = *delimiters++) != '\0') {
+        size_t l = strlen(attribute) + 2;
+        char ex_attr[l];
+        strcpy(ex_attr, attribute);
+        ex_attr[l - 2] = del;
+        ex_attr[l - 1] = '\0';
+        if (contains(buffer, ex_attr)) {
+            const char *value = get_string_between_delimiters(buffer, ex_attr, &del);
+            struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+            single_attribute->key = attribute;
+            single_attribute->value = strdup(value);
+            return single_attribute;
+        }
+    }
+    return NULL;
+}
+
+struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
+    // all metadata
+    static const char *METADATA_ATTRIBUTES[] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
+                                                VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
+                                                VENTANA_BARCODE2D_ATT};
+
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
+    int8_t metadata_id = 0;
+
+    // iterate over directories in tiff file
+    for (uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for (uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+
+            // entry with XMP Tag contains metadata
+            if (entry.tag == TIFFTAG_XMP) {
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                // read content of XMP into buffer
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read XMP Tag.\n");
+                    free(buffer);
+                    return NULL;
+                }
+
+                // checks for all metadata
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                    if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+                        struct metadata_attribute *single_attribute =
+                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES[i]);
+                        if (single_attribute != NULL) {
+                            attributes[metadata_id++] = single_attribute;
+                        }
+                    }
+                }
+                free(buffer);
+            }
+
+            // entry with Datetime tag contains metadata
+            if (entry.tag == TIFFTAG_DATETIME) {
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                // read content of Datetime into buffer
+                char *buffer = malloc(entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read tag DateTime.\n");
+                    return NULL;
+                }
+
+                // add metadata
+                struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+                single_attribute->key = "Datetime";
+                single_attribute->value = strdup(buffer);
+
+                free(buffer);
+            }
+        }
+    }
+
+    // add all found metadata
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+struct wsi_data *get_wsi_data_ventana(const char *filename) {
+    // gets file extension
+    int32_t result = 0;
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, BIF) != 0 && strcmp(ext, TIF) != 0) {
+        return NULL;
+    }
+
+    // opens file
+    file_t *fp = file_open(filename, "rb+");
+
+    // checks if file was successfully opened
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open Ventana file.\n");
+        return NULL;
+    }
+
+    // checks file details
+    bool big_tiff = false;
+    bool big_endian = false;
+    result = check_file_header(fp, &big_endian, &big_tiff);
+
+    // checks result
+    if (!big_tiff || result != 0) {
+        fprintf(stderr, "Error: Not a valid Ventana file.\n");
+        file_close(fp);
+        return NULL;
+    }
+
+    // creates tiff file structure
+    struct tiff_file *file;
+    file = read_tiff_file(fp, big_tiff, false, big_endian);
+
+    // checks result
+    if (file == NULL) {
+        fprintf(stderr, "Error: Could not read tiff file.\n");
+        file_close(fp);
+        return NULL;
+    }
+
+    // checks tag value in order to if file is actually Ventana
+    result = tag_value_contains(fp, file, TIFFTAG_XMP, "iScan");
+
+    // checks result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not find XMP tag.\n");
+        file_close(fp);
+        return NULL;
+    }
+
+    // gets all metadata
+    struct metadata *metadata_attributes = get_metadata_ventana(fp, file);
+
+    // is Ventana
+    // TODO: replace format value and handle more efficiently
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = 3;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    file_close(fp);
+    return wsi_data;
 }
 
 // gets the label directory of ventana file
@@ -180,6 +340,7 @@ int32_t anonymize_xmp_attribute_if_exists(char *str, const char *attr, const cha
     return -1;
 }
 
+// TODO: make use of wsi_data struct
 // anonymizes metadata in XMP Tags of ventana file
 int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {

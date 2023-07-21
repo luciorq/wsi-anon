@@ -10,10 +10,13 @@
 #include "plugin.h"
 #include "ventana-io.h"
 
-static const char *VENDOR_STRINGS[] = {"Aperio",           "Hamamatsu",     "3DHistech (Mirax)", "Ventana",
-                                       "Philips’ iSyntax", "Philips' TIFF", "Unknown",           "Invalid"};
+static const char *VENDOR_AND_FORMAT_STRINGS[] = {"Aperio",           "Hamamatsu",     "3DHistech (Mirax)", "Ventana",
+                                                  "Philips’ iSyntax", "Philips' TIFF", "Unknown",           "Invalid"};
 
+// TODO: remove this
 extern int8_t check_file_format(const char *filename);
+
+extern struct wsi_data *get_wsi_data(const char *filename);
 
 extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name, bool keep_macro_image,
                                      bool disable_unlinking);

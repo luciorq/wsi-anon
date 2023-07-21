@@ -11,12 +11,25 @@ char *get_app_name() {
 void print_help_message() {
     fprintf(stderr, "Usage: %s [FILE] [-OPTIONS]\n\n", get_app_name());
     fprintf(stderr, "OPTIONS:\n");
-    fprintf(stderr, "-c     Only check file for vendor format\n");
+    fprintf(stderr, "-c     Only check file for vendor format and metadata\n");
     fprintf(stderr, "-n     Specify pseudo label name (e.g. -n \"labelname\")\n");
     fprintf(stderr, "-m     If flag is set, macro image will NOT be deleted\n");
     fprintf(stderr, "-i     If flag is set, anonymization will be done in-place\n");
     fprintf(stderr, "-u     If flag is set, tiff directory will NOT be unlinked\n\n");
     fprintf(stderr, "       Note: For file formats using JPEG compression this does not work currently.\n\n");
+}
+
+void print_metadata(struct wsi_data *wsi_data) {
+    fprintf(stdout, "Vendor: %s\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
+    if (wsi_data->metadata_attributes->length != 0) {
+        fprintf(stdout, "Metadata found:\n");
+        for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
+            fprintf(stdout, "%30s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
+                    wsi_data->metadata_attributes->attributes[metadata_id]->value);
+        }
+    } else {
+        fprintf(stdout, "No metadata found.\n");
+    }
 }
 
 int32_t main(int32_t argc, char *argv[]) {
@@ -78,8 +91,18 @@ int32_t main(int32_t argc, char *argv[]) {
 
     if (only_check) {
         if (filename != NULL) {
-            int8_t format = check_file_format(filename);
-            fprintf(stdout, "Vendor: [%s]\n", VENDOR_STRINGS[format]);
+            struct wsi_data *wsi_data = get_wsi_data(filename);
+            // if format is supported and valid
+            if (wsi_data->metadata_attributes != NULL) {
+                // TODO: print out the rest of information (label and macro dims if available
+                print_metadata(wsi_data);
+            }
+            // handles invalid or unsupported file formats
+            else {
+                fprintf(stderr, "Error: %s format\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
+                exit(EXIT_FAILURE);
+            }
+            free(wsi_data);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);
