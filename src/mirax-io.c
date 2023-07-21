@@ -617,9 +617,11 @@ struct wsi_data *get_wsi_data_mirax(const char *filename) {
 
     // cleanup
     free(ini);
+    free(data_filenames);
     return wsi_data;
 }
 
+// TODO: make use of wsi_data from get_wsi_data_mirax function
 void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length) {
 
     // iterate through every data file
