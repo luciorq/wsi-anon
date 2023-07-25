@@ -2,7 +2,7 @@ import ctypes
 import os
 import threading
 
-from .model.model import WSIData, Vendor
+from .model.model import *
 
 lock = threading.Lock()
 
@@ -16,8 +16,8 @@ def get_wsi_data(filename):
 
     c_filename = filename.encode('utf-8')
 
-    result = WSIData.from_address(_wsi_anonymizer.get_wsi_data((ctypes.c_char_p(c_filename))))
-    return Vendor(result.format)
+    wsi_data = WSIData.from_address(_wsi_anonymizer.get_wsi_data((ctypes.c_char_p(c_filename))))
+    return wsi_data
 
 # TODO: if necessary adjust this method with WSIData aswell
 def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unlinking=False, do_inplace=False):

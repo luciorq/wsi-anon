@@ -54,13 +54,12 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
         ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
         #("/data/Ventana/OS-2.bif", Vendor.VENTANA), TODO: check what causes segmentation fault here
+        ("/data/non_existing_file.txt", Vendor.INVALID),
     ],
 )
 def test_format_get_wsi_data(wsi_filename, vendor):
-    file_format = get_wsi_data(wsi_filename)
-    assert file_format == vendor
-
-# TODO: extend testcases for get_wsi_data function here
+    result = get_wsi_data(wsi_filename)
+    assert Vendor(result.format) == vendor
 
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
