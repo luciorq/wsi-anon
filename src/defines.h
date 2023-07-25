@@ -104,6 +104,17 @@ typedef enum {
     TIFF_IFD8 = 18
 } TIFFDataType;
 
+typedef enum {
+    APERIO = 0,
+    HAMAMATSU = 1,
+    MIRAX = 2,
+    VENTANA = 3,
+    PHILIPS_ISYNTAX = 4,
+    PHILIPS_TIFF = 5,
+    UNKNOWN = 6,
+    INVALID = 7
+} FILE_FORMAT;
+
 #define ASCII 2
 #define SHORT 3
 #define LONG 4
@@ -192,7 +203,7 @@ struct metadata {
 
 // TODO: members are incomplete --> view concept again or comment in members below!!
 struct wsi_data {
-    int8_t format;
+    FILE_FORMAT format;
     const char *filename;
     // struct associated_image_data **label;
     // struct associated_image_data **macro;

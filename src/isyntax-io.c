@@ -84,9 +84,8 @@ struct wsi_data *get_wsi_data_isyntax(const char *filename) {
     struct metadata *metadata_attributes = get_metadata_isyntax(fp, header_size);
 
     // is iSyntax
-    // TODO: replace format value and handle more efficiently
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-    wsi_data->format = 4;
+    wsi_data->format = PHILIPS_ISYNTAX;
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
 

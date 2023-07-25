@@ -85,7 +85,7 @@ make wasm
 
 ### Console Application
 
-Check for slide vendor:
+Check for slide vendor amd all metadata:
 
 ```bash
 ./wsi-anon.out "/path/to/wsi.tif" -c

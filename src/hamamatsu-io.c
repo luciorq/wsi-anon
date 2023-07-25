@@ -86,9 +86,8 @@ struct wsi_data *get_wsi_data_hamamatsu(const char *filename) {
     struct metadata *metadata_attributes = get_metadata_hamamatsu(fp, file);
 
     // is Hamamatsu
-    // TODO: replace format value and handle more efficiently
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-    wsi_data->format = 1;
+    wsi_data->format = HAMAMATSU;
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
 
