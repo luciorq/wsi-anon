@@ -5,27 +5,43 @@ import threading
 from enum import Enum
 
 class Vendor(Enum):
-    Aperio = 0
-    Hamamatsu = 1
-    Mirax = 2
-    Ventana = 3
-    Isyntax = 4
-    Unknown = 5
-    Invalid = 6
+    APERIO = 0
+    HAMAMATSU = 1
+    MIRAX = 2
+    VENTANA = 3
+    ISYNTAX = 4
+    PHILIPS_TIFF = 5
+    UNKNOWN = 6
+    INVALID = 7
+
+class MetadataAttribute(ctypes.Structure):
+    _fields_ = [("key", ctypes.c_char_p),
+                ("value", ctypes.c_char_p)]
+
+class Metadata(ctypes.Structure):
+    _fields_ = [("metadataAttributes", ctypes.POINTER(MetadataAttribute)),
+                ("length", ctypes.c_size_t)]
+
+# TODO: extend the fields by members of struct
+class WSIData(ctypes.Structure):
+    _fields_ = [("format", ctypes.c_int8),
+                ("filename", ctypes.c_char_p),
+                ("metadata", ctypes.POINTER(Metadata))]
 
 lock = threading.Lock()
 
 libname = os.path.abspath(os.path.join("bin", "libwsianon.so"))
 _wsi_anonymizer = ctypes.cdll.LoadLibrary(libname)
 
-def check_file_format(filename):
+def get_wsi_data(filename):
     global _wsi_anonymizer
-    _wsi_anonymizer.check_file_format.argtypes = [ctypes.c_char_p]
+    _wsi_anonymizer.get_wsi_data.argtypes = [ctypes.c_char_p]
+    _wsi_anonymizer.get_wsi_data.restype = ctypes.c_void_p
 
     c_filename = filename.encode('utf-8')
 
-    result = _wsi_anonymizer.check_file_format(ctypes.c_char_p(c_filename))
-    return Vendor(result)
+    result = WSIData.from_address(_wsi_anonymizer.get_wsi_data((ctypes.c_char_p(c_filename))))
+    return Vendor(result.format)
 
 def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unlinking=False, do_inplace=False):
     global _wsi_anonymizer

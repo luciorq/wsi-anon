@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.11
+
+* save all information regarding WSI in struct
+* replace check_file_header by get_wsi_data function
+
 ## 0.4.10
 
 * bugfix that correctly overwrites SLIDE_ID with random number in slidedat.ini and Data files for MIRAX format

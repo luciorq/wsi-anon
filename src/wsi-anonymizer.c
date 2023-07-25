@@ -14,21 +14,6 @@ struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {
     &get_wsi_data_aperio,  &get_wsi_data_hamamatsu, &get_wsi_data_mirax,
     &get_wsi_data_ventana, &get_wsi_data_isyntax,   &get_wsi_data_philips_tiff};
 
-int8_t check_file_format(const char *filename) {
-    if (file_exists(filename)) {
-        for (int8_t i = 0; i < num_of_formats - 2; i++) {
-            if (is_format_functions[i](filename)) {
-                return i;
-            }
-        }
-        // unknown format
-        return num_of_formats - 2;
-    } else {
-        // invalid format
-        return num_of_formats - 1;
-    }
-}
-
 struct wsi_data *get_wsi_data(const char *filename) {
     if (file_exists(filename)) {
         for (int8_t i = 0; i < num_of_formats - 2; i++) {
