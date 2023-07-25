@@ -1,58 +1,5 @@
 #include "ventana-io.h"
 
-// TODO: remove this (obsolete)
-// checks if file is in ventana format
-int32_t is_ventana(const char *filename) {
-    int32_t result = 0;
-    const char *ext = get_filename_ext(filename);
-
-    bool is_bif = strcmp(ext, BIF) == 0;
-    bool is_tif = strcmp(ext, TIF) == 0;
-
-    if (!is_bif && !is_tif) {
-        return result;
-    }
-
-    file_t *fp = file_open(filename, "rb+");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
-        return result;
-    }
-
-    bool big_tiff = false;
-    bool big_endian = false;
-
-    result = check_file_header(fp, &big_endian, &big_tiff);
-
-    if (!big_tiff || result == -1) {
-        fprintf(stderr, "Error: Not a valid Ventana file.\n");
-        file_close(fp);
-        return -1;
-    }
-
-    struct tiff_file *file;
-    file = read_tiff_file(fp, big_tiff, false, big_endian);
-
-    if (file == NULL) {
-        fprintf(stderr, "Error: Could not read tiff file.\n");
-        file_close(fp);
-        return result;
-    }
-
-    result = tag_value_contains(fp, file, TIFFTAG_XMP, "iScan");
-
-    if (result == -1) {
-        fprintf(stderr, "Error: Could not find XMP tag.\n");
-        file_close(fp);
-        return result;
-    }
-
-    // is ventana
-    file_close(fp);
-    return result;
-}
-
 struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute) {
     char *delimiters = "\"\'\0";
     char del;

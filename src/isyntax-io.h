@@ -7,8 +7,6 @@ static const char ISYNTAX_EXT[] = "isyntax";
 static const char DOT_ISYNTAX[] = ".isyntax";
 
 // main functions
-int32_t is_isyntax(const char *filename);
-
 struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute);
 
 struct metadata *get_metadata_isyntax(file_t *fp, int32_t header_size);

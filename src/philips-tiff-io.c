@@ -1,52 +1,5 @@
 #include "philips-tiff-io.h"
 
-// checks if file is Philips TIFF
-int32_t is_philips_tiff(const char *filename) {
-    int32_t result = 0;
-    const char *ext = get_filename_ext(filename);
-
-    // check for file extension
-    if (strcmp(ext, TIFF) != 0) {
-        return 0;
-    }
-
-    file_t *fp;
-    fp = file_open(filename, "rb+");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
-        return result;
-    }
-
-    bool big_tiff = false;
-    bool big_endian = false;
-    result = check_file_header(fp, &big_endian, &big_tiff);
-
-    if (result != 0) {
-        return result;
-    }
-
-    struct tiff_file *file;
-    file = read_tiff_file(fp, big_tiff, false, big_endian);
-
-    if (file == NULL) {
-        fprintf(stderr, "Error: Could not read tiff file.\n");
-        file_close(fp);
-        return result;
-    }
-
-    // check if the Software tag starts with Philips
-    result = tag_value_contains(fp, file, TIFFTAG_SOFTWARE, "Philips");
-
-    if (result == -1) {
-        fprintf(stderr, "Error: Could not find value in Software tag.\n");
-    }
-
-    // is Philips' TIFF
-    file_close(fp);
-    return (result == 1);
-}
-
 struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attribute) {
     const char *value = get_value_from_attribute(buffer, attribute);
     // check if value of attribute is not an empty string

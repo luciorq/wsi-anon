@@ -37,17 +37,6 @@ static const char *SLIDE_THUMBNAIL = "ScanDataLayer_SlideThumbnail";
 // whole slide image
 static const char *SLIDE_WSI = "ScanDataLayer_WholeSlide";
 
-// TODO: delete this (obsolete)
-int32_t is_mirax(const char *filename) {
-    const char *ext = get_filename_ext(filename);
-
-    if (strcmp(ext, MRXS_EXT) == 0) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
                                                const char *metadata_key) {
     // iterate over groups in ini file

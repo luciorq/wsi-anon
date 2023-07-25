@@ -61,6 +61,8 @@ def test_format_get_wsi_data(wsi_filename, vendor):
     result = get_wsi_data(wsi_filename)
     assert Vendor(result.format) == vendor
 
+# TODO: extend test cases for get_wsi_data
+
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [

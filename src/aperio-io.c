@@ -1,52 +1,5 @@
 #include "aperio-io.h"
 
-// TODO: remove this (obsolete)
-// checks if file is aperio
-int32_t is_aperio(const char *filename) {
-    int32_t result = 0;
-    const char *ext = get_filename_ext(filename);
-
-    // check for valid file extension
-    if (strcmp(ext, SVS) != 0 && strcmp(ext, TIF) != 0) {
-        return result;
-    }
-
-    file_t *fp;
-    fp = file_open(filename, "rb+");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
-        return result;
-    }
-
-    bool big_tiff = false;
-    bool big_endian = false;
-    result = check_file_header(fp, &big_endian, &big_tiff);
-
-    if (result != 0) {
-        return result;
-    }
-
-    struct tiff_file *file;
-    file = read_tiff_file(fp, big_tiff, false, big_endian);
-
-    if (file == NULL) {
-        fprintf(stderr, "Error: Could not read tiff file.\n");
-        file_close(fp);
-        return result;
-    }
-
-    result = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "Aperio");
-
-    if (result == -1) {
-        fprintf(stderr, "Error: Could not find aperio label directory.\n");
-    }
-
-    // is aperio
-    file_close(fp);
-    return (result == 1);
-}
-
 struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *delimiter1, const char *delimiter2) {
     const char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
     // check if tag is not an empty string

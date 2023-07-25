@@ -1,38 +1,5 @@
 #include "isyntax-io.h"
 
-// TODO: delete this (obsolete)
-// checks iSyntax file format
-int32_t is_isyntax(const char *filename) {
-
-    const char *ext = get_filename_ext(filename);
-
-    // check for file extension
-    if (strcmp(ext, ISYNTAX_EXT) != 0) {
-        return 0;
-    } else {
-        int32_t result = 0;
-        file_t *fp = file_open(filename, "rb+");
-
-        // if file could not be opened
-        if (fp == NULL) {
-            fprintf(stderr, "Error: Could not open iSyntax file.\n");
-            return result;
-        }
-
-        // searches for root node in file for verification
-        result = file_contains_value(fp, ISYNTAX_ROOTNODE);
-
-        // if root node could not be found
-        if (!result) {
-            return result;
-        }
-
-        // is iSyntax
-        file_close(fp);
-        return result;
-    }
-}
-
 struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) {
     const char *value = get_value_from_attribute(buffer, attribute);
     // check if value of attribute is not an empty string

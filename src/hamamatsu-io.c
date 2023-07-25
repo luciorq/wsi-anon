@@ -1,26 +1,5 @@
 #include "hamamatsu-io.h"
 
-// TODO: remove this part (obsolete)
-// checks if the file is hamamatsu
-int32_t is_hamamatsu(const char *filename) {
-    int32_t result = 0;
-    const char *ext = get_filename_ext(filename);
-
-    // check for valid file extension
-    if (strcmp(ext, NDPI) != 0) {
-        return result;
-    }
-
-    // check if ndpi tiff tags are present
-    file_t *fp = file_open(filename, "rb+");
-    bool big_tiff = false;
-    bool big_endian = false;
-    result = check_file_header(fp, &big_endian, &big_tiff);
-
-    file_close(fp);
-    return (result == 0);
-}
-
 struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
     // TODO: find better value to determine size for malloc of metadata

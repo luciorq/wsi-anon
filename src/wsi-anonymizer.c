@@ -1,18 +1,14 @@
 #include "wsi-anonymizer.h"
 
-// TODO: remove this function
-int32_t (*is_format_functions[])(const char *filename) = {&is_aperio,  &is_hamamatsu, &is_mirax,
-                                                          &is_ventana, &is_isyntax,   &is_philips_tiff};
-
 int32_t (*handle_format_functions[])(const char **filename, const char *new_label_name, bool keep_macro_image,
                                      bool disable_unlinking, bool do_inplace) = {
     &handle_aperio, &handle_hamamatsu, &handle_mirax, &handle_ventana, &handle_isyntax, &handle_philips_tiff};
 
-int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
-
 struct wsi_data *(*get_wsi_data_functions[])(const char *filename) = {
     &get_wsi_data_aperio,  &get_wsi_data_hamamatsu, &get_wsi_data_mirax,
     &get_wsi_data_ventana, &get_wsi_data_isyntax,   &get_wsi_data_philips_tiff};
+
+int8_t num_of_formats = sizeof(VENDOR_AND_FORMAT_STRINGS) / sizeof(char *);
 
 struct wsi_data *get_wsi_data(const char *filename) {
     if (file_exists(filename)) {

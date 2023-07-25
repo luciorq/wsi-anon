@@ -7,8 +7,6 @@ static const char DOT_NDPI[] = ".ndpi";
 static const char NDPI[] = "ndpi";
 
 // main functions
-int32_t is_hamamatsu(const char *filename);
-
 struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file);
 
 struct wsi_data *get_wsi_data_hamamatsu(const char *filename);
