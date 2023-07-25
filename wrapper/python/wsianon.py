@@ -2,31 +2,7 @@ import ctypes
 import os
 import threading
 
-from enum import Enum
-
-class Vendor(Enum):
-    APERIO = 0
-    HAMAMATSU = 1
-    MIRAX = 2
-    VENTANA = 3
-    ISYNTAX = 4
-    PHILIPS_TIFF = 5
-    UNKNOWN = 6
-    INVALID = 7
-
-class MetadataAttribute(ctypes.Structure):
-    _fields_ = [("key", ctypes.c_char_p),
-                ("value", ctypes.c_char_p)]
-
-class Metadata(ctypes.Structure):
-    _fields_ = [("metadataAttributes", ctypes.POINTER(MetadataAttribute)),
-                ("length", ctypes.c_size_t)]
-
-# TODO: extend the fields by members of struct
-class WSIData(ctypes.Structure):
-    _fields_ = [("format", ctypes.c_int8),
-                ("filename", ctypes.c_char_p),
-                ("metadata", ctypes.POINTER(Metadata))]
+from .model.model import WSIData, Vendor
 
 lock = threading.Lock()
 
@@ -43,6 +19,7 @@ def get_wsi_data(filename):
     result = WSIData.from_address(_wsi_anonymizer.get_wsi_data((ctypes.c_char_p(c_filename))))
     return Vendor(result.format)
 
+# TODO: if necessary adjust this method with WSIData aswell
 def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unlinking=False, do_inplace=False):
     global _wsi_anonymizer
     _wsi_anonymizer.anonymize_wsi.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool]

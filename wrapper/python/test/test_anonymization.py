@@ -7,8 +7,8 @@ import pytest
 import openslide
 import tiffslide
 
-from ..wsianon import get_wsi_data, anonymize_wsi, Vendor
-
+from ..wsianon import get_wsi_data, anonymize_wsi
+from ..model.model import Vendor
 
 lock = threading.Lock()
 
