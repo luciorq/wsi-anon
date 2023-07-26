@@ -24,7 +24,7 @@ void print_metadata(struct wsi_data *wsi_data) {
     if (wsi_data->metadata_attributes->length != 0) {
         fprintf(stdout, "Metadata found:\n");
         for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
-            fprintf(stdout, "%30s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
+            fprintf(stdout, "%45s %s\n", wsi_data->metadata_attributes->attributes[metadata_id]->key,
                     wsi_data->metadata_attributes->attributes[metadata_id]->value);
         }
     } else {

@@ -19,7 +19,6 @@ def get_wsi_data(filename):
     wsi_data = WSIData.from_address(_wsi_anonymizer.get_wsi_data((ctypes.c_char_p(c_filename))))
     return wsi_data
 
-# TODO: if necessary adjust this method with WSIData aswell
 def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unlinking=False, do_inplace=False):
     global _wsi_anonymizer
     _wsi_anonymizer.anonymize_wsi.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool]
