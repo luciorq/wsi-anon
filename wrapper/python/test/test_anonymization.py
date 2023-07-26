@@ -46,22 +46,24 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         max_wait_in_sec -= 1
     return False
 
-
+# TODO: place all Philips based files into Philips folder instead of separating into Philips iSyntax and Philips TIFF
 @pytest.mark.parametrize(
     "wsi_filename, vendor",
     [
         ("/data/Aperio/CMU-1.svs", Vendor.APERIO),
         ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
+        #("/data/Hamamatsu/test.ndpi", Vendor.HAMAMATSU), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
         ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
-        #("/data/Ventana/OS-2.bif", Vendor.VENTANA), TODO: check what causes segmentation fault here
-        ("/data/non_existing_file.txt", Vendor.INVALID),
+        #("/data/Ventana/OS-2.bif", Vendor.VENTANA), # TODO: check what causes segmentation fault here
+        ("/data/Philips iSyntax/4399.isyntax", Vendor.PHILIPS_ISYNTAX),
+        #("/data/Philips TIFF/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips TIFF folder was created and 'test.tiff' file was added
+        #("/data/Unknown/existing_file.txt", Vendor.UNKNOWN), # TODO: remove comments when Unknown folder was created and 'existing_file.txt' file was added
+        ("/non_existing_file.txt", Vendor.INVALID),
     ],
 )
 def test_format_get_wsi_data(wsi_filename, vendor):
     wsi_data = get_wsi_data(wsi_filename)
     assert Vendor(wsi_data.format) == vendor
-
-# TODO: extend test cases for get_wsi_data
 
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
@@ -186,7 +188,7 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        #("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
+        #("/data/Philips iSyntax/", "4399", a"non-philips", "isyntax"),
         #("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), 
     ],
 )
