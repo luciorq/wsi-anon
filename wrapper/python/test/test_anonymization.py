@@ -58,8 +58,8 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
     ],
 )
 def test_format_get_wsi_data(wsi_filename, vendor):
-    result = get_wsi_data(wsi_filename)
-    assert Vendor(result.format) == vendor
+    wsi_data = get_wsi_data(wsi_filename)
+    assert Vendor(wsi_data.format) == vendor
 
 # TODO: extend test cases for get_wsi_data
 

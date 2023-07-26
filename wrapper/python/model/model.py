@@ -6,7 +6,7 @@ class Vendor(Enum):
     HAMAMATSU = 1
     MIRAX = 2
     VENTANA = 3
-    ISYNTAX = 4
+    PHILIPS_ISYNTAX = 4
     PHILIPS_TIFF = 5
     UNKNOWN = 6
     INVALID = 7

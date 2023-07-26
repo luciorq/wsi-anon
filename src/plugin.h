@@ -1,4 +1,4 @@
-// TODO: rework comment (and add further functions )
+// TODO: rework comment (and add further functions)
 
 /*
  *

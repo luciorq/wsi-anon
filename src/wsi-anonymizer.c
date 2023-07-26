@@ -20,12 +20,12 @@ struct wsi_data *get_wsi_data(const char *filename) {
         }
         // unknown format
         struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-        wsi_data->format = num_of_formats - 2;
+        wsi_data->format = UNKNOWN;
         return wsi_data;
     } else {
         // invalid format
         struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-        wsi_data->format = num_of_formats - 1;
+        wsi_data->format = INVALID;
         return wsi_data;
     }
 }
