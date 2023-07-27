@@ -45,7 +45,7 @@ To build the shared library with command line interface simply run
 make
 ```
 
-and run with `bin/wsi-anon.out /path/to/wsi.tif` afterwards.
+and run with `bin/wsi-anon.out /path/to/wsi.svs` afterwards.
 
 This will build the object files and subsequently a static and a shared library. Also the console application will be build as .out file. These files are stored under `bin/`. Note that this will use the default Makefile.
 
@@ -55,7 +55,7 @@ To build the console application in debug mode type
 make console-app-debug
 ```
 
-and run with `gdb -args bin/wsi-anon-dbg.out /path/to/wsi.tif` afterwards.
+and run with `gdb -args bin/wsi-anon-dbg.out /path/to/wsi.svs` afterwards.
 
 #### Under Windows
 
@@ -69,7 +69,7 @@ set PATH=C:\mingw\bin;%PATH%
 mingw32-make -f MakefileWin.mk
 ```
 
-and run with `exe\wsi-anon.exe \path\to\wsi.tif` afterwards.
+and run with `exe\wsi-anon.exe \path\to\wsi.svs` afterwards.
 
 ### Web Assembly Target
 
@@ -85,16 +85,16 @@ make wasm
 
 ### Console Application
 
-Check for slide vendor amd all metadata:
+Check for slide vendor and view all found metadata in WSI:
 
 ```bash
-./wsi-anon.out "/path/to/wsi.tif" -c
+./wsi-anon.out "/path/to/wsi.svs" -c
 ```
 
 Anonymize slide:
 
 ```bash
-./wsi-anon.out "/path/to/wsi.tif" [-OPTIONS]
+./wsi-anon.out "/path/to/wsi.svs" [-OPTIONS]
 ```
 
 Type `-h` or `--help` for help. Further CLI parameters are:

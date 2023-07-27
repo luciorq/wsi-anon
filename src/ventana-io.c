@@ -1,34 +1,32 @@
 #include "ventana-io.h"
 
-struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute) {
-    char *delimiters = "\"\'\0";
-    char del;
-    while ((del = *delimiters++) != '\0') {
-        size_t l = strlen(attribute) + 2;
-        char ex_attr[l];
-        strcpy(ex_attr, attribute);
-        ex_attr[l - 2] = del;
-        ex_attr[l - 1] = '\0';
-        if (contains(buffer, ex_attr)) {
-            const char *value = get_string_between_delimiters(buffer, ex_attr, &del);
-            struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-            single_attribute->key = attribute;
-            single_attribute->value = strdup(value);
-            return single_attribute;
-        }
+struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute, const char *delimiter) {
+    const char *value = get_string_between_delimiters(buffer, attribute, delimiter);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = attribute;
+        single_attribute->value = strdup(value);
+        return single_attribute;
     }
     return NULL;
 }
 
 struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
-    // all metadata
+    // all metadata with double quotes
     static const char *METADATA_ATTRIBUTES[] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
                                                 VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
                                                 VENTANA_BARCODE2D_ATT};
 
+    // all metadata with single quotes
+    static const char *METADATA_ATTRIBUTES_2[] = {
+        VENTANA_BASENAME_ATT_2,  VENTANA_FILENAME_ATT_2,  VENTANA_UNITNUMBER_ATT_2, VENTANA_USERNAME_ATT_2,
+        VENTANA_BUILDDATE_ATT_2, VENTANA_BARCODE1D_ATT_2, VENTANA_BARCODE2D_ATT_2};
+
     // initialize metadata_attribute struct
     struct metadata_attribute **attributes =
-        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
+        malloc(sizeof(**attributes) * (sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]) +
+                                       sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0])));
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -50,36 +48,43 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
                     return NULL;
                 }
 
-                // checks for all metadata
-                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
-                    if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+                // checks for all metadata with double quotes
+                for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); k++) {
+                    if (contains(buffer, METADATA_ATTRIBUTES[k])) {
                         struct metadata_attribute *single_attribute =
-                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES[i]);
+                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES[k], "\"");
                         if (single_attribute != NULL) {
                             attributes[metadata_id++] = single_attribute;
                         }
                     }
                 }
-                free(buffer);
+
+                // checks for all metadata with double quotes
+                for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES_2) / sizeof(METADATA_ATTRIBUTES_2[0]); k++) {
+                    if (contains(buffer, METADATA_ATTRIBUTES_2[k])) {
+                        struct metadata_attribute *single_attribute =
+                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES_2[k], "\'");
+                        if (single_attribute != NULL) {
+                            attributes[metadata_id++] = single_attribute;
+                        }
+                    }
+                }
             }
 
-            // entry with Datetime tag contains metadata
             if (entry.tag == TIFFTAG_DATETIME) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                // read content of Datetime into buffer
                 char *buffer = malloc(entry_size * entry.count);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read tag DateTime.\n");
+                    fprintf(stderr, "Error: Could not read DATE_TIME Tag.\n");
+                    free(buffer);
                     return NULL;
                 }
-
                 // add metadata
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
                 single_attribute->key = "Datetime";
                 single_attribute->value = strdup(buffer);
-
+                attributes[metadata_id++] = single_attribute;
                 free(buffer);
             }
         }
@@ -253,6 +258,7 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
     return result;
 }
 
+/*
 // searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
 void wipe_xmp_data(char *str, const char *attr, const char *del, const char replacement) {
     while ((str = strstr(str, attr)) != NULL) {
@@ -263,10 +269,12 @@ void wipe_xmp_data(char *str, const char *attr, const char *del, const char repl
         }
     }
 }
+*/
 
 // checks if an attribute is included in the xml string and subsequently checks if single or
 // double quotes are used to define the value of the key; when the given key is found, the
 // string within the quotes is wiped with a replacement char
+/*
 int32_t anonymize_xmp_attribute_if_exists(char *str, const char *attr, const char replacement) {
     if (contains(str, attr)) {
         char *delimiters = "\"\'\0"; // could be other delimiters than "" and ''?
@@ -285,17 +293,26 @@ int32_t anonymize_xmp_attribute_if_exists(char *str, const char *attr, const cha
     }
     return -1;
 }
+*/
+
+char *anonymize_xmp_attribute_if_exists(char *buffer, const char *attr, const char *delimiter) {
+    const char *value = get_string_between_delimiters(buffer, attr, delimiter);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        char *replacement = create_replacement_string(' ', strlen(value));
+        buffer = replace_str(buffer, value, replacement);
+    }
+    return buffer;
+}
 
 // TODO: make use of wsi_data struct
 // anonymizes metadata in XMP Tags of ventana file
 int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
 
+    for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
-
             struct tiff_entry entry = dir.entries[j];
-
             // searches for XMP Tag in all directories and removes metadata in it
             if (entry.tag == TIFFTAG_XMP) {
                 file_seek(fp, entry.offset, SEEK_SET);
@@ -310,12 +327,26 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 char *result = buffer;
                 bool rewrite = false;
 
-                char metadata_attributes[][15] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
-                                                  VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
-                                                  VENTANA_BARCODE2D_ATT};
+                // all metadata with double quotes
+                const char *METADATA_ATTRIBUTES[] = {
+                    VENTANA_BASENAME_ATT,  VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT, VENTANA_USERNAME_ATT,
+                    VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT, VENTANA_BARCODE2D_ATT};
 
-                for (size_t i = 0; i < sizeof(metadata_attributes) / sizeof(metadata_attributes[0]); i++) {
-                    if (anonymize_xmp_attribute_if_exists(result, metadata_attributes[i], ' ')) {
+                for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); k++) {
+                    if (contains(result, METADATA_ATTRIBUTES[k])) {
+                        result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES[k], "\"");
+                        rewrite = true;
+                    }
+                }
+
+                // all metadata with single quotes
+                const char *METADATA_ATTRIBUTES_2[] = {
+                    VENTANA_BASENAME_ATT_2,  VENTANA_FILENAME_ATT_2,  VENTANA_UNITNUMBER_ATT_2, VENTANA_USERNAME_ATT_2,
+                    VENTANA_BUILDDATE_ATT_2, VENTANA_BARCODE1D_ATT_2, VENTANA_BARCODE2D_ATT_2};
+
+                for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES_2) / sizeof(METADATA_ATTRIBUTES_2[0]); k++) {
+                    if (contains(result, METADATA_ATTRIBUTES_2[k])) {
+                        result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES_2[k], "\'");
                         rewrite = true;
                     }
                 }

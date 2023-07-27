@@ -4,6 +4,7 @@
 
 * save all information regarding WSI in struct
 * replace check_file_header by get_wsi_data function
+* extend testcases by new files
 
 ## 0.4.10
 

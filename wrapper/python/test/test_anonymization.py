@@ -54,7 +54,7 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
         #("/data/Hamamatsu/test.ndpi", Vendor.HAMAMATSU), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
         ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
-        #("/data/Ventana/OS-2.bif", Vendor.VENTANA), # TODO: check what causes segmentation fault here
+        ("/data/Ventana/OS-2.bif", Vendor.VENTANA),
         #("/data/Philips/4399.isyntax", Vendor.PHILIPS_ISYNTAX), # TODO: remove comments when Philips folder was created and '4399.isyntax' file was added
         #("/data/Philips/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
         #("/data/Unknown/existing_file.txt", Vendor.UNKNOWN), # TODO: remove comments when Unknown folder was created and 'existing_file.txt' file was added
@@ -101,7 +101,6 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
         #("/data/Hamamatsu/", "test", "anon-hamamatsu", "ndpi"), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
-        #("/data/Ventana/", "OS-2", "anon-ventana", "bif"),
     ],
 )
 def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -118,10 +117,6 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
     with openslide.OpenSlide(str(result_filename)) as slide:
         assert "label" not in slide.associated_images
 
-        if "Ventana" in wsi_filepath:
-            for property in ["UnitNumber", "UserName", "BuildDate"]:
-                assert all(c == " " for c in slide.properties[f"ventana.{property}"])
-
         if "Hamamatsu" in wsi_filepath:
             for property in ["DateTime"]:
                 assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
@@ -133,6 +128,7 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
         ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
+        ("/data/Ventana/", "OS-2", "anon-ventana", "bif"),
         #("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
     ],
 )
@@ -155,6 +151,10 @@ def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filenam
             for property in ["SLIDE_NAME", "PROJECT_NAME", "SLIDE_CREATIONDATETIME"]:
                 assert all(c == "X" for c in slide.properties[f"mirax.GENERAL.{property}"])
             assert all(c == "0" for c in slide.properties[f"mirax.GENERAL.SLIDE_ID"])
+
+        if "Ventana" in wsi_filepath:
+            for property in ["UnitNumber", "UserName", "BuildDate"]:
+                assert all(c == " " for c in slide.properties[f"ventana.{property}"])
 
         if "Hamamatsu" in wsi_filepath:
             for property in ["DateTime"]:
@@ -211,30 +211,30 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
     cleanup(str(result_filename.absolute()))
 
 
-# @pytest.mark.parametrize(
-#     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
-#     [
-#         #("/data/Philips/", "test", "anon-philips", "tiff"), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
-#     ],
-# )
-# def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
-#     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
-#     if result_filename.exists():
-#         remove_file(str(result_filename.absolute()))
+@pytest.mark.parametrize(
+    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+    [
+        #("/data/Philips/", "test", "anon-philips", "tiff"), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
+    ],
+)
+def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+    if result_filename.exists():
+        remove_file(str(result_filename.absolute()))
 
-#     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-#     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
-#     assert result != -1
+    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+    assert result != -1
     
-#     assert wait_until_exists(str(result_filename), 5)
+    assert wait_until_exists(str(result_filename), 5)
 
-#     with openslide.OpenSlide(str(result_filename)) as slide:
-#         if "Philips_TIFF" in wsi_filepath:
-#             for property in ["DICOM_DEVICE_SERIAL_NUMBER", "PIM_DP_UFS_BARCODE", "PIM_DP_SOURCE_FILE"]:
-#                 assert all(c == "X" for c in slide.properties[f"philips.{property}"])
-#             assert "19000101000000.000000" in slide.properties["philips.DICOM_ACQUISITION_DATETIME"]
+    with openslide.OpenSlide(str(result_filename)) as slide:
+        if "Philips_TIFF" in wsi_filepath:
+            for property in ["DICOM_DEVICE_SERIAL_NUMBER", "PIM_DP_UFS_BARCODE", "PIM_DP_SOURCE_FILE"]:
+                assert all(c == "X" for c in slide.properties[f"philips.{property}"])
+            assert "19000101000000.000000" in slide.properties["philips.DICOM_ACQUISITION_DATETIME"]
     
-#     cleanup(str(result_filename.absolute()))
+    cleanup(str(result_filename.absolute()))
 
 
 # Actually both are not working at the moment

@@ -1,5 +1,3 @@
-// TODO: rework comment (and add further functions)
-
 /*
  *
  * In order to execute anonymization on an additional format, include this header file in the header

@@ -45,13 +45,20 @@
 #define APERIO_BARCODE_TAG "Barcode = "
 
 // ventana
-#define VENTANA_FILENAME_ATT "JP2FileName="
-#define VENTANA_UNITNUMBER_ATT "UnitNumber="
-#define VENTANA_USERNAME_ATT "UserName="
-#define VENTANA_BARCODE1D_ATT "Barcode1D="
-#define VENTANA_BARCODE2D_ATT "Barcode2D="
-#define VENTANA_BASENAME_ATT "BaseName="
-#define VENTANA_BUILDDATE_ATT "BuildDate="
+#define VENTANA_FILENAME_ATT "JP2FileName=\""
+#define VENTANA_UNITNUMBER_ATT "UnitNumber=\""
+#define VENTANA_USERNAME_ATT "UserName=\""
+#define VENTANA_BARCODE1D_ATT "Barcode1D=\""
+#define VENTANA_BARCODE2D_ATT "Barcode2D=\""
+#define VENTANA_BASENAME_ATT "BaseName=\""
+#define VENTANA_BUILDDATE_ATT "BuildDate=\""
+#define VENTANA_FILENAME_ATT_2 "JP2FileName=\'"
+#define VENTANA_UNITNUMBER_ATT_2 "UnitNumber=\'"
+#define VENTANA_USERNAME_ATT_2 "UserName=\'"
+#define VENTANA_BARCODE1D_ATT_2 "Barcode1D=\'"
+#define VENTANA_BARCODE2D_ATT_2 "Barcode2D=\'"
+#define VENTANA_BASENAME_ATT_2 "BaseName=\'"
+#define VENTANA_BUILDDATE_ATT_2 "BuildDate=\'"
 
 // philips based (Philips' iSyntax and TIFF)
 #define PHILIPS_DELIMITER_STR "\"IString\""
