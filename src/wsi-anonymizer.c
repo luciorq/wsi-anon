@@ -36,13 +36,13 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
 
     struct wsi_data *wsi_data = get_wsi_data(*filename);
 
-    if (wsi_data->format == UNKNOWN) {
+    if (wsi_data->format == INVALID) {
         fprintf(stderr, "Error: File does not exist or is invalid.\n");
-        free_wsi_data(wsi_data);
+        free(wsi_data);
         return result;
-    } else if (wsi_data->format == INVALID) {
+    } else if (wsi_data->format == UNKNOWN) {
         fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
-        free_wsi_data(wsi_data);
+        free(wsi_data);
         return result;
     } else {
         result = handle_format_functions[wsi_data->format](filename, new_label_name, keep_macro_image,
