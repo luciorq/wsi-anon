@@ -12,7 +12,7 @@ extern char *create_pre_suffixed_char_array(const char x, uint64_t length, const
 
 extern bool starts_with(const char *str, const char *pre);
 
-extern const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);
+extern char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);
 
 extern void remove_leading_spaces(char *str);
 
