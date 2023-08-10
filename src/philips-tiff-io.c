@@ -263,7 +263,6 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
                     if (contains(result, METADATA_ATTRIBUTES[i])) {
                         char *new_result = anonymize_value_of_attribute(result, METADATA_ATTRIBUTES[i]);
                         strcpy(result, new_result);
-                        free(new_result);
                         rewrite = true;
                     }
                 }

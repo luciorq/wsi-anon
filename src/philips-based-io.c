@@ -59,11 +59,9 @@ char *anonymize_value_of_attribute(char *buffer, char *attribute) {
         char replace_with = 'X';
         char *replacement = create_replacement_string(replace_with, strlen(value));
         char *result = replace_str(buffer, value, replacement);
+        strcpy(buffer, result);
         free(replacement);
-        free(rough_value);
-        free((char *)concatenated_str);
-        free(value);
-        return result;
+        free(result);
     }
     free(rough_value);
     free((char *)concatenated_str);

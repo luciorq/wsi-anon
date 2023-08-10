@@ -144,7 +144,6 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
         if (contains(result, METADATA_ATTRIBUTES[i])) {
             char *new_result = anonymize_value_of_attribute(result, METADATA_ATTRIBUTES[i]);
             strcpy(result, new_result);
-            free(new_result);
             rewrite = true;
         }
     }
@@ -173,15 +172,16 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
     file_seek(fp, 0, SEEK_SET);
 
     if (file_read(buffer, header_size, 1, fp) != 1) {
-        free(buffer);
         fprintf(stderr, "Error: Could not read iSyntax file.\n");
         return -1;
     }
 
     // handle bigger overhead when using malloc in WASM
+    /*
     if (strlen(buffer) > header_size) {
         buffer[header_size] = '\0';
     }
+    */
 
     char *result = buffer;
     bool rewrite = false;
