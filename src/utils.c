@@ -205,19 +205,20 @@ bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
 }
 
-const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2) {
+char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2) {
     const char *substring1 = strstr(buffer, delimiter1);
     if (substring1) {
         const size_t s_del1 = strlen(delimiter1);
         if (delimiter2) {
             const char *substring2 = strstr(substring1 + s_del1, delimiter2);
             const size_t mlen = substring2 - (substring1 + s_del1);
-            char *result = (char *)malloc(mlen + 1);
+            char *result = (char *)malloc(sizeof(char) * (mlen + 1)); // Buffer overflow here
             if (result) {
                 memcpy(result, substring1 + s_del1, mlen);
                 result[mlen] = '\0';
                 return result;
             }
+            free(result);
         }
     }
     return NULL;

@@ -18,6 +18,8 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
                      bool do_inplace);
 
 // additional functions
+void free_slidedata_ini_file(struct ini_file *ini);
+
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count);
 
 struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *layer_name, const char *level_name);

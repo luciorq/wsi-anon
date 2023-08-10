@@ -1,14 +1,16 @@
 #include "philips-tiff-io.h"
 
 struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attribute) {
-    const char *value = get_value_from_attribute(buffer, attribute);
+    char *value = get_value_from_attribute(buffer, attribute);
     // check if value of attribute is not an empty string
     if (value[0] != '\0') {
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = attribute;
+        single_attribute->key = strdup(attribute);
         single_attribute->value = strdup(value);
+        free(value);
         return single_attribute;
     }
+    free(value);
     return NULL;
 }
 
@@ -38,6 +40,7 @@ struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
                 char *buffer = (char *)malloc(entry.count * entry_size);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read tag image description.\n");
+                    free(buffer);
                     return NULL;
                 }
 
@@ -121,6 +124,7 @@ struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
     wsi_data->metadata_attributes = metadata_attributes;
 
     // cleanup
+    free_tiff_file(file);
     file_close(fp);
     return wsi_data;
 }
@@ -149,10 +153,12 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
                 if (contains(result, image_type)) {
 
                     // get image data string
-                    const char *image_data = get_string_between_delimiters(result, PHILIPS_OBJECT, image_type);
-                    image_data = get_string_between_delimiters(image_data, PHILIPS_IMAGE_DATA, PHILIPS_ATT_OPEN);
-                    image_data = get_string_between_delimiters(
-                        image_data, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
+                    char *rough_image_data = get_string_between_delimiters(result, PHILIPS_OBJECT, image_type);
+                    char *refined_image_data =
+                        get_string_between_delimiters(rough_image_data, PHILIPS_IMAGE_DATA, PHILIPS_ATT_OPEN);
+                    const char *concatenated_str = concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL);
+                    char *image_data =
+                        get_string_between_delimiters(refined_image_data, concatenated_str, PHILIPS_ATT_END);
 
                     // set height and width to 1
                     int32_t height = 1;
@@ -174,13 +180,19 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
                         new_image_data[strlen(image_data)] = '\0';
                     }
 
-                    result = replace_str(result, image_data, new_image_data);
+                    char *new_result = replace_str(result, image_data, new_image_data);
+                    strcpy(result, new_result);
                     rewrite = true;
 
-                    // free memory and release encoder
+                    // free all memory
+                    free(rough_image_data);
+                    free(refined_image_data);
+                    free((char *)concatenated_str);
+                    free(image_data);
                     free(white_image);
-                    free(new_image_data);
                     jpec_enc_del(e);
+                    free(new_image_data);
+                    free(new_result);
                 }
 
                 // alter image in image description
@@ -192,8 +204,8 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
                         free(buffer);
                         return -1;
                     }
-                    free(buffer);
                 }
+                free(buffer);
             }
         }
     }
@@ -222,45 +234,38 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
 
                 // Datetime attribute is substituted with minimum possible value
                 if (contains(result, PHILIPS_DATETIME_ATT)) {
-                    const char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
-                    result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+                    char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
+                    char *new_result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+                    strcpy(result, new_result);
                     rewrite = true;
+                    free(value);
+                    free(new_result);
                 }
 
-                // replaced with arbitrary value
-                if (contains(result, PHILIPS_SERIAL_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT);
-                    rewrite = true;
+                // Slot and Rack Number value in metadata is replaced by blank spaces
+                static char *METADATA_NUMBER[] = {PHILIPS_SLOT_ATT, PHILIPS_RACK_ATT};
+
+                for (size_t i = 0; i < sizeof(METADATA_NUMBER) / sizeof(METADATA_NUMBER[0]); i++) {
+                    if (contains(result, METADATA_NUMBER[i])) {
+                        char *new_result = wipe_section_of_attribute(result, METADATA_NUMBER[i]);
+                        strcpy(result, new_result);
+                        free(new_result);
+                        rewrite = true;
+                    }
                 }
 
-                // wipes complete section of given attribute
-                if (contains(result, PHILIPS_SLOT_ATT)) {
-                    result = wipe_section_of_attribute(result, PHILIPS_SLOT_ATT);
-                    rewrite = true;
-                }
+                // rest of metadata that is replacable with arbitrary value
+                static char *METADATA_ATTRIBUTES[] = {PHILIPS_SERIAL_ATT, PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
+                                                      PHILIPS_SOURCE_FILE_ATT};
 
-                // wipes complete section of given attribute
-                if (contains(result, PHILIPS_RACK_ATT)) {
-                    result = wipe_section_of_attribute(result, PHILIPS_RACK_ATT);
-                    rewrite = true;
-                }
-
-                // replace with arbitrary value
-                if (contains(result, PHILIPS_OPERID_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT);
-                    rewrite = true;
-                }
-
-                // replace with arbitrary value
-                if (contains(result, PHILIPS_BARCODE_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT);
-                    rewrite = true;
-                }
-
-                // replace with arbitrary value
-                if (contains(result, PHILIPS_SOURCE_FILE_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_SOURCE_FILE_ATT);
-                    rewrite = true;
+                // anonymize rest of metadata
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                    if (contains(result, METADATA_ATTRIBUTES[i])) {
+                        char *new_result = anonymize_value_of_attribute(result, METADATA_ATTRIBUTES[i]);
+                        strcpy(result, new_result);
+                        free(new_result);
+                        rewrite = true;
+                    }
                 }
 
                 // alters image description
@@ -378,6 +383,8 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
     anonymize_philips_metadata(fp, file);
 
     // clean up
+    free((char *)(*filename));
+    free_tiff_file(file);
     file_close(fp);
     return result;
 }

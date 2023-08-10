@@ -29,6 +29,8 @@ uint32_t get_size_of_value(uint16_t type, uint32_t *count);
 
 uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset);
 
+void free_tiff_dir_and_entries(struct tiff_directory *tiff_dir, struct tiff_entry *entries, struct tiff_entry *entry);
+
 struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset, bool big_tiff,
                                            bool ndpi, bool big_endian);
 

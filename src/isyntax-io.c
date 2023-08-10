@@ -1,14 +1,16 @@
 #include "isyntax-io.h"
 
 struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) {
-    const char *value = get_value_from_attribute(buffer, attribute);
+    char *value = get_value_from_attribute(buffer, attribute);
     // check if value of attribute is not an empty string
     if (value[0] != '\0') {
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = attribute;
+        single_attribute->key = strdup(attribute);
         single_attribute->value = strdup(value);
+        free(value);
         return single_attribute;
     }
+    free(value);
     return NULL;
 }
 
@@ -114,39 +116,37 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 
     // Datetime attribute is substituted with minimum possible value
     if (contains(result, PHILIPS_DATETIME_ATT)) {
-        const char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
-        result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+        char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
+        char *new_result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+        strcpy(result, new_result);
+        free(new_result);
+        free(value);
         rewrite = true;
     }
 
-    // replaced with arbitrary value
-    if (contains(result, PHILIPS_SERIAL_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT);
-        rewrite = true;
+    // Slot and Rack Number value in metadata is replaced by blank spaces
+    static char *METADATA_NUMBER[] = {PHILIPS_SLOT_ATT, PHILIPS_RACK_ATT};
+
+    for (size_t i = 0; i < sizeof(METADATA_NUMBER) / sizeof(METADATA_NUMBER[0]); i++) {
+        if (contains(result, METADATA_NUMBER[i])) {
+            char *new_result = wipe_section_of_attribute(result, METADATA_NUMBER[i]);
+            strcpy(result, new_result);
+            free(new_result);
+            rewrite = true;
+        }
     }
 
-    // wipes complete section of given attribute
-    if (contains(result, PHILIPS_SLOT_ATT)) {
-        result = wipe_section_of_attribute(result, PHILIPS_SLOT_ATT);
-        rewrite = true;
-    }
+    // rest of metadata
+    static char *METADATA_ATTRIBUTES[] = {PHILIPS_SERIAL_ATT, PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
 
-    // wipes complete section of given attribute
-    if (contains(result, PHILIPS_RACK_ATT)) {
-        result = wipe_section_of_attribute(result, PHILIPS_RACK_ATT);
-        rewrite = true;
-    }
-
-    // replace with arbitrary value
-    if (contains(result, PHILIPS_OPERID_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT);
-        rewrite = true;
-    }
-
-    // replace with arbitrary value
-    if (contains(result, PHILIPS_BARCODE_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT);
-        rewrite = true;
+    // checks for rest of metadata and replaces it with arbitrary value
+    for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+        if (contains(result, METADATA_ATTRIBUTES[i])) {
+            char *new_result = anonymize_value_of_attribute(result, METADATA_ATTRIBUTES[i]);
+            strcpy(result, new_result);
+            free(new_result);
+            rewrite = true;
+        }
     }
 
     // alters iSyntax file
@@ -189,10 +189,10 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
     if (contains(result, image_type)) {
 
         // get image data string
-        const char *image_data = get_string_between_delimiters(result, image_type, PHILIPS_OBJECT);
-        image_data = get_string_between_delimiters(image_data, PHILIPS_IMAGE_DATA, ISYNTAX_DATA);
-        image_data = get_string_between_delimiters(
-            image_data, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
+        char *rough_image_data = get_string_between_delimiters(result, image_type, PHILIPS_OBJECT);
+        char *refined_image_data = get_string_between_delimiters(rough_image_data, PHILIPS_IMAGE_DATA, ISYNTAX_DATA);
+        const char *concatenated_str = concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL);
+        char *image_data = get_string_between_delimiters(refined_image_data, concatenated_str, PHILIPS_ATT_END);
 
         // set height and width to 1
         int32_t height = 1;
@@ -213,13 +213,20 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';
         }
-        result = replace_str(result, image_data, new_image_data);
+
+        char *new_result = replace_str(result, image_data, new_image_data);
+        strcpy(result, new_result);
         rewrite = true;
 
-        // free memory and release encoder
+        // free all memory
+        free(rough_image_data);
+        free(refined_image_data);
+        free((char *)concatenated_str);
+        free(image_data);
         free(white_image);
-        free(new_image_data);
         jpec_enc_del(e);
+        free(new_image_data);
+        free(new_result);
     }
 
     // alter XML header
@@ -267,6 +274,8 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
     if (result == -1) {
         fprintf(stderr, "Error: Could not wipe label image from file.\n");
+        file_close(fp);
+        return result;
     }
 
     // remove macro image
@@ -281,6 +290,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
     anonymize_isyntax_metadata(fp, header_size);
 
     // clean up
+    free((char *)(*filename));
     file_close(fp);
     return result;
 }

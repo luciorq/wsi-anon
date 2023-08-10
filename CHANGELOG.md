@@ -2,9 +2,9 @@
 
 ## 0.4.11
 
-* save all information regarding WSI in struct
 * replace check_file_header by get_wsi_data function
 * extend testcases by new files
+* remove all memory leaks (except for MIRAX)
 
 ## 0.4.10
 

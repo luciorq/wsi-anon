@@ -38,16 +38,16 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
 
     if (wsi_data->format == UNKNOWN) {
         fprintf(stderr, "Error: File does not exist or is invalid.\n");
-        free(wsi_data);
+        free_wsi_data(wsi_data);
         return result;
     } else if (wsi_data->format == INVALID) {
         fprintf(stderr, "Error: Unknown file format. Process aborted.\n");
-        free(wsi_data);
+        free_wsi_data(wsi_data);
         return result;
     } else {
         result = handle_format_functions[wsi_data->format](filename, new_label_name, keep_macro_image,
                                                            disable_unlinking, do_inplace);
-        free(wsi_data);
+        free_wsi_data(wsi_data);
         return result;
     }
 }
@@ -62,4 +62,13 @@ int32_t anonymize_wsi(const char *filename, const char *new_label_name, bool kee
     return anonymize_wsi_with_result(&filename, new_label_name, keep_macro_image, disable_unlinking, do_inplace);
 }
 
-void freeMem(void *ptr) { free(ptr); }
+void free_wsi_data(struct wsi_data *wsi_data) {
+    for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
+        free(wsi_data->metadata_attributes->attributes[metadata_id]->value);
+        free(wsi_data->metadata_attributes->attributes[metadata_id]->key);
+        free(wsi_data->metadata_attributes->attributes[metadata_id]);
+    }
+    free(wsi_data->metadata_attributes->attributes);
+    free(wsi_data->metadata_attributes);
+    free(wsi_data);
+}

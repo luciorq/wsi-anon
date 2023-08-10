@@ -199,8 +199,8 @@ struct tiff_file {
 };
 
 struct metadata_attribute {
-    const char *key;
-    const char *value;
+    char *key;
+    char *value;
 };
 
 struct metadata {

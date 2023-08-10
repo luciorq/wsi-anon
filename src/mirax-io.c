@@ -49,7 +49,7 @@ struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const 
                 // if metadata_key was found
                 if (strcmp(entry->key, metadata_key) == 0) {
                     struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-                    single_attribute->key = metadata_key;
+                    single_attribute->key = strdup(metadata_key);
                     single_attribute->value = strdup((*entry).value);
                     return single_attribute;
                 }
@@ -94,6 +94,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
 
         // if file does not exist terminate loop
         if (fp == NULL) {
+            free((char *)datadat_filename);
             break;
         }
 
@@ -106,7 +107,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
             if (contains(buffer, PROFILENAME)) {
                 const char *value = get_string_between_delimiters(buffer, PROFILENAME, "\"");
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-                single_attribute->key = PROFILENAME;
+                single_attribute->key = strdup(PROFILENAME);
                 single_attribute->value = strdup(value);
                 if (single_attribute != NULL) {
                     attributes[metadata_id++] = single_attribute;
@@ -115,6 +116,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
             }
         }
         // cleanup
+        free((char *)datadat_filename);
         free(buffer);
         file_close(fp);
     }
@@ -124,6 +126,15 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
     metadata_attributes->attributes = attributes;
     metadata_attributes->length = metadata_id;
     return metadata_attributes;
+}
+
+// free slidedat_ini with all groups and its entries
+void free_slidedata_ini_file(struct ini_file *ini) {
+    for (int32_t i = 0; i < ini->group_count; i++) {
+        free((char *)(&ini->groups[i])->group_identifier);
+    }
+    free(ini->groups);
+    free(ini);
 }
 
 struct wsi_data *get_wsi_data_mirax(const char *filename) {
@@ -136,7 +147,7 @@ struct wsi_data *get_wsi_data_mirax(const char *filename) {
     }
 
     // open ini file
-    const char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
+    char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
     struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
 
     // check if ini file was successfully read
@@ -173,7 +184,8 @@ struct wsi_data *get_wsi_data_mirax(const char *filename) {
     wsi_data->metadata_attributes = metadata_attributes;
 
     // cleanup
-    free(ini);
+    free(path);
+    free_slidedata_ini_file(ini);
     free(data_filenames);
     return wsi_data;
 }

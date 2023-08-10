@@ -1,14 +1,16 @@
 #include "ventana-io.h"
 
 struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute, const char *delimiter) {
-    const char *value = get_string_between_delimiters(buffer, attribute, delimiter);
+    char *value = get_string_between_delimiters(buffer, attribute, delimiter);
     // check if tag is not an empty string
     if (value[0] != '\0') {
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = attribute;
+        single_attribute->key = strdup(attribute);
         single_attribute->value = strdup(value);
+        free(value);
         return single_attribute;
     }
+    free(value);
     return NULL;
 }
 
@@ -69,6 +71,7 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
                         }
                     }
                 }
+                free(buffer);
             }
 
             if (entry.tag == TIFFTAG_DATETIME) {
@@ -82,7 +85,7 @@ struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
                 }
                 // add metadata
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-                single_attribute->key = "Datetime";
+                single_attribute->key = strdup("Datetime");
                 single_attribute->value = strdup(buffer);
                 attributes[metadata_id++] = single_attribute;
                 free(buffer);
@@ -158,7 +161,8 @@ struct wsi_data *get_wsi_data_ventana(const char *filename) {
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
 
-    // cleanup
+    // clean up
+    free_tiff_file(file);
     file_close(fp);
     return wsi_data;
 }
@@ -221,6 +225,8 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 
     if (size_offsets != size_lengths) {
         fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+        free(strip_offsets);
+        free(strip_lengths);
         return -1;
     }
 
@@ -230,9 +236,13 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
         char *strip = create_pre_suffixed_char_array('0', strip_lengths[i], NULL, NULL);
         if (!file_write(strip, 1, strip_lengths[i], fp)) {
             fprintf(stderr, "Error: Wiping image data failed.\n");
+            free(strip_offsets);
+            free(strip_lengths);
             free(strip);
             return -1;
         }
+        free(strip_offsets);
+        free(strip_lengths);
         free(strip);
     }
     return 0;
@@ -258,49 +268,15 @@ int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, in
     return result;
 }
 
-/*
-// searches for attributes in XMP Data and replaces its values with equal amount of empty spaces
-void wipe_xmp_data(char *str, const char *attr, const char *del, const char replacement) {
-    while ((str = strstr(str, attr)) != NULL) {
-        int length_attr = strlen(attr);
-        str += length_attr;
-        while (*str != *del && *str != '\0') {
-            *str++ = replacement;
-        }
-    }
-}
-*/
-
-// checks if an attribute is included in the xml string and subsequently checks if single or
-// double quotes are used to define the value of the key; when the given key is found, the
-// string within the quotes is wiped with a replacement char
-/*
-int32_t anonymize_xmp_attribute_if_exists(char *str, const char *attr, const char replacement) {
-    if (contains(str, attr)) {
-        char *delimiters = "\"\'\0"; // could be other delimiters than "" and ''?
-        char del;
-        while ((del = *delimiters++) != '\0') {
-            size_t l = strlen(attr) + 2;
-            char ex_attr[l];
-            strcpy(ex_attr, attr);
-            ex_attr[l - 2] = del;
-            ex_attr[l - 1] = '\0';
-            if (contains(str, ex_attr)) {
-                wipe_xmp_data(str, &ex_attr[0], &del, replacement);
-                return 1;
-            }
-        }
-    }
-    return -1;
-}
-*/
-
 char *anonymize_xmp_attribute_if_exists(char *buffer, const char *attr, const char *delimiter) {
-    const char *value = get_string_between_delimiters(buffer, attr, delimiter);
+    char *value = get_string_between_delimiters(buffer, attr, delimiter);
     // check if tag is not an empty string
     if (value[0] != '\0') {
         char *replacement = create_replacement_string(' ', strlen(value));
-        buffer = replace_str(buffer, value, replacement);
+        char *result = replace_str(buffer, value, replacement);
+        free(replacement);
+        free(value);
+        return result;
     }
     return buffer;
 }
@@ -334,7 +310,9 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
                 for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); k++) {
                     if (contains(result, METADATA_ATTRIBUTES[k])) {
-                        result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES[k], "\"");
+                        char *new_result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES[k], "\"");
+                        strcpy(result, new_result);
+                        free(new_result);
                         rewrite = true;
                     }
                 }
@@ -346,7 +324,9 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
 
                 for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES_2) / sizeof(METADATA_ATTRIBUTES_2[0]); k++) {
                     if (contains(result, METADATA_ATTRIBUTES_2[k])) {
-                        result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES_2[k], "\'");
+                        char *new_result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES_2[k], "\'");
+                        strcpy(result, new_result);
+                        free(new_result);
                         rewrite = true;
                     }
                 }
@@ -368,20 +348,26 @@ int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
                 file_seek(fp, entry.offset, SEEK_SET);
                 int32_t entry_size = get_size_of_value(entry.type, &entry.count);
                 char *buffer = malloc(entry_size * entry.count);
+
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read DATE_TIME Tag.\n");
                     free(buffer);
                     return -1;
                 }
+
                 char *replacement = create_replacement_string(' ', strlen(buffer));
-                buffer = replace_str(buffer, buffer, replacement);
+                char *new_buffer = replace_str(buffer, buffer, replacement);
                 file_seek(fp, entry.offset, SEEK_SET);
-                if (!file_write(buffer, entry_size, entry.count, fp)) {
+                if (!file_write(new_buffer, entry_size, entry.count, fp)) {
                     fprintf(stderr, "Error: changing data in DATE_TIME Tag failed.\n");
+                    free(replacement);
                     free(buffer);
+                    free(new_buffer);
                     return -1;
                 }
+                free(replacement);
                 free(buffer);
+                free(new_buffer);
             }
         }
     }
@@ -435,6 +421,8 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
 
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find Image File Directory of Label image.\n");
+        free_tiff_file(file);
+        file_close(fp);
         return -1;
     }
 
@@ -449,6 +437,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
     remove_metadata_in_ventana(fp, file);
 
     // clean up
+    free((char *)(*filename));
     free_tiff_file(file);
     file_close(fp);
     return result;

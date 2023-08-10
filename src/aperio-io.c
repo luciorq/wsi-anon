@@ -1,14 +1,16 @@
 #include "aperio-io.h"
 
 struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *delimiter1, const char *delimiter2) {
-    const char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
+    char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
     // check if tag is not an empty string
     if (value[0] != '\0') {
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = delimiter1;
+        single_attribute->key = strdup(delimiter1);
         single_attribute->value = strdup(value);
+        free(value);
         return single_attribute;
     }
+    free(value);
     return NULL;
 }
 
@@ -119,6 +121,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     wsi_data->metadata_attributes = metadata_attributes;
 
     // cleanup
+    free_tiff_file(file);
     file_close(fp);
     return wsi_data;
 }
@@ -130,6 +133,8 @@ char *override_image_description(char *result, char *delimiter) {
     if (value[0] != '\0') {
         char *replacement = create_replacement_string('X', strlen(value));
         result = replace_str(result, value, replacement);
+        free((char *)(value));
+        free(replacement);
     }
     return result;
 }
@@ -155,24 +160,16 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
                 bool rewrite = false;
                 char *result = buffer;
 
-                if (contains(result, APERIO_FILENAME_TAG)) {
-                    result = override_image_description(result, APERIO_FILENAME_TAG);
-                    rewrite = true;
-                }
+                static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_DATE_TAG,
+                                                      APERIO_BARCODE_TAG};
 
-                if (contains(result, APERIO_USER_TAG)) {
-                    result = override_image_description(result, APERIO_USER_TAG);
-                    rewrite = true;
-                }
-
-                if (contains(result, APERIO_DATE_TAG)) {
-                    result = override_image_description(result, APERIO_DATE_TAG);
-                    rewrite = true;
-                }
-
-                if (contains(result, APERIO_BARCODE_TAG)) {
-                    result = override_image_description(result, APERIO_BARCODE_TAG);
-                    rewrite = true;
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                    if (contains(result, METADATA_ATTRIBUTES[i])) {
+                        char *new_result = override_image_description(result, METADATA_ATTRIBUTES[i]);
+                        strcpy(result, new_result);
+                        free(new_result);
+                        rewrite = true;
+                    }
                 }
 
                 if (rewrite == true) {
@@ -241,6 +238,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 
     if (file == NULL) {
         fprintf(stderr, "Error: Could not read tiff file.\n");
+        file_close(fp);
         return -1;
     }
 
@@ -256,6 +254,8 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find IFD of label image.\n");
+        free_tiff_file(file);
+        file_close(fp);
         return -1;
     }
 
@@ -279,6 +279,8 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
 
         if (macro_dir == -1) {
             fprintf(stderr, "Error: Could not find IFD of macro image.\n");
+            free_tiff_file(file);
+            file_close(fp);
             return -1;
         }
 
@@ -304,6 +306,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     // clean up
+    free((char *)(*filename));
     free_tiff_file(file);
     file_close(fp);
     return result;

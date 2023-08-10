@@ -26,7 +26,7 @@ struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
 
                 // add metadata
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-                single_attribute->key = "Datetime";
+                single_attribute->key = strdup("Datetime");
                 single_attribute->value = strdup(buffer);
                 if (single_attribute != NULL) {
                     attributes[metadata_id++] = single_attribute;
@@ -92,6 +92,7 @@ struct wsi_data *get_wsi_data_hamamatsu(const char *filename) {
     wsi_data->metadata_attributes = metadata_attributes;
 
     // cleanup
+    free_tiff_file(file);
     file_close(fp);
     return wsi_data;
 }
@@ -115,18 +116,22 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
                     uint64_t new_start = temp_entry.start + 8;
                     if (file_seek(fp, new_start, SEEK_SET)) {
                         fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
+                        free(v_buffer);
                         return -1;
                     }
                     if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
                         fprintf(stderr, "Error: Failed to read entry value.\n");
+                        free(v_buffer);
                         return -1;
                     }
                     fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
 
                     // SourceLens equals -1 if macro directory containing the label image was found
                     if (*v_buffer == -1) {
+                        free(v_buffer);
                         return i;
                     }
+                    free(v_buffer);
                 }
             }
         }
@@ -157,8 +162,10 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
 
                 if (file_write(replacement, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not overwrite metadata in file.\n");
+                    free(replacement);
                     return -1;
                 }
+                free(replacement);
                 return 0;
             }
         }
@@ -237,8 +244,9 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         result = unlink_directory(fp, file, dir_count, true);
     }
 
+    // clean up
+    free((char *)(*filename));
     free_tiff_file(file);
     file_close(fp);
-
     return result;
 }

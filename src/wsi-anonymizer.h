@@ -21,6 +21,6 @@ extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_label
 extern int32_t anonymize_wsi(const char *filename, const char *new_label_name, bool keep_macro_image,
                              bool disable_unlinking, bool do_inplace);
 
-extern void freeMem(void *ptr);
+extern void free_wsi_data(struct wsi_data *wsi_data);
 
 #endif

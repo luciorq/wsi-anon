@@ -19,13 +19,16 @@ void insert_dir_into_tiff_file(struct tiff_file *file, struct tiff_directory *di
         memset(&(file->directories[file->size / 2]), 0, realloc_size / 2);
     }
     file->directories[file->used++] = *dir;
+    free(dir);
 }
 
-// destroy tiff file with associated directories
+// free tiff_file with all directories and entries
 void free_tiff_file(struct tiff_file *file) {
+    for (uint64_t i = 0; i < file->used; i++) {
+        free((&file->directories[i])->entries);
+    }
     free(file->directories);
-    file->directories = NULL;
-    file->used = file->size = 0;
+    free(file);
 }
 
 // fix the byte order for data array depending on the endianess
@@ -127,6 +130,12 @@ uint64_t fix_ndpi_offset(uint64_t directory_offset, uint64_t offset) {
     return new_offset;
 }
 
+void free_tiff_dir_and_entries(struct tiff_directory *tiff_dir, struct tiff_entry *entries, struct tiff_entry *entry) {
+    free(tiff_dir);
+    free(entries);
+    free(entry);
+}
+
 // read a tiff directory at a certain offset
 struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset, bool big_tiff,
                                            bool ndpi, bool big_endian) {
@@ -153,6 +162,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
 
         if (entry == NULL) {
             fprintf(stderr, "Error: could not allocate memory for entry.\n");
+            free_tiff_dir_and_entries(tiff_dir, entries, entry);
             return NULL;
         }
 
@@ -169,6 +179,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
         if (!value_size || count > (SIZE_MAX / value_size)) {
             fprintf(stderr, "Error: failed to determine valid parameters to read value from file.\n");
+            free_tiff_dir_and_entries(tiff_dir, entries, entry);
             return NULL;
         }
 
@@ -177,6 +188,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
         uint8_t read_size = big_tiff ? 8 : 4;
         if (file_read(value, read_size, 1, fp) != 1) {
             fprintf(stderr, "Error: reading value to array failed.\n");
+            free_tiff_dir_and_entries(tiff_dir, entries, entry);
             return NULL;
         }
 
@@ -187,10 +199,12 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
                               (NDPI_ENTRY_EXTENSION / 2),
                           SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to offset extension.\n");
+                free_tiff_dir_and_entries(tiff_dir, entries, entry);
                 return NULL;
             }
             if (file_read(value + NDPI_BIT_EXTENSION, NDPI_BIT_EXTENSION, 1, fp) != 1) {
                 fprintf(stderr, "Error: cannot read offset extension.\n");
+                free_tiff_dir_and_entries(tiff_dir, entries, entry);
                 return NULL;
             }
             if (is_value && (value[4] > 0 || value[5] > 0 || value[6] > 0 || value[7] > 0)) {
@@ -201,6 +215,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
             uint64_t dir_start = (NDPI_ENTRY_EXTENSION * (i + 1)) + (NDPI_BIT_EXTENSION / 2);
             if (file_seek(fp, offset + dir_start, SEEK_SET) != 0) {
                 fprintf(stderr, "Error: cannot seek to IFD start.\n");
+                free_tiff_dir_and_entries(tiff_dir, entries, entry);
                 return NULL;
             }
         }
@@ -218,6 +233,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
         }
 
         entries[i] = *entry;
+        free(entry);
     }
 
     // get the directory offset of the successor
@@ -289,6 +305,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
 
         if (current_dir == NULL) {
             fprintf(stderr, "Error: Failed reading directory.\n");
+            free(current_dir);
             return NULL;
         }
         insert_dir_into_tiff_file(file, current_dir);
@@ -336,6 +353,8 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
         if (size_offsets != size_lengths) {
             fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            free(strip_offsets);
+            free(strip_lengths);
             return -1;
         }
 
@@ -344,6 +363,8 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
             if (prefix != NULL) {
                 if (check_prefix(fp, prefix) != 0) {
+                    free(strip_offsets);
+                    free(strip_lengths);
                     return -1;
                 }
                 file_seek(fp, strip_offsets[i], SEEK_SET);
@@ -354,11 +375,15 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             char *strip = create_pre_suffixed_char_array('0', strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
                 fprintf(stderr, "Error: Wiping image data failed.\n");
+                free(strip_offsets);
+                free(strip_lengths);
                 free(strip);
                 return -1;
             }
             free(strip);
         }
+        free(strip_offsets);
+        free(strip_lengths);
         return 0;
     } else {
         uint32_t *strip_offsets = read_pointer32_by_tag(fp, dir, TIFFTAG_STRIPOFFSETS, ndpi, big_endian, &size_offsets);
@@ -372,6 +397,8 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
         if (size_offsets != size_lengths) {
             fprintf(stderr, "Error: Length of strip offsets and lengths are not matching.\n");
+            free(strip_offsets);
+            free(strip_lengths);
             return -1;
         }
 
@@ -394,6 +421,8 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 
             if (prefix != NULL) {
                 if (check_prefix(fp, prefix) != 0) {
+                    free(strip_offsets);
+                    free(strip_lengths);
                     return -1;
                 }
                 file_seek(fp, strip_offsets[i], SEEK_SET);
@@ -404,11 +433,15 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
             char *strip = create_pre_suffixed_char_array('0', strip_lengths[i], prefix, suffix);
             if (!file_write(strip, 1, strip_lengths[i], fp)) {
                 fprintf(stderr, "Error: Wiping image data failed.\n");
+                free(strip_offsets);
+                free(strip_lengths);
                 free(strip);
                 return -1;
             }
             free(strip);
         }
+        free(strip_offsets);
+        free(strip_lengths);
     }
     return 0;
 }
