@@ -317,7 +317,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
     }
 
     // remove LABELIMAGE in ImageDescription XML
-    result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE);             // TODO: terminates here under windows
+    result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE); // TODO: terminates here under windows
 
     if (result == -1) {
         fprintf(stderr, "Error: Could not wipe LABELIMAGE in ImageDescription XML from file.\n");
