@@ -358,10 +358,11 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
     }
 
     // write empty jpeg image to file
-    const char *empty_buffer = create_pre_suffixed_char_array('0', **length, prefix, suffix);
+    char *empty_buffer = create_pre_suffixed_char_array('0', **length, prefix, suffix);
     file_seek(fp, **offset, SEEK_SET);
     file_write(empty_buffer, **length, 1, fp);
 
+    free(empty_buffer);
     free(buffer);
     file_close(fp);
     return 0;

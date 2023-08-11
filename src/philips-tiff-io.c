@@ -80,7 +80,7 @@ struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
 
     // checks if file was successfully opened
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open Philips' TIFF file.\n");
+        fprintf(stderr, "Error: Could not open Philips TIFF file.\n");
         return NULL;
     }
 
@@ -175,7 +175,7 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
 
                     // encode new image data and check if string is longer than original string,
                     // replace old base64-encoded string afterwards
-                    char *new_image_data = (char *)b64_encode(jpeg, strlen(image_data));
+                    char *new_image_data = (char *)b64_encode(jpeg, len);
                     if (strlen(new_image_data) > strlen(image_data)) {
                         new_image_data[strlen(image_data)] = '\0';
                     }
@@ -289,7 +289,7 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
 int32_t handle_philips_tiff(const char **filename, const char *new_label_name, bool keep_macro_image,
                             bool disable_unlinking, bool do_inplace) {
 
-    fprintf(stdout, "Anonymize Philips' TIFF WSI...\n");
+    fprintf(stdout, "Anonymize Philips TIFF WSI...\n");
 
     if (!do_inplace) {
         *filename = duplicate_file(*filename, new_label_name, DOT_TIFF);
@@ -317,7 +317,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
     }
 
     // remove LABELIMAGE in ImageDescription XML
-    result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE);
+    result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE);             // TODO: terminates here under windows
 
     if (result == -1) {
         fprintf(stderr, "Error: Could not wipe LABELIMAGE in ImageDescription XML from file.\n");
@@ -372,7 +372,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
 
     // unlinking
     if (!disable_unlinking) {
-        fprintf(stderr, "Error: Unlinking in Philips' TIFF file currently not supported.\n");
+        fprintf(stderr, "Error: Unlinking in Philips TIFF file currently not supported.\n");
         // ToDo: find out why unlinking of macro directory does not properly work
         // unlink_directory(fp, file, macro_dir, false);
         // unlink_directory(fp, file, label_dir, false);

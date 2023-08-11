@@ -16,7 +16,7 @@ struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *
 
 struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
     // all metadata
-    static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_DATE_TAG,
+    static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_TIME_TAG, APERIO_DATE_TAG, APERIO_SLIDE_TAG,
                                                 APERIO_BARCODE_TAG};
 
     // initialize metadata_attribute struct
@@ -160,7 +160,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
                 bool rewrite = false;
                 char *result = buffer;
 
-                static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_DATE_TAG,
+                static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_TIME_TAG, APERIO_DATE_TAG, APERIO_SLIDE_TAG,
                                                       APERIO_BARCODE_TAG};
 
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {

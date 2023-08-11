@@ -41,7 +41,9 @@
 // aperio
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
+#define APERIO_TIME_TAG "Time = "
 #define APERIO_DATE_TAG "Date = "
+#define APERIO_SLIDE_TAG "Slide = "
 #define APERIO_BARCODE_TAG "Barcode = "
 
 // ventana

@@ -88,7 +88,7 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
         assert "label" not in associated_images
         
         if "Aperio" in wsi_filepath:
-            for property in ["Filename", "User", "Date"]:
+            for property in ["Filename", "User", "Date", "Time"]:
                 assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
         slide.close()
     except tiffslide.TiffFileError as e:
