@@ -3,7 +3,7 @@
 struct metadata *get_metadata_hamamatsu(file_handle *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
     // TODO: find better value to determine size for malloc of metadata
-    struct metadata_attribute **attributes = malloc(sizeof(**attributes) * 15);
+    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -29,7 +29,9 @@ struct metadata *get_metadata_hamamatsu(file_handle *fp, struct tiff_file *file)
                 single_attribute->key = strdup("Datetime");
                 single_attribute->value = strdup(buffer);
                 if (single_attribute != NULL) {
-                    attributes[metadata_id++] = single_attribute;
+                    attributes =
+                        (struct metadata_attribute **)realloc(attributes, sizeof(**attributes) * (++metadata_id));
+                    attributes[metadata_id - 1] = single_attribute;
                 }
             }
         }
