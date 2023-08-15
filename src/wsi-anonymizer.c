@@ -36,7 +36,10 @@ int32_t anonymize_wsi_with_result(const char **filename, const char *new_label_n
 
     struct wsi_data *wsi_data = get_wsi_data(*filename);
 
-    if (wsi_data->format == INVALID) {
+    if (wsi_data == NULL) {
+        fprintf(stderr, "Error: Unable to gather metadata in WSI.\n");
+        return result;
+    } else if (wsi_data->format == INVALID) {
         fprintf(stderr, "Error: File does not exist or is invalid.\n");
         free(wsi_data);
         return result;
