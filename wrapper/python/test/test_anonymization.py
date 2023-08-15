@@ -236,26 +236,26 @@ def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, 
     
     cleanup(str(result_filename.absolute()))
 
-# TODO: both tests are not working at the moment
-# TODO: rename Philips iSyntax into Philips after placing Philips TIFF and iSyntax into Philips folder
-@pytest.mark.parametrize(
-    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
-    [
-        #("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
-        #("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"),
-    ],
-)
-def test_anonymize_file_format_basic(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
-    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
-    if result_filename.exists():
-        remove_file(str(result_filename.absolute()))
+# # TODO: both tests are not working at the moment
+# # TODO: rename Philips iSyntax into Philips after placing Philips TIFF and iSyntax into Philips folder
+# @pytest.mark.parametrize(
+#     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+#     [
+#         ("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
+#         ("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"),
+#     ],
+# )
+# def test_anonymize_file_format_basic(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+#     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+#     if result_filename.exists():
+#         remove_file(str(result_filename.absolute()))
 
-    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
-    assert result != -1
+#     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+#     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+#     assert result != -1
 
-    assert wait_until_exists(str(result_filename), 5)
+#     assert wait_until_exists(str(result_filename), 5)
 
-    # TODO: add some ordinary checks here?
+#     # TODO: add some ordinary checks here?
     
-    cleanup(str(result_filename.absolute()))
+#     cleanup(str(result_filename.absolute()))
