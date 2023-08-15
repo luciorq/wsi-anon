@@ -90,7 +90,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
     for (int32_t i = 0; i < num_of_datafiles && !found_profilename; i++) {
         // open data_file[i]
         const char *datadat_filename = concat_path_filename(path, data_filenames[i]);
-        file_t *fp = file_open(datadat_filename, "rb+");
+        file_handle *fp = file_open(datadat_filename, "rb+");
 
         // if file does not exist terminate loop
         if (fp == NULL) {
@@ -274,7 +274,7 @@ struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *l
 
 // read file number, position and size frrom index dat
 int32_t *read_data_location(const char *filename, int32_t record, int32_t **position, int32_t **size) {
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open file stream.\n");
@@ -330,7 +330,7 @@ int32_t *read_data_location(const char *filename, int32_t record, int32_t **posi
 // wipe the image data for filename, offset and length
 int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length, const char *prefix,
                         const char *suffix) {
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open label file.\n");
@@ -395,7 +395,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
 
 // delete label record from index file
 int32_t delete_record_from_index_file(const char *filename, int32_t record, int32_t all_records) {
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
     int32_t to_move = all_records - record - 1;
 
     if (to_move == 0) {
@@ -567,7 +567,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
     // concat index.dat filename
     const char *indexdat_filename = concat_path_filename(path, filename);
 
-    file_t *fp = file_open(indexdat_filename, "rb+");
+    file_handle *fp = file_open(indexdat_filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open index.dat file.\n");
@@ -606,7 +606,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
-        file_t *fp = file_open(datadat_filename, "rb+");
+        file_handle *fp = file_open(datadat_filename, "rb+");
 
         // if file does not exist terminate loop
         if (fp == NULL) {
@@ -642,7 +642,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
-        file_t *fp = file_open(datadat_filename, "rb+");
+        file_handle *fp = file_open(datadat_filename, "rb+");
 
         // if file does not exist terminate loop
         if (fp == NULL) {

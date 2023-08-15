@@ -19,7 +19,7 @@ struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) 
     return NULL;
 }
 
-struct metadata *get_metadata_isyntax(file_t *fp, int32_t header_size) {
+struct metadata *get_metadata_isyntax(file_handle *fp, int32_t header_size) {
     // all metadata
     static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT, PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
                                           PHILIPS_RACK_ATT,     PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
@@ -67,7 +67,7 @@ struct wsi_data *get_wsi_data_isyntax(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // check if file was successfully opened
     if (fp == NULL) {
@@ -103,7 +103,7 @@ struct wsi_data *get_wsi_data_isyntax(const char *filename) {
 
 // TODO: make use of get_wsi_data
 // anonymizes metadata from iSyntax file
-int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
+int32_t anonymize_isyntax_metadata(file_handle *fp, int32_t header_size) {
 
     // gets only XML header
     char *buffer = (char *)malloc(header_size);
@@ -169,7 +169,7 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 }
 
 // remove label image and macro image
-int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type) {
+int32_t wipe_isyntax_image_data(file_handle *fp, size_t header_size, char *image_type) {
 
     // gets only the xml header
     char *buffer = (char *)malloc(header_size);
@@ -264,7 +264,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, DOT_ISYNTAX);
     }
 
-    file_t *fp = file_open(*filename, "rb+");
+    file_handle *fp = file_open(*filename, "rb+");
 
     // if file could not be opened
     if (fp == NULL) {

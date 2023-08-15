@@ -16,7 +16,7 @@ struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attri
     return NULL;
 }
 
-struct metadata *get_metadata_ventana(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_ventana(file_handle *fp, struct tiff_file *file) {
     // all metadata with double quotes
     static const char *METADATA_ATTRIBUTES[] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
                                                 VENTANA_USERNAME_ATT, VENTANA_BUILDDATE_ATT, VENTANA_BARCODE1D_ATT,
@@ -113,7 +113,7 @@ struct wsi_data *get_wsi_data_ventana(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
@@ -170,7 +170,7 @@ struct wsi_data *get_wsi_data_ventana(const char *filename) {
 }
 
 // gets the label directory of ventana file
-int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
+int64_t get_ventana_label_dir(file_handle *fp, struct tiff_file *file) {
 
     for (uint64_t i = 0; i < file->used; i++) {
 
@@ -200,7 +200,7 @@ int64_t get_ventana_label_dir(file_t *fp, struct tiff_file *file) {
 }
 
 // wipes the label directory of ventana file by replacing bytes with zeros
-int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endian) {
+int32_t wipe_label_ventana(file_handle *fp, struct tiff_directory *dir, bool big_endian) {
     int32_t offset_tag = TIFFTAG_TILEOFFSETS;
     int32_t byte_count_tag = TIFFTAG_TILEBYTECOUNTS;
 
@@ -251,7 +251,7 @@ int32_t wipe_label_ventana(file_t *fp, struct tiff_directory *dir, bool big_endi
 }
 
 // wipes and unlinks directory
-int32_t wipe_and_unlink_ventana_directory(file_t *fp, struct tiff_file *file, int64_t directory, bool big_endian,
+int32_t wipe_and_unlink_ventana_directory(file_handle *fp, struct tiff_file *file, int64_t directory, bool big_endian,
                                           bool disable_unlinking) {
     // surpress compiler warning; remove when unlinking is implemented
     UNUSED(disable_unlinking);
@@ -285,7 +285,7 @@ char *anonymize_xmp_attribute_if_exists(char *buffer, const char *attr, const ch
 
 // TODO: make use of wsi_data struct
 // anonymizes metadata in XMP Tags of ventana file
-int32_t remove_metadata_in_ventana(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_ventana(file_handle *fp, struct tiff_file *file) {
 
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
@@ -394,7 +394,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, is_bif ? DOT_BIF : DOT_TIF);
     }
 
-    file_t *fp = file_open(*filename, "rb+");
+    file_handle *fp = file_open(*filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open tiff file.\n");

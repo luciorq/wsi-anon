@@ -1,6 +1,6 @@
 #include "hamamatsu-io.h"
 
-struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_hamamatsu(file_handle *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
     // TODO: find better value to determine size for malloc of metadata
     struct metadata_attribute **attributes = malloc(sizeof(**attributes) * 15);
@@ -53,7 +53,7 @@ struct wsi_data *get_wsi_data_hamamatsu(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
@@ -98,7 +98,7 @@ struct wsi_data *get_wsi_data_hamamatsu(const char *filename) {
 }
 
 // retrieve the macro directory in order to wipe label image from the tiff file structure
-int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian) {
+int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_handle *fp, bool big_endian) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory temp_dir = file->directories[i];
 
@@ -141,7 +141,7 @@ int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_end
 
 // TODO: make use of wsi_data struct
 // removes all metadata
-int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_hamamatsu(file_handle *fp, struct tiff_file *file) {
     for (uint32_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint32_t j = 0; j < dir.count; j++) {
@@ -187,7 +187,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);
     }
 
-    file_t *fp;
+    file_handle *fp;
     fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;

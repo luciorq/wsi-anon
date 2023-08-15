@@ -18,7 +18,7 @@ const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group
 }
 
 // get the amount of ini groups in the ini
-int32_t get_groups_count(file_t *fp) {
+int32_t get_groups_count(file_handle *fp) {
     int32_t count_groups = 0;
     // we only need the first two chars to determine
     // if line is a group tag
@@ -36,7 +36,7 @@ struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filena
     // concat slidedat filename
     const char *slidedat_filename = concat_path_filename(path, ini_filename);
 
-    file_t *fp = file_open(slidedat_filename, "r");
+    file_handle *fp = file_open(slidedat_filename, "r");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not read ini file.\n");
@@ -316,7 +316,7 @@ void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *gr
 int32_t write_ini_file(struct ini_file *ini_file, const char *path, const char *filename) {
 
     const char *slidedat_filename = concat_path_filename(path, filename);
-    file_t *fp = file_open(slidedat_filename, "w");
+    file_handle *fp = file_open(slidedat_filename, "w");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Failed writing index file.\n");

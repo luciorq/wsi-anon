@@ -68,7 +68,7 @@ void fix_byte_order(void *data, int32_t size, int64_t count, bool big_endian) {
 }
 
 // read an unsigned integer from a filestream at current position
-uint64_t read_uint(file_t *fp, int32_t size, bool big_endian) {
+uint64_t read_uint(file_handle *fp, int32_t size, bool big_endian) {
     uint8_t buffer[size];
     if (file_read(buffer, size, 1, fp) != 1) {
         return 0;
@@ -137,8 +137,8 @@ void free_tiff_dir_and_entries(struct tiff_directory *tiff_dir, struct tiff_entr
 }
 
 // read a tiff directory at a certain offset
-struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset, bool big_tiff,
-                                           bool ndpi, bool big_endian) {
+struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset, uint64_t *in_pointer_offset,
+                                           bool big_tiff, bool ndpi, bool big_endian) {
     uint64_t offset = *dir_offset;
     *dir_offset = 0;
 
@@ -247,7 +247,7 @@ struct tiff_directory *read_tiff_directory(file_t *fp, uint64_t *dir_offset, uin
 }
 
 // check tiff file header
-int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
+int32_t check_file_header(file_handle *fp, bool *big_endian, bool *big_tiff) {
     int32_t result = -1;
     uint16_t endianness;
 
@@ -279,7 +279,7 @@ int32_t check_file_header(file_t *fp, bool *big_endian, bool *big_tiff) {
 }
 
 // read the tiff file structure with offsets from the file stream
-struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_endian) {
+struct tiff_file *read_tiff_file(file_handle *fp, bool big_tiff, bool ndpi, bool big_endian) {
     // get directory offset; file stream pointer must be located just
     // before the directory offset
     uint64_t in_pointer_offset = file_tell(fp);
@@ -316,7 +316,7 @@ struct tiff_file *read_tiff_file(file_t *fp, bool big_tiff, bool ndpi, bool big_
 
 // check the head of the directory offset for a given prefix. if the head is not equal to the given
 // prefix the label/macro image is not wiped
-int32_t check_prefix(file_t *fp, const char *prefix) {
+int32_t check_prefix(file_handle *fp, const char *prefix) {
     size_t prefix_len = strlen(prefix);
     char *buf = (char *)malloc(prefix_len + 1);
     buf[prefix_len] = '\0';
@@ -336,7 +336,7 @@ int32_t check_prefix(file_t *fp, const char *prefix) {
     return 0;
 }
 
-int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool big_endian, bool big_tiff,
+int32_t wipe_directory(file_handle *fp, struct tiff_directory *dir, bool ndpi, bool big_endian, bool big_tiff,
                        const char *prefix, const char *suffix) {
     int32_t size_offsets;
     int32_t size_lengths;
@@ -447,7 +447,7 @@ int32_t wipe_directory(file_t *fp, struct tiff_directory *dir, bool ndpi, bool b
 }
 
 // read a 32-bit pointer from the directory entries by tiff tag
-uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian,
+uint32_t *read_pointer32_by_tag(file_handle *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian,
                                 int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
@@ -489,7 +489,7 @@ uint32_t *read_pointer32_by_tag(file_t *fp, struct tiff_directory *dir, int32_t 
 }
 
 // read a 64-bit pointer from the directory entries by tiff tag
-uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian,
+uint64_t *read_pointer64_by_tag(file_handle *fp, struct tiff_directory *dir, int32_t tag, bool ndpi, bool big_endian,
                                 int32_t *length) {
     for (uint64_t i = 0; i < dir->count; i++) {
         struct tiff_entry entry = dir->entries[i];
@@ -531,7 +531,7 @@ uint64_t *read_pointer64_by_tag(file_t *fp, struct tiff_directory *dir, int32_t 
     return NULL;
 }
 
-int32_t unlink_directory(file_t *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi) {
+int32_t unlink_directory(file_handle *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi) {
     struct tiff_directory dir = file->directories[current_dir];
     struct tiff_directory successor = file->directories[current_dir + 1];
 
@@ -597,7 +597,7 @@ int32_t get_aperio_gt450_dir_by_name(struct tiff_file *file, const char *dir_nam
     return -1;
 }
 
-int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag, const char *contains_value) {
+int32_t tag_value_contains(file_handle *fp, struct tiff_file *file, int32_t tag, const char *contains_value) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -625,7 +625,7 @@ int32_t tag_value_contains(file_t *fp, struct tiff_file *file, int32_t tag, cons
     return -1;
 }
 
-int32_t get_directory_by_tag_and_value(file_t *fp, struct tiff_file *file, int32_t tag, const char *value) {
+int32_t get_directory_by_tag_and_value(file_handle *fp, struct tiff_file *file, int32_t tag, const char *value) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {

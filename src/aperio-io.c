@@ -16,7 +16,7 @@ struct metadata_attribute *get_attribute_aperio(const char *buffer, const char *
     return NULL;
 }
 
-struct metadata *get_metadata_aperio(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_aperio(file_handle *fp, struct tiff_file *file) {
     // all metadata
     static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG,  APERIO_TIME_TAG,
                                                 APERIO_DATE_TAG,     APERIO_SLIDE_TAG, APERIO_BARCODE_TAG};
@@ -76,7 +76,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
@@ -143,7 +143,7 @@ char *override_image_description(char *result, char *delimiter) {
 
 // TODO: make use of get_metadata_aperio function
 // removes all metadata
-int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
+int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
     for (uint32_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint32_t j = 0; j < dir.count; j++) {
@@ -189,7 +189,7 @@ int32_t remove_metadata_in_aperio(file_t *fp, struct tiff_file *file) {
 
 // macro image for gt450 needs to be treated differently because it is JPEG encoded.
 // therefore we need to convert it to LZW compression
-int32_t change_macro_image_compression_gt450(file_t *fp, struct tiff_file *file, int32_t directory) {
+int32_t change_macro_image_compression_gt450(file_handle *fp, struct tiff_file *file, int32_t directory) {
     struct tiff_directory dir = file->directories[directory];
     for (uint32_t i = 0; i < dir.count; i++) {
         struct tiff_entry entry = dir.entries[i];
@@ -223,7 +223,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         *filename = duplicate_file(*filename, new_label_name, is_svs ? DOT_SVS : DOT_TIF);
     }
 
-    file_t *fp;
+    file_handle *fp;
     fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;

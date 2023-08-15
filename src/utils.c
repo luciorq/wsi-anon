@@ -54,7 +54,7 @@ const char *get_filename_ext(const char *filename) {
 }
 
 int32_t file_exists(const char *filename) {
-    file_t *file;
+    file_handle *file;
     if ((file = file_open(filename, "rb+"))) {
         file_close(file);
         return 1;
@@ -457,7 +457,7 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
 }
 
 // find size up to substring in file
-size_t get_size_to_substring(file_t *fp, char *substring) {
+size_t get_size_to_substring(file_handle *fp, char *substring) {
 
     file_seek(fp, 0, SEEK_END);
     long file_length = file_tell(fp);
@@ -481,7 +481,7 @@ size_t get_size_to_substring(file_t *fp, char *substring) {
 }
 
 // check if file contains specific value
-int32_t file_contains_value(file_t *fp, char *value) {
+int32_t file_contains_value(file_handle *fp, char *value) {
 
     file_seek(fp, 0, SEEK_END);
     long size = file_tell(fp);
@@ -517,7 +517,7 @@ const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, in
 }
 
 // read a signed integer 32 from file stream
-int32_t *read_int32(file_t *fp) {
+int32_t *read_int32(file_handle *fp) {
     int32_t *buffer = (int32_t *)malloc(sizeof(int32_t));
 
     if (file_read(buffer, sizeof(*buffer), 1, fp) != 1) {
@@ -530,7 +530,7 @@ int32_t *read_int32(file_t *fp) {
 
 // assert a int32_t has a certain value
 // used to skip pointer position on stream
-bool assert_value(file_t *fp, int32_t value) {
+bool assert_value(file_handle *fp, int32_t value) {
     int32_t *v_to_check = read_int32(fp);
     return *v_to_check == value;
 }

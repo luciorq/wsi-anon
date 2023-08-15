@@ -19,7 +19,7 @@ struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attrib
     return NULL;
 }
 
-struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_philips_tiff(file_handle *fp, struct tiff_file *file) {
     // all metadata
     static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT,   PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
                                           PHILIPS_RACK_ATT,       PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
@@ -81,7 +81,7 @@ struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
@@ -135,7 +135,7 @@ struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
 }
 
 // remove label image and macro image
-int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_type) {
+int32_t wipe_philips_image_data(file_handle *fp, struct tiff_file *file, char *image_type) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -218,7 +218,7 @@ int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_
 }
 
 // anonymizes metadata from Philips' TIFF file
-int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file) {
+int32_t anonymize_philips_metadata(file_handle *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -300,7 +300,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
         *filename = duplicate_file(*filename, new_label_name, DOT_TIFF);
     }
 
-    file_t *fp;
+    file_handle *fp;
     fp = file_open(*filename, "rb+");
 
     // philips tiff files can be stored as single-tiff TIFF or BigTIFF format
