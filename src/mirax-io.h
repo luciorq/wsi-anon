@@ -6,12 +6,20 @@
 #include "tiff-based-io.h"
 
 // main functions
-int32_t is_mirax(const char *filename);
+struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
+                                               const char *metadata_key);
+
+struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file, const char **data_filenames,
+                                    int32_t num_of_datafiles);
+
+struct wsi_data *get_wsi_data_mirax(const char *filename);
 
 int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
                      bool do_inplace);
 
 // additional functions
+void free_slidedata_ini_file(struct ini_file *ini);
+
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count);
 
 struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *layer_name, const char *level_name);

@@ -1,42 +1,109 @@
 #include "isyntax-io.h"
 
-static const char ISYNTAX_EXT[] = "isyntax";
-static const char DOT_ISYNTAX[] = ".isyntax";
-
-// checks iSyntax file format
-int32_t is_isyntax(const char *filename) {
-
-    const char *ext = get_filename_ext(filename);
-
-    // check for file extension
-    if (strcmp(ext, ISYNTAX_EXT) != 0) {
-        return 0;
-    } else {
-        int32_t result = 0;
-        file_t *fp = file_open(filename, "rb+");
-
-        // if file could not be opened
-        if (fp == NULL) {
-            fprintf(stderr, "Error: Could not open iSyntax file.\n");
-            return result;
+struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) {
+    char *value = get_value_from_attribute(buffer, attribute);
+    // check if value of attribute is not an empty string
+    if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        if (contains(attribute, "=")) {
+            char *pos_of_char = strchr(attribute, '=');
+            attribute = pos_of_char + 2;
         }
-
-        // searches for root node in file for verification
-        result = file_contains_value(fp, ISYNTAX_ROOTNODE);
-
-        // if root node could not be found
-        if (!result) {
-            return result;
-        }
-
-        // is iSyntax
-        file_close(fp);
-        return result;
+        single_attribute->key = strdup(attribute);
+        single_attribute->value = strdup(value);
+        free(value);
+        return single_attribute;
     }
+    free(value);
+    return NULL;
 }
 
+struct metadata *get_metadata_isyntax(file_handle *fp, int32_t header_size) {
+    // all metadata
+    static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT, PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
+                                          PHILIPS_RACK_ATT,     PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
+
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
+    int8_t metadata_id = 0;
+
+    // read content of XML header into buffer
+    char *buffer = malloc(header_size);
+    file_seek(fp, 0, SEEK_SET);
+    if (file_read(buffer, header_size, 1, fp) != 1) {
+        free(buffer);
+        fprintf(stderr, "Error: Could not read XML header of iSyntax file.\n");
+        return NULL;
+    }
+
+    // checks for all metadata
+    for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+        if (contains(buffer, METADATA_ATTRIBUTES[i])) {
+            struct metadata_attribute *single_attribute = get_attribute_isyntax(buffer, METADATA_ATTRIBUTES[i]);
+            if (single_attribute != NULL) {
+                attributes[metadata_id++] = single_attribute;
+            }
+        }
+    }
+
+    // add all found metadata
+    free(buffer);
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+struct wsi_data *get_wsi_data_isyntax(const char *filename) {
+    // gets file extension
+    int32_t result = 0;
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, ISYNTAX_EXT) != 0) {
+        return NULL;
+    }
+
+    // opens file
+    file_handle *fp = file_open(filename, "rb+");
+
+    // check if file was successfully opened
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Could not open iSyntax file.\n");
+        return NULL;
+    }
+
+    // checks root node in order to determine if file is actually iSyntax
+    result = file_contains_value(fp, ISYNTAX_ROOTNODE);
+
+    // checks result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not find root node in iSyntax file.\n");
+        return NULL;
+    }
+
+    // get header size
+    size_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
+
+    // gets all metadata
+    struct metadata *metadata_attributes = get_metadata_isyntax(fp, header_size);
+
+    // is iSyntax
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = PHILIPS_ISYNTAX;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    file_close(fp);
+    return wsi_data;
+}
+
+// TODO: make use of get_wsi_data
 // anonymizes metadata from iSyntax file
-int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
+int32_t anonymize_isyntax_metadata(file_handle *fp, int32_t header_size) {
 
     // gets only XML header
     char *buffer = (char *)malloc(header_size);
@@ -54,39 +121,36 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 
     // Datetime attribute is substituted with minimum possible value
     if (contains(result, PHILIPS_DATETIME_ATT)) {
-        const char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
-        result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+        char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
+        char *new_result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+        strcpy(result, new_result);
+        free(new_result);
+        free(value);
         rewrite = true;
     }
 
-    // replaced with arbitrary value
-    if (contains(result, PHILIPS_SERIAL_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT);
-        rewrite = true;
+    // Slot and Rack Number value in metadata is replaced by blank spaces
+    static char *METADATA_NUMBER[] = {PHILIPS_SLOT_ATT, PHILIPS_RACK_ATT};
+
+    for (size_t i = 0; i < sizeof(METADATA_NUMBER) / sizeof(METADATA_NUMBER[0]); i++) {
+        if (contains(result, METADATA_NUMBER[i])) {
+            char *new_result = wipe_section_of_attribute(result, METADATA_NUMBER[i]);
+            strcpy(result, new_result);
+            free(new_result);
+            rewrite = true;
+        }
     }
 
-    // wipes complete section of given attribute
-    if (contains(result, PHILIPS_SLOT_ATT)) {
-        result = wipe_section_of_attribute(result, PHILIPS_SLOT_ATT);
-        rewrite = true;
-    }
+    // rest of metadata
+    static char *METADATA_ATTRIBUTES[] = {PHILIPS_SERIAL_ATT, PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
 
-    // wipes complete section of given attribute
-    if (contains(result, PHILIPS_RACK_ATT)) {
-        result = wipe_section_of_attribute(result, PHILIPS_RACK_ATT);
-        rewrite = true;
-    }
-
-    // replace with arbitrary value
-    if (contains(result, PHILIPS_OPERID_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT);
-        rewrite = true;
-    }
-
-    // replace with arbitrary value
-    if (contains(result, PHILIPS_BARCODE_ATT)) {
-        result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT);
-        rewrite = true;
+    // checks for rest of metadata and replaces it with arbitrary value
+    for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+        if (contains(result, METADATA_ATTRIBUTES[i])) {
+            char *new_result = anonymize_value_of_attribute(result, METADATA_ATTRIBUTES[i]);
+            strcpy(result, new_result);
+            rewrite = true;
+        }
     }
 
     // alters iSyntax file
@@ -105,7 +169,7 @@ int32_t anonymize_isyntax_metadata(file_t *fp, int32_t header_size) {
 }
 
 // remove label image and macro image
-int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type) {
+int32_t wipe_isyntax_image_data(file_handle *fp, size_t header_size, char *image_type) {
 
     // gets only the xml header
     char *buffer = (char *)malloc(header_size);
@@ -113,15 +177,16 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
     file_seek(fp, 0, SEEK_SET);
 
     if (file_read(buffer, header_size, 1, fp) != 1) {
-        free(buffer);
         fprintf(stderr, "Error: Could not read iSyntax file.\n");
         return -1;
     }
 
     // handle bigger overhead when using malloc in WASM
+    /*
     if (strlen(buffer) > header_size) {
         buffer[header_size] = '\0';
     }
+    */
 
     char *result = buffer;
     bool rewrite = false;
@@ -129,10 +194,10 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
     if (contains(result, image_type)) {
 
         // get image data string
-        const char *image_data = get_string_between_delimiters(result, image_type, PHILIPS_OBJECT);
-        image_data = get_string_between_delimiters(image_data, PHILIPS_IMAGE_DATA, ISYNTAX_DATA);
-        image_data = get_string_between_delimiters(
-            image_data, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
+        char *rough_image_data = get_string_between_delimiters(result, image_type, PHILIPS_OBJECT);
+        char *refined_image_data = get_string_between_delimiters(rough_image_data, PHILIPS_IMAGE_DATA, ISYNTAX_DATA);
+        const char *concatenated_str = concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL);
+        char *image_data = get_string_between_delimiters(refined_image_data, concatenated_str, PHILIPS_ATT_END);
 
         // set height and width to 1
         int32_t height = 1;
@@ -153,13 +218,20 @@ int32_t wipe_isyntax_image_data(file_t *fp, size_t header_size, char *image_type
         if (strlen(new_image_data) > strlen(image_data)) {
             new_image_data[strlen(image_data)] = '\0';
         }
-        result = replace_str(result, image_data, new_image_data);
+
+        char *new_result = replace_str(result, image_data, new_image_data);
+        strcpy(result, new_result);
         rewrite = true;
 
-        // free memory and release encoder
+        // free all memory
+        free(rough_image_data);
+        free(refined_image_data);
+        free((char *)concatenated_str);
+        free(image_data);
         free(white_image);
-        free(new_image_data);
         jpec_enc_del(e);
+        free(new_image_data);
+        free(new_result);
     }
 
     // alter XML header
@@ -192,7 +264,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         *filename = duplicate_file(*filename, new_label_name, DOT_ISYNTAX);
     }
 
-    file_t *fp = file_open(*filename, "rb+");
+    file_handle *fp = file_open(*filename, "rb+");
 
     // if file could not be opened
     if (fp == NULL) {
@@ -207,6 +279,8 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
 
     if (result == -1) {
         fprintf(stderr, "Error: Could not wipe label image from file.\n");
+        file_close(fp);
+        return result;
     }
 
     // remove macro image
@@ -221,6 +295,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
     anonymize_isyntax_metadata(fp, header_size);
 
     // clean up
+    free((char *)(*filename));
     file_close(fp);
     return result;
 }

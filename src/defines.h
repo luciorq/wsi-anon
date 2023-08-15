@@ -16,7 +16,6 @@
 #define MRXS_ROOT_OFFSET_NONHIER 41
 #define MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET 4
 #define MRXS_MAX_SIZE_DATA_DAT 1000
-#define MRXS_PROFILENAME "ProfileName=\""
 
 // tiff endianness
 #define TIFF_BIGENDIAN 0x4d4d
@@ -42,17 +41,26 @@
 // aperio
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
+#define APERIO_TIME_TAG "Time = "
 #define APERIO_DATE_TAG "Date = "
+#define APERIO_SLIDE_TAG "Slide = "
 #define APERIO_BARCODE_TAG "Barcode = "
 
 // ventana
-#define VENTANA_FILENAME_ATT "JP2FileName="
-#define VENTANA_UNITNUMBER_ATT "UnitNumber="
-#define VENTANA_USERNAME_ATT "UserName="
-#define VENTANA_BARCODE1D_ATT "Barcode1D="
-#define VENTANA_BARCODE2D_ATT "Barcode2D="
-#define VENTANA_BASENAME_ATT "BaseName="
-#define VENTANA_BUILDDATE_ATT "BuildDate="
+#define VENTANA_FILENAME_ATT "JP2FileName=\""
+#define VENTANA_UNITNUMBER_ATT "UnitNumber=\""
+#define VENTANA_USERNAME_ATT "UserName=\""
+#define VENTANA_BARCODE1D_ATT "Barcode1D=\""
+#define VENTANA_BARCODE2D_ATT "Barcode2D=\""
+#define VENTANA_BASENAME_ATT "BaseName=\""
+#define VENTANA_BUILDDATE_ATT "BuildDate=\""
+#define VENTANA_FILENAME_ATT_2 "JP2FileName=\'"
+#define VENTANA_UNITNUMBER_ATT_2 "UnitNumber=\'"
+#define VENTANA_USERNAME_ATT_2 "UserName=\'"
+#define VENTANA_BARCODE1D_ATT_2 "Barcode1D=\'"
+#define VENTANA_BARCODE2D_ATT_2 "Barcode2D=\'"
+#define VENTANA_BASENAME_ATT_2 "BaseName=\'"
+#define VENTANA_BUILDDATE_ATT_2 "BuildDate=\'"
 
 // philips based (Philips' iSyntax and TIFF)
 #define PHILIPS_DELIMITER_STR "\"IString\""
@@ -104,6 +112,17 @@ typedef enum {
     TIFF_SLONG8 = 17,
     TIFF_IFD8 = 18
 } TIFFDataType;
+
+typedef enum {
+    APERIO = 0,
+    HAMAMATSU = 1,
+    MIRAX = 2,
+    VENTANA = 3,
+    PHILIPS_ISYNTAX = 4,
+    PHILIPS_TIFF = 5,
+    UNKNOWN = 6,
+    INVALID = 7
+} FILE_FORMAT;
 
 #define ASCII 2
 #define SHORT 3
@@ -179,6 +198,25 @@ struct tiff_file {
     uint32_t used;
     uint32_t size;
     struct tiff_directory *directories;
+};
+
+struct metadata_attribute {
+    char *key;
+    char *value;
+};
+
+struct metadata {
+    struct metadata_attribute **attributes;
+    size_t length;
+};
+
+// TODO: members are incomplete --> view concept again or comment in members below!!
+struct wsi_data {
+    FILE_FORMAT format;
+    const char *filename;
+    // struct associated_image_data **label;
+    // struct associated_image_data **macro;
+    struct metadata *metadata_attributes;
 };
 
 #endif

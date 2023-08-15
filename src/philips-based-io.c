@@ -2,44 +2,70 @@
 
 // replaces section of passed attribute with empty string
 char *wipe_section_of_attribute(char *buffer, char *attribute) {
-    const char *section =
-        get_string_between_delimiters(buffer, attribute, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
-    section = concat_str(attribute, section);
-    section = concat_str(section, concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL));
+    const char *concatenated_str = concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL);
+    char *rough_section = get_string_between_delimiters(buffer, attribute, concatenated_str);
+
+    const char *concatenated_section = concat_str(attribute, rough_section);
+    const char *concatenated_symbols = concat_str(PHILIPS_ATT_END, PHILIPS_CLOSING_SYMBOL);
+    const char *section = concat_str(concatenated_section, concatenated_symbols);
     char *replacement = create_replacement_string(' ', strlen(section));
-    return replace_str(buffer, section, replacement);
+    char *result = replace_str(buffer, section, replacement);
+
+    free((void *)concatenated_str);
+    free(rough_section);
+    free((void *)concatenated_section);
+    free((void *)section);
+    free((void *)concatenated_symbols);
+    free(replacement);
+
+    return result;
 }
 
 // returns value for an attribute
-const char *get_value_from_attribute(char *buffer, char *attribute) {
-    const char *value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
-    const char *delimiter = get_string_between_delimiters(value, PHILIPS_ATT_PMSVR, PHILIPS_CLOSING_SYMBOL);
+char *get_value_from_attribute(char *buffer, char *attribute) {
+    char *value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
+    char *delimiter = get_string_between_delimiters(value, PHILIPS_ATT_PMSVR, PHILIPS_CLOSING_SYMBOL);
 
     // check for datatype
     if (strcmp(delimiter, PHILIPS_DELIMITER_STR) == 0) {
-        return get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL),
-                                             PHILIPS_ATT_END);
+        const char *concatened_str = concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL);
+        char *result = get_string_between_delimiters(value, concatened_str, PHILIPS_ATT_END);
+        free(value);
+        free(delimiter);
+        free((void *)concatened_str);
+        return result;
     } else if (strcmp(delimiter, PHILIPS_DELIMITER_INT) == 0) {
-        return get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_INT, PHILIPS_CLOSING_SYMBOL),
-                                             PHILIPS_ATT_END);
+        const char *concatened_str = concat_str(PHILIPS_DELIMITER_INT, PHILIPS_CLOSING_SYMBOL);
+        char *result = get_string_between_delimiters(value, concatened_str, PHILIPS_ATT_END);
+        free(value);
+        free(delimiter);
+        free((void *)concatened_str);
+        return result;
     } else {
         fprintf(stderr, "Unable find value for attribute with this datatype");
+        free(value);
+        free(delimiter);
         return NULL;
     }
 }
 
 // searches for attribute and replaces its value with equal amount of X's
 char *anonymize_value_of_attribute(char *buffer, char *attribute) {
-    const char *value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
-    value = get_string_between_delimiters(value, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL),
-                                          PHILIPS_ATT_END);
-
+    char *rough_value = get_string_between_delimiters(buffer, attribute, PHILIPS_ATT_OPEN);
+    const char *concatenated_str = concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL);
+    char *value = get_string_between_delimiters(rough_value, concatenated_str, PHILIPS_ATT_END);
     // check for empty String
     if (strcmp(value, "") != 0) {
         char replace_with = 'X';
         char *replacement = create_replacement_string(replace_with, strlen(value));
-        return replace_str(buffer, value, replacement);
+        char *result = replace_str(buffer, value, replacement);
+        strcpy(buffer, result);
+        free(replacement);
+        free(result);
     }
+    free(rough_value);
+    free((void *)concatenated_str);
+    free(value);
 
     return buffer;
 }

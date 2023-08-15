@@ -10,6 +10,7 @@ static const char SLIDE_ID[] = "SLIDE_ID";
 static const char SLIDE_VERSION[] = "SLIDE_VERSION";
 static const char SLIDE_CREATIONDATETIME[] = "SLIDE_CREATIONDATETIME";
 static const char SLIDE_UTC_CREATIONDATETIME[] = "SLIDE_UTC_CREATIONDATETIME";
+static const char PROFILENAME[] = "ProfileName=\"";
 static const char NONHIERLAYER_0_SECTION[] = "NONHIERLAYER_0_SECTION";
 static const char NONHIERLAYER_1_SECTION[] = "NONHIERLAYER_1_SECTION";
 static const char SCANNER_HARDWARE_ID[] = "SCANNER_HARDWARE_ID";
@@ -35,6 +36,161 @@ static const char *SLIDE_BARCODE = "ScanDataLayer_SlideBarcode";
 static const char *SLIDE_THUMBNAIL = "ScanDataLayer_SlideThumbnail";
 // whole slide image
 static const char *SLIDE_WSI = "ScanDataLayer_WholeSlide";
+
+struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
+                                               const char *metadata_key) {
+    // iterate over groups in ini file
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
+        struct ini_group *group = &ini_file->groups[i];
+        // check for group
+        if (strcmp(group->group_identifier, group_name) == 0) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
+                struct ini_entry *entry = &group->entries[j];
+                // if metadata_key was found
+                if (strcmp(entry->key, metadata_key) == 0) {
+                    struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+                    single_attribute->key = strdup(metadata_key);
+                    single_attribute->value = strdup((*entry).value);
+                    return single_attribute;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file, const char **data_filenames,
+                                    int32_t num_of_datafiles) {
+    // all groups
+    static const char *GROUPS[] = {GENERAL, NONHIERLAYER_0_SECTION, NONHIERLAYER_1_SECTION};
+
+    // all metadata
+    static const char *METADATA_ATTRIBUTES[] = {
+        SLIDE_NAME,          PROJECT_NAME, SLIDE_ID, SLIDE_CREATIONDATETIME, SLIDE_UTC_CREATIONDATETIME,
+        SCANNER_HARDWARE_ID, PROFILENAME};
+
+    // initialize metadata_attribute struct
+    struct metadata_attribute **attributes =
+        malloc(sizeof(**attributes) * sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]));
+    int8_t metadata_id = 0;
+
+    // checks for all metadata in Slidedat.ini
+    for (size_t i = 0; i < sizeof(GROUPS) / sizeof(GROUPS[0]); i++) {
+        for (size_t j = 0; j < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); j++) {
+            struct metadata_attribute *single_attribute =
+                get_attribute_mirax(ini_file, GROUPS[i], METADATA_ATTRIBUTES[j]);
+            if (single_attribute != NULL) {
+                attributes[metadata_id++] = single_attribute;
+            }
+        }
+    }
+
+    // iterate through every data file
+    bool found_profilename = false;
+    for (int32_t i = 0; i < num_of_datafiles && !found_profilename; i++) {
+        // open data_file[i]
+        const char *datadat_filename = concat_path_filename(path, data_filenames[i]);
+        file_handle *fp = file_open(datadat_filename, "rb+");
+
+        // if file does not exist terminate loop
+        if (fp == NULL) {
+            free((void *)datadat_filename);
+            break;
+        }
+
+        // malloc buffer as big as slide version and slide id
+        char *buffer = (char *)malloc(MRXS_MAX_SIZE_DATA_DAT);
+
+        // read file
+        if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
+            // check for ProfileName
+            if (contains(buffer, PROFILENAME)) {
+                // removes '=' from key and saves it with value in struct
+                const char *value = get_string_between_delimiters(buffer, PROFILENAME, "\"");
+                struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+                single_attribute->key = strdup(PROFILENAME);
+                single_attribute->key[strlen(single_attribute->key) - 2] = '\0';
+                single_attribute->value = strdup(value);
+                if (single_attribute != NULL) {
+                    attributes[metadata_id++] = single_attribute;
+                }
+                found_profilename = true;
+            }
+        }
+        // cleanup
+        free((void *)datadat_filename);
+        free(buffer);
+        file_close(fp);
+    }
+
+    // add all found metadata
+    struct metadata *metadata_attributes = malloc(sizeof(*metadata_attributes));
+    metadata_attributes->attributes = attributes;
+    metadata_attributes->length = metadata_id;
+    return metadata_attributes;
+}
+
+// free slidedat_ini with all groups and its entries
+void free_slidedata_ini_file(struct ini_file *ini) {
+    for (int32_t i = 0; i < ini->group_count; i++) {
+        free((void *)(&ini->groups[i])->group_identifier);
+    }
+    free(ini->groups);
+    free(ini);
+}
+
+struct wsi_data *get_wsi_data_mirax(const char *filename) {
+    // gets file extension
+    const char *ext = get_filename_ext(filename);
+
+    // check for valid file extension
+    if (strcmp(ext, MRXS_EXT) != 0) {
+        return NULL;
+    }
+
+    // open ini file
+    char *path = strndup(filename, strlen(filename) - strlen(DOT_MRXS_EXT));
+    struct ini_file *ini = read_slidedat_ini_file(path, SLIDEDAT);
+
+    // check if ini file was successfully read
+    if (ini == NULL) {
+        return NULL;
+    }
+
+    // get number of files
+    const char *file_count = get_value_from_ini_file(ini, DATAFILE, FILE_COUNT);
+    if (file_count == NULL) {
+        fprintf(stderr, "Error: No index file specified.\n");
+        return NULL;
+    }
+
+    // cast file count
+    int32_t f_count;
+    sscanf(file_count, "%d", &f_count);
+
+    // get data.dat filenames for metadata
+    const char **data_filenames = (const char **)malloc((f_count + 1) * sizeof(char *));
+    for (int32_t i = 0; i < f_count; i++) {
+        const char *temp_datafile_key = concat_wildcard_string_int32(FILE_, i);
+        const char *temp_datafile_name = get_value_from_ini_file(ini, DATAFILE, temp_datafile_key);
+        data_filenames[i] = temp_datafile_name;
+    }
+
+    // gets all metadata in Slidedat.ini
+    struct metadata *metadata_attributes = get_metadata_mirax(path, ini, data_filenames, f_count);
+
+    // is MIRAX
+    struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
+    wsi_data->format = MIRAX;
+    wsi_data->filename = filename;
+    wsi_data->metadata_attributes = metadata_attributes;
+
+    // cleanup
+    free(path);
+    free_slidedata_ini_file(ini);
+    free(data_filenames);
+    return wsi_data;
+}
 
 // retrieve the file structure of the mirax file from the
 // Slidedat.ini file
@@ -118,7 +274,7 @@ struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *l
 
 // read file number, position and size frrom index dat
 int32_t *read_data_location(const char *filename, int32_t record, int32_t **position, int32_t **size) {
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open file stream.\n");
@@ -174,7 +330,7 @@ int32_t *read_data_location(const char *filename, int32_t record, int32_t **posi
 // wipe the image data for filename, offset and length
 int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length, const char *prefix,
                         const char *suffix) {
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open label file.\n");
@@ -204,10 +360,11 @@ int32_t wipe_level_data(const char *filename, int32_t **offset, int32_t **length
     }
 
     // write empty jpeg image to file
-    const char *empty_buffer = create_pre_suffixed_char_array('0', **length, prefix, suffix);
+    char *empty_buffer = create_pre_suffixed_char_array('0', **length, prefix, suffix);
     file_seek(fp, **offset, SEEK_SET);
     file_write(empty_buffer, **length, 1, fp);
 
+    free(empty_buffer);
     free(buffer);
     file_close(fp);
     return 0;
@@ -238,7 +395,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
 
 // delete label record from index file
 int32_t delete_record_from_index_file(const char *filename, int32_t record, int32_t all_records) {
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
     int32_t to_move = all_records - record - 1;
 
     if (to_move == 0) {
@@ -410,7 +567,7 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
     // concat index.dat filename
     const char *indexdat_filename = concat_path_filename(path, filename);
 
-    file_t *fp = file_open(indexdat_filename, "rb+");
+    file_handle *fp = file_open(indexdat_filename, "rb+");
 
     if (fp == NULL) {
         fprintf(stderr, "Error: Could not open index.dat file.\n");
@@ -449,7 +606,7 @@ int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, 
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
-        file_t *fp = file_open(datadat_filename, "rb+");
+        file_handle *fp = file_open(datadat_filename, "rb+");
 
         // if file does not exist terminate loop
         if (fp == NULL) {
@@ -485,7 +642,7 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
 
         const char *datadat_filename = concat_path_filename(path, data_files[i]);
 
-        file_t *fp = file_open(datadat_filename, "rb+");
+        file_handle *fp = file_open(datadat_filename, "rb+");
 
         // if file does not exist terminate loop
         if (fp == NULL) {
@@ -498,8 +655,8 @@ void remove_metadata_in_data_dat(const char *path, const char **data_files, int3
         // read file
         if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
             // check for ProfileName
-            if (contains(buffer, MRXS_PROFILENAME)) {
-                const char *value = get_string_between_delimiters(buffer, MRXS_PROFILENAME, "\"");
+            if (contains(buffer, PROFILENAME)) {
+                const char *value = get_string_between_delimiters(buffer, PROFILENAME, "\"");
                 char *replacement = create_replacement_string('X', strlen(value));
                 buffer = replace_str(buffer, value, replacement);
             }
@@ -678,14 +835,4 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     }
 
     return result;
-}
-
-int32_t is_mirax(const char *filename) {
-    const char *ext = get_filename_ext(filename);
-
-    if (strcmp(ext, MRXS_EXT) == 0) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
