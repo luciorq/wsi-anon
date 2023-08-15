@@ -11,11 +11,11 @@ char *wipe_section_of_attribute(char *buffer, char *attribute) {
     char *replacement = create_replacement_string(' ', strlen(section));
     char *result = replace_str(buffer, section, replacement);
 
-    free((char *)concatenated_str);
+    free((void *)concatenated_str);
     free(rough_section);
-    free((char *)concatenated_section);
-    free((char *)section);
-    free((char *)concatenated_symbols);
+    free((void *)concatenated_section);
+    free((void *)section);
+    free((void *)concatenated_symbols);
     free(replacement);
 
     return result;
@@ -32,14 +32,14 @@ char *get_value_from_attribute(char *buffer, char *attribute) {
         char *result = get_string_between_delimiters(value, concatened_str, PHILIPS_ATT_END);
         free(value);
         free(delimiter);
-        free((char *)concatened_str);
+        free((void *)concatened_str);
         return result;
     } else if (strcmp(delimiter, PHILIPS_DELIMITER_INT) == 0) {
         const char *concatened_str = concat_str(PHILIPS_DELIMITER_INT, PHILIPS_CLOSING_SYMBOL);
         char *result = get_string_between_delimiters(value, concatened_str, PHILIPS_ATT_END);
         free(value);
         free(delimiter);
-        free((char *)concatened_str);
+        free((void *)concatened_str);
         return result;
     } else {
         fprintf(stderr, "Unable find value for attribute with this datatype");
@@ -64,7 +64,7 @@ char *anonymize_value_of_attribute(char *buffer, char *attribute) {
         free(result);
     }
     free(rough_value);
-    free((char *)concatenated_str);
+    free((void *)concatenated_str);
     free(value);
 
     return buffer;

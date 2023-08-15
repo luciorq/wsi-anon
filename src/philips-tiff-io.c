@@ -192,7 +192,7 @@ int32_t wipe_philips_image_data(file_handle *fp, struct tiff_file *file, char *i
                     // free all memory
                     free(rough_image_data);
                     free(refined_image_data);
-                    free((char *)concatenated_str);
+                    free((void *)concatenated_str);
                     free(image_data);
                     free(white_image);
                     jpec_enc_del(e);
@@ -387,7 +387,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
     anonymize_philips_metadata(fp, file);
 
     // clean up
-    free((char *)(*filename));
+    free((void *)(*filename));
     free_tiff_file(file);
     file_close(fp);
     return result;

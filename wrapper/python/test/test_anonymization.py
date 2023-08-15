@@ -237,7 +237,7 @@ def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, 
     cleanup(str(result_filename.absolute()))
 
 
-Actually both are not working at the moment
+# Actually both are not working at the moment
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [

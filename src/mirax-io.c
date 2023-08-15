@@ -94,7 +94,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
 
         // if file does not exist terminate loop
         if (fp == NULL) {
-            free((char *)datadat_filename);
+            free((void *)datadat_filename);
             break;
         }
 
@@ -118,7 +118,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
             }
         }
         // cleanup
-        free((char *)datadat_filename);
+        free((void *)datadat_filename);
         free(buffer);
         file_close(fp);
     }
@@ -133,7 +133,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
 // free slidedat_ini with all groups and its entries
 void free_slidedata_ini_file(struct ini_file *ini) {
     for (int32_t i = 0; i < ini->group_count; i++) {
-        free((char *)(&ini->groups[i])->group_identifier);
+        free((void *)(&ini->groups[i])->group_identifier);
     }
     free(ini->groups);
     free(ini);

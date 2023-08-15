@@ -423,7 +423,7 @@ int32_t handle_ventana(const char **filename, const char *new_label_name, bool k
     remove_metadata_in_ventana(fp, file);
 
     // clean up
-    free((char *)(*filename));
+    free((void *)(*filename));
     free_tiff_file(file);
     file_close(fp);
     return result;
