@@ -4,8 +4,10 @@ struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attri
     char *value = get_string_between_delimiters(buffer, attribute, delimiter);
     // check if tag is not an empty string
     if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
         single_attribute->key = strdup(attribute);
+        single_attribute->key[strlen(single_attribute->key) - 2] = '\0';
         single_attribute->value = strdup(value);
         free(value);
         return single_attribute;
