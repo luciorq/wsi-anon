@@ -210,31 +210,31 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 
     cleanup(str(result_filename.absolute()))
 
+# TODO: remove comments when Philips folder was created and 'test.tiff' file was added
+# @pytest.mark.parametrize(
+#     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+#     [
+#         ("/data/Philips/", "test", "anon-philips", "tiff"),
+#     ],
+# )
+# def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+#     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+#     if result_filename.exists():
+#         remove_file(str(result_filename.absolute()))
 
-@pytest.mark.parametrize(
-    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
-    [
-        #("/data/Philips/", "test", "anon-philips", "tiff"), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
-    ],
-)
-def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
-    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
-    if result_filename.exists():
-        remove_file(str(result_filename.absolute()))
-
-    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
-    assert result != -1
+#     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+#     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+#     assert result != -1
     
-    assert wait_until_exists(str(result_filename), 5)
+#     assert wait_until_exists(str(result_filename), 5)
 
-    with openslide.OpenSlide(str(result_filename)) as slide:
-        if "Philips_TIFF" in wsi_filepath:
-            for property in ["DICOM_DEVICE_SERIAL_NUMBER", "PIM_DP_UFS_BARCODE", "PIM_DP_SOURCE_FILE"]:
-                assert all(c == "X" for c in slide.properties[f"philips.{property}"])
-            assert "19000101000000.000000" in slide.properties["philips.DICOM_ACQUISITION_DATETIME"]
+#     with openslide.OpenSlide(str(result_filename)) as slide:
+#         if "Philips_TIFF" in wsi_filepath:
+#             for property in ["DICOM_DEVICE_SERIAL_NUMBER", "PIM_DP_UFS_BARCODE", "PIM_DP_SOURCE_FILE"]:
+#                 assert all(c == "X" for c in slide.properties[f"philips.{property}"])
+#             assert "19000101000000.000000" in slide.properties["philips.DICOM_ACQUISITION_DATETIME"]
     
-    cleanup(str(result_filename.absolute()))
+#     cleanup(str(result_filename.absolute()))
 
 # # TODO: both tests are not working at the moment
 # # TODO: rename Philips iSyntax into Philips after placing Philips TIFF and iSyntax into Philips folder
