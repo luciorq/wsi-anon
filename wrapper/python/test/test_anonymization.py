@@ -46,7 +46,7 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         max_wait_in_sec -= 1
     return False
 
-# TODO: place all Philips based files into Philips folder instead of separating into Philips iSyntax and Philips TIFF
+# TODO: rename Philips iSyntax and Philips TIFF folders into Philips after placing Philips TIFF and iSyntax into it
 @pytest.mark.parametrize(
     "wsi_filename, vendor",
     [
@@ -55,8 +55,8 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         #("/data/Hamamatsu/test.ndpi", Vendor.HAMAMATSU), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
         ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
         ("/data/Ventana/OS-2.bif", Vendor.VENTANA),
-        #("/data/Philips/4399.isyntax", Vendor.PHILIPS_ISYNTAX), # TODO: remove comments when Philips folder was created and '4399.isyntax' file was added
-        #("/data/Philips/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
+        ("/data/Philips iSyntax/4399.isyntax", Vendor.PHILIPS_ISYNTAX),
+        #("/data/Philips TIFF/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
         #("/data/Unknown/existing_file.txt", Vendor.UNKNOWN), # TODO: remove comments when Unknown folder was created and 'existing_file.txt' file was added
         ("/non_existing_file.txt", Vendor.INVALID),
     ],
@@ -236,12 +236,11 @@ def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, 
     
     cleanup(str(result_filename.absolute()))
 
-
-# Actually both are not working at the moment
+# TODO: rename Philips iSyntax into Philips after placing Philips TIFF and iSyntax into Philips folder
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Philips/", "4399", "anon-philips", "isyntax"),
+        ("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
         ("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), 
     ],
 )
