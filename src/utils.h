@@ -60,6 +60,9 @@ bool assert_value(file_handle *fp, int32_t value);
 
 const char *slice_str(const char *value, size_t start, size_t end);
 
+struct metadata_attribute *get_attribute(char *buffer, const char *delimiter1, const char *delimiter2,
+                                         int32_t remove_chars);
+
 // file operations
 const char *duplicate_file(const char *filename, const char *new_file_name, const char *file_extension);
 

@@ -7,8 +7,6 @@ static const char BIF[] = "bif";
 static const char DOT_BIF[] = ".bif";
 
 // main functions
-struct metadata_attribute *get_attribute_ventana(char *buffer, const char *attribute, const char *delimiter);
-
 struct metadata *get_metadata_ventana(file_handle *fp, struct tiff_file *file);
 
 struct wsi_data *get_wsi_data_ventana(const char *filename);

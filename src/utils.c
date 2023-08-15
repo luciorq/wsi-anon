@@ -445,6 +445,23 @@ const char *slice_str(const char *str, size_t start, size_t end) {
     return result;
 }
 
+struct metadata_attribute *get_attribute(char *buffer, const char *delimiter1, const char *delimiter2,
+                                         int32_t remove_chars) {
+    char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = strdup(delimiter1);
+        single_attribute->key[strlen(single_attribute->key) - remove_chars] = '\0';
+        single_attribute->value = strdup(value);
+        free(value);
+        return single_attribute;
+    }
+    free(value);
+    return NULL;
+}
+
 // convert bytes into int
 int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
     int32_t ret = 0;
