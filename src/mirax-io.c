@@ -105,9 +105,11 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
         if (file_read(buffer, MRXS_MAX_SIZE_DATA_DAT, 1, fp) != 1) {
             // check for ProfileName
             if (contains(buffer, PROFILENAME)) {
+                // removes '=' from key and saves it with value in struct
                 const char *value = get_string_between_delimiters(buffer, PROFILENAME, "\"");
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
                 single_attribute->key = strdup(PROFILENAME);
+                single_attribute->key[strlen(single_attribute->key) - 2] = '\0';
                 single_attribute->value = strdup(value);
                 if (single_attribute != NULL) {
                     attributes[metadata_id++] = single_attribute;
