@@ -4,7 +4,12 @@ struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) 
     char *value = get_value_from_attribute(buffer, attribute);
     // check if value of attribute is not an empty string
     if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        if (contains(attribute, "=")) {
+            char *pos_of_char = strchr(attribute, '=');
+            attribute = pos_of_char + 2;
+        }
         single_attribute->key = strdup(attribute);
         single_attribute->value = strdup(value);
         free(value);
