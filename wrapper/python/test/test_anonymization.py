@@ -7,13 +7,8 @@ import pytest
 import openslide
 import tiffslide
 
-<<<<<<< HEAD
-# replace check_file_format with get_wsi_data function in wsi-anonymizer.c
-from ..wsianon import check_file_format, anonymize_wsi, Vendor
-=======
 from ..wsianon import get_wsi_data, anonymize_wsi
 from ..model.model import Vendor
->>>>>>> master
 
 lock = threading.Lock()
 
@@ -66,17 +61,9 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         ("/non_existing_file.txt", Vendor.INVALID),
     ],
 )
-<<<<<<< HEAD
-def test_check_fileformat(wsi_filename, vendor):
-    # replace check_file_format with get_wsi_data function in wsi-anonymizer.c
-    file_format = check_file_format(wsi_filename)
-    assert file_format == vendor
-
-=======
 def test_format_get_wsi_data(wsi_filename, vendor):
     wsi_data = get_wsi_data(wsi_filename)
     assert Vendor(wsi_data.format) == vendor
->>>>>>> master
 
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
@@ -188,7 +175,7 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
         remove_file(str(result_filename.absolute()))
     
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-    result = anonymize_wsi(filename=wsi_filename, new_filename=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
+    result = anonymize_wsi(filename=wsi_filename, new_label_name=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
     assert result != -1
     
     assert wait_until_exists(str(result_filename), 5)

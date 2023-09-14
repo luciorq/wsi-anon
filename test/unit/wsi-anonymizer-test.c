@@ -4,13 +4,13 @@
 
 // ####################### functions to test ####################### //
 
-extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_filename, const char *pseudonym_metadata,
-                                     bool keep_macro_image, bool disable_unlinking);
+extern int32_t anonymize_wsi_inplace(const char *filename, const char *new_label_name, bool keep_macro_image,
+                                     bool disable_unlinking);
 
 // ####################### test cases ####################### //
 
 void test_errors_are_propagated() {
-    int32_t result = anonymize_wsi_inplace("/non/existing/wsi.svs", "new_label", NULL, false, false);
+    int32_t result = anonymize_wsi_inplace("/non/existing/wsi.svs", "new_label", false, false);
     CU_ASSERT_NOT_EQUAL(result, 0);
 }
 
