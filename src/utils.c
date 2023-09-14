@@ -54,7 +54,7 @@ const char *get_filename_ext(const char *filename) {
 }
 
 int32_t file_exists(const char *filename) {
-    file_t *file;
+    file_handle *file;
     if ((file = file_open(filename, "rb+"))) {
         file_close(file);
         return 1;
@@ -205,19 +205,20 @@ bool starts_with(const char *str, const char *pre) {
     return strlen(str) < strlen(pre) ? false : memcmp(pre, str, strlen(pre)) == 0;
 }
 
-const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2) {
+char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2) {
     const char *substring1 = strstr(buffer, delimiter1);
     if (substring1) {
         const size_t s_del1 = strlen(delimiter1);
         if (delimiter2) {
             const char *substring2 = strstr(substring1 + s_del1, delimiter2);
             const size_t mlen = substring2 - (substring1 + s_del1);
-            char *result = (char *)malloc(mlen + 1);
+            char *result = (char *)malloc(sizeof(char) * (mlen + 1)); // Buffer overflow here
             if (result) {
                 memcpy(result, substring1 + s_del1, mlen);
                 result[mlen] = '\0';
                 return result;
             }
+            free(result);
         }
     }
     return NULL;
@@ -444,6 +445,23 @@ const char *slice_str(const char *str, size_t start, size_t end) {
     return result;
 }
 
+struct metadata_attribute *get_attribute(char *buffer, const char *delimiter1, const char *delimiter2,
+                                         int32_t remove_chars) {
+    char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = strdup(delimiter1);
+        single_attribute->key[strlen(single_attribute->key) - remove_chars] = '\0';
+        single_attribute->value = strdup(value);
+        free(value);
+        return single_attribute;
+    }
+    free(value);
+    return NULL;
+}
+
 // convert bytes into int
 int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
     int32_t ret = 0;
@@ -456,7 +474,7 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
 }
 
 // find size up to substring in file
-size_t get_size_to_substring(file_t *fp, char *substring) {
+size_t get_size_to_substring(file_handle *fp, char *substring) {
 
     file_seek(fp, 0, SEEK_END);
     long file_length = file_tell(fp);
@@ -480,7 +498,7 @@ size_t get_size_to_substring(file_t *fp, char *substring) {
 }
 
 // check if file contains specific value
-int32_t file_contains_value(file_t *fp, char *value) {
+int32_t file_contains_value(file_handle *fp, char *value) {
 
     file_seek(fp, 0, SEEK_END);
     long size = file_tell(fp);
@@ -516,7 +534,7 @@ const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, in
 }
 
 // read a signed integer 32 from file stream
-int32_t *read_int32(file_t *fp) {
+int32_t *read_int32(file_handle *fp) {
     int32_t *buffer = (int32_t *)malloc(sizeof(int32_t));
 
     if (file_read(buffer, sizeof(*buffer), 1, fp) != 1) {
@@ -529,7 +547,7 @@ int32_t *read_int32(file_t *fp) {
 
 // assert a int32_t has a certain value
 // used to skip pointer position on stream
-bool assert_value(file_t *fp, int32_t value) {
+bool assert_value(file_handle *fp, int32_t value) {
     int32_t *v_to_check = read_int32(fp);
     return *v_to_check == value;
 }

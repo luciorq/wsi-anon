@@ -41,17 +41,26 @@
 // aperio
 #define APERIO_FILENAME_TAG "Filename = "
 #define APERIO_USER_TAG "User = "
+#define APERIO_TIME_TAG "Time = "
 #define APERIO_DATE_TAG "Date = "
+#define APERIO_SLIDE_TAG "Slide = "
 #define APERIO_BARCODE_TAG "Barcode = "
 
 // ventana
-#define VENTANA_FILENAME_ATT "JP2FileName="
-#define VENTANA_UNITNUMBER_ATT "UnitNumber="
-#define VENTANA_USERNAME_ATT "UserName="
-#define VENTANA_BARCODE1D_ATT "Barcode1D="
-#define VENTANA_BARCODE2D_ATT "Barcode2D="
-#define VENTANA_BASENAME_ATT "BaseName="
-#define VENTANA_BUILDDATE_ATT "BuildDate="
+#define VENTANA_FILENAME_ATT "JP2FileName=\""
+#define VENTANA_UNITNUMBER_ATT "UnitNumber=\""
+#define VENTANA_USERNAME_ATT "UserName=\""
+#define VENTANA_BARCODE1D_ATT "Barcode1D=\""
+#define VENTANA_BARCODE2D_ATT "Barcode2D=\""
+#define VENTANA_BASENAME_ATT "BaseName=\""
+#define VENTANA_BUILDDATE_ATT "BuildDate=\""
+#define VENTANA_FILENAME_ATT_2 "JP2FileName=\'"
+#define VENTANA_UNITNUMBER_ATT_2 "UnitNumber=\'"
+#define VENTANA_USERNAME_ATT_2 "UserName=\'"
+#define VENTANA_BARCODE1D_ATT_2 "Barcode1D=\'"
+#define VENTANA_BARCODE2D_ATT_2 "Barcode2D=\'"
+#define VENTANA_BASENAME_ATT_2 "BaseName=\'"
+#define VENTANA_BUILDDATE_ATT_2 "BuildDate=\'"
 
 // philips based (Philips' iSyntax and TIFF)
 #define PHILIPS_DELIMITER_STR "\"IString\""
@@ -62,10 +71,8 @@
 #define PHILIPS_ATT_PMSVR "PMSVR="
 #define PHILIPS_DATETIME_ATT "DICOM_ACQUISITION_DATETIME"
 #define PHILIPS_SERIAL_ATT "DICOM_DEVICE_SERIAL_NUMBER"
-#define PHILIPS_SLOT_ATT "PIIM_DP_SCANNER_SLOT_NUMBER"
-#define PHILIPS_RACK_ATT "PIIM_DP_SCANNER_RACK_NUMBER"
-//#define PHILIPS_SLOT_ATT "<Attribute Name=\"PIIM_DP_SCANNER_SLOT_NUMBER" TODO: check for this
-//#define PHILIPS_RACK_ATT "<Attribute Name=\"PIIM_DP_SCANNER_RACK_NUMBER" TODO: check for this
+#define PHILIPS_SLOT_ATT "<Attribute Name=\"PIIM_DP_SCANNER_SLOT_NUMBER"
+#define PHILIPS_RACK_ATT "<Attribute Name=\"PIIM_DP_SCANNER_RACK_NUMBER"
 #define PHILIPS_OPERID_ATT "PIIM_DP_SCANNER_OPERATOR_ID"
 #define PHILIPS_BARCODE_ATT "PIM_DP_UFS_BARCODE"
 #define PHILIPS_SOURCE_FILE_ATT "PIM_DP_SOURCE_FILE"
@@ -104,7 +111,25 @@ typedef enum {
     TIFF_LONG8 = 16,
     TIFF_SLONG8 = 17,
     TIFF_IFD8 = 18
-} TIFF_DATATYPE;
+} TIFFDataType;
+
+typedef enum {
+    APERIO = 0,
+    HAMAMATSU = 1,
+    MIRAX = 2,
+    VENTANA = 3,
+    PHILIPS_ISYNTAX = 4,
+    PHILIPS_TIFF = 5,
+    UNKNOWN = 6,
+    INVALID = 7
+} FILE_FORMAT;
+
+#define ASCII 2
+#define SHORT 3
+#define LONG 4
+#define FLOAT 11
+#define DOUBLE 12
+#define LONG8 16
 
 #define JPEG_SOI "\xff\xd8\xff\xe0\0"
 #define JPEG_EOI "\xff\xd9\0"
@@ -176,8 +201,8 @@ struct tiff_file {
 };
 
 struct metadata_attribute {
-    const char *key;
-    const char *value;
+    char *key;
+    char *value;
 };
 
 struct metadata {
@@ -187,22 +212,11 @@ struct metadata {
 
 // TODO: members are incomplete --> view concept again or comment in members below!!
 struct wsi_data {
-    int8_t format;
+    FILE_FORMAT format;
     const char *filename;
     // struct associated_image_data **label;
     // struct associated_image_data **macro;
     struct metadata *metadata_attributes;
-};
-
-// TODO: find out if this even makes any sense? all data (except for macro) overwritten?
-// TODO: is overwrite_metadata not redundant if flag is set?
-struct anon_configuration {
-    bool overwrite_label;
-    bool overwrite_macro;
-    bool overwrite_metadata;
-    bool keep_macro_image;
-    bool disable_unlinking;
-    bool do_inplace;
 };
 
 #endif

@@ -1,141 +1,25 @@
 #include "philips-tiff-io.h"
 
-// TODO: remove this (obsolete)
-// checks if file is Philips TIFF
-int32_t is_philips_tiff(const char *filename) {
-    int32_t result = 0;
-    const char *ext = get_filename_ext(filename);
-
-    // check for file extension
-    if (strcmp(ext, TIFF) != 0) {
-        return 0;
-    }
-
-    file_t *fp;
-    fp = file_open(filename, "rb+");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open tiff file.\n");
-        return result;
-    }
-
-    bool big_tiff = false;
-    bool big_endian = false;
-    result = check_file_header(fp, &big_endian, &big_tiff);
-
-    if (result != 0) {
-        return result;
-    }
-
-    struct tiff_file *file;
-    file = read_tiff_file(fp, big_tiff, false, big_endian);
-
-    if (file == NULL) {
-        fprintf(stderr, "Error: Could not read tiff file.\n");
-        file_close(fp);
-        return result;
-    }
-
-    // check if the Software tag starts with Philips
-    result = tag_value_contains(fp, file, TIFFTAG_SOFTWARE, "Philips");
-
-    if (result == -1) {
-        fprintf(stderr, "Error: Could not find value in Software tag.\n");
-    }
-
-    // is Philips' TIFF
-    file_close(fp);
-    return (result == 1);
-}
-
-// remove label image and macro image
-int32_t wipe_philips_image_data(file_t *fp, struct tiff_file *file, char *image_type) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        struct tiff_directory dir = file->directories[i];
-        for (uint64_t j = 0; j < dir.count; j++) {
-            struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
-                // get requested image tag from file
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
-
-                char *buffer = malloc(sizeof(char) * entry_size * entry.count);
-                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read tag image description.\n");
-                    return -1;
-                }
-
-                char *result = buffer;
-                bool rewrite = false;
-
-                // check for label and macro image in image description
-                if (contains(result, image_type)) {
-
-                    // get image data string
-                    const char *image_data = get_string_between_delimiters(result, PHILIPS_OBJECT, image_type);
-                    image_data = get_string_between_delimiters(image_data, PHILIPS_IMAGE_DATA, PHILIPS_ATT_OPEN);
-                    image_data = get_string_between_delimiters(
-                        image_data, concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL), PHILIPS_ATT_END);
-
-                    // set height and width to 1
-                    int32_t height = 1;
-                    int32_t width = 1;
-
-                    // alloc with height and width and fill with 255 for a white image
-                    unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
-                    memset(white_image, 255, height * width);
-
-                    // create white jpg image
-                    jpec_enc_t *e = jpec_enc_new(white_image, width, height);
-                    int32_t len;
-                    const uint8_t *jpeg = jpec_enc_run(e, &len);
-
-                    // encode new image data and check if string is longer than original string,
-                    // replace old base64-encoded string afterwards
-                    char *new_image_data = (char *)b64_encode(jpeg, strlen(image_data));
-                    if (strlen(new_image_data) > strlen(image_data)) {
-                        new_image_data[strlen(image_data)] = '\0';
-                    }
-
-                    result = replace_str(result, image_data, new_image_data);
-                    rewrite = true;
-
-                    // free memory and release encoder
-                    free(white_image);
-                    free(new_image_data);
-                    jpec_enc_del(e);
-                }
-
-                // alter image in image description
-                if (rewrite) {
-                    strcpy(buffer, result);
-                    file_seek(fp, entry.offset, SEEK_SET);
-                    if (!file_write(buffer, entry.count, entry_size, fp)) {
-                        fprintf(stderr, "Error: changing image description failed.\n");
-                        free(buffer);
-                        return -1;
-                    }
-                    free(buffer);
-                }
-            }
-        }
-    }
-    return 0;
-}
-
 struct metadata_attribute *get_attribute_philips_tiff(char *buffer, char *attribute) {
-    const char *value = get_value_from_attribute(buffer, attribute);
+    char *value = get_value_from_attribute(buffer, attribute);
     // check if value of attribute is not an empty string
     if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = attribute;
+        if (contains(attribute, "=")) {
+            char *pos_of_char = strchr(attribute, '=');
+            attribute = pos_of_char + 2;
+        }
+        single_attribute->key = strdup(attribute);
         single_attribute->value = strdup(value);
+        free(value);
         return single_attribute;
     }
+    free(value);
     return NULL;
 }
 
-struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_philips_tiff(file_handle *fp, struct tiff_file *file) {
     // all metadata
     static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT,   PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
                                           PHILIPS_RACK_ATT,       PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
@@ -161,6 +45,7 @@ struct metadata *get_metadata_philips_tiff(file_t *fp, struct tiff_file *file) {
                 char *buffer = (char *)malloc(entry.count * entry_size);
                 if (file_read(buffer, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not read tag image description.\n");
+                    free(buffer);
                     return NULL;
                 }
 
@@ -196,11 +81,11 @@ struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
-        fprintf(stderr, "Error: Could not open Philips' TIFF file.\n");
+        fprintf(stderr, "Error: Could not open Philips TIFF file.\n");
         return NULL;
     }
 
@@ -238,20 +123,102 @@ struct wsi_data *get_wsi_data_philips_tiff(const char *filename) {
     struct metadata *metadata_attributes = get_metadata_philips_tiff(fp, file);
 
     // is Philips' TIFF
-    // TODO: replace format value and handle more efficiently
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-    wsi_data->format = 5;
+    wsi_data->format = PHILIPS_TIFF;
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
 
     // cleanup
+    free_tiff_file(file);
     file_close(fp);
     return wsi_data;
 }
 
-// TODO: make use of get_wsi_data_philips_tiff function
+// remove label image and macro image
+int32_t wipe_philips_image_data(file_handle *fp, struct tiff_file *file, char *image_type) {
+    for (uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory dir = file->directories[i];
+        for (uint64_t j = 0; j < dir.count; j++) {
+            struct tiff_entry entry = dir.entries[j];
+            if (entry.tag == TIFFTAG_IMAGEDESCRIPTION) {
+                // get requested image tag from file
+                file_seek(fp, entry.offset, SEEK_SET);
+                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                char *buffer = malloc(sizeof(char) * entry_size * entry.count);
+                if (file_read(buffer, entry.count, entry_size, fp) != 1) {
+                    fprintf(stderr, "Error: Could not read tag image description.\n");
+                    return -1;
+                }
+
+                char *result = buffer;
+                bool rewrite = false;
+
+                // check for label and macro image in image description
+                if (contains(result, image_type)) {
+
+                    // get image data string
+                    char *rough_image_data = get_string_between_delimiters(result, PHILIPS_OBJECT, image_type);
+                    char *refined_image_data =
+                        get_string_between_delimiters(rough_image_data, PHILIPS_IMAGE_DATA, PHILIPS_ATT_OPEN);
+                    const char *concatenated_str = concat_str(PHILIPS_DELIMITER_STR, PHILIPS_CLOSING_SYMBOL);
+                    char *image_data =
+                        get_string_between_delimiters(refined_image_data, concatenated_str, PHILIPS_ATT_END);
+
+                    // set height and width to 1
+                    int32_t height = 1;
+                    int32_t width = 1;
+
+                    // alloc with height and width and fill with 255 for a white image
+                    unsigned char *white_image = (unsigned char *)malloc((height * width) * sizeof(unsigned char));
+                    memset(white_image, 255, height * width);
+
+                    // create white jpg image
+                    jpec_enc_t *e = jpec_enc_new(white_image, width, height);
+                    int32_t len;
+                    const uint8_t *jpeg = jpec_enc_run(e, &len);
+
+                    // encode new image data and check if string is longer than original string,
+                    // replace old base64-encoded string afterwards
+                    char *new_image_data = (char *)b64_encode(jpeg, len);
+                    if (strlen(new_image_data) > strlen(image_data)) {
+                        new_image_data[strlen(image_data)] = '\0';
+                    }
+
+                    char *new_result = replace_str(result, image_data, new_image_data);
+                    strcpy(result, new_result);
+                    rewrite = true;
+
+                    // free all memory
+                    free(rough_image_data);
+                    free(refined_image_data);
+                    free((void *)concatenated_str);
+                    free(image_data);
+                    free(white_image);
+                    jpec_enc_del(e);
+                    free(new_image_data);
+                    free(new_result);
+                }
+
+                // alter image in image description
+                if (rewrite) {
+                    strcpy(buffer, result);
+                    file_seek(fp, entry.offset, SEEK_SET);
+                    if (!file_write(buffer, entry.count, entry_size, fp)) {
+                        fprintf(stderr, "Error: changing image description failed.\n");
+                        free(buffer);
+                        return -1;
+                    }
+                }
+                free(buffer);
+            }
+        }
+    }
+    return 0;
+}
+
 // anonymizes metadata from Philips' TIFF file
-int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const char *pseudonym) {
+int32_t anonymize_philips_metadata(file_handle *fp, struct tiff_file *file) {
     for (uint64_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint64_t j = 0; j < dir.count; j++) {
@@ -272,47 +239,37 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const cha
 
                 // Datetime attribute is substituted with minimum possible value
                 if (contains(result, PHILIPS_DATETIME_ATT)) {
-                    const char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
-                    result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+                    char *value = get_value_from_attribute(result, PHILIPS_DATETIME_ATT);
+                    char *new_result = replace_str(result, value, PHILIPS_MIN_DATETIME);
+                    strcpy(result, new_result);
                     rewrite = true;
+                    free(value);
+                    free(new_result);
                 }
 
-                // replaced with arbitrary value
-                if (contains(result, PHILIPS_SERIAL_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_SERIAL_ATT, pseudonym);
-                    rewrite = true;
+                // Slot and Rack Number value in metadata is replaced by blank spaces
+                static char *METADATA_NUMBER[] = {PHILIPS_SLOT_ATT, PHILIPS_RACK_ATT};
+
+                for (size_t i = 0; i < sizeof(METADATA_NUMBER) / sizeof(METADATA_NUMBER[0]); i++) {
+                    if (contains(result, METADATA_NUMBER[i])) {
+                        char *new_result = wipe_section_of_attribute(result, METADATA_NUMBER[i]);
+                        strcpy(result, new_result);
+                        free(new_result);
+                        rewrite = true;
+                    }
                 }
 
-                // wipes complete section of given attribute
-                if (contains(result, PHILIPS_SLOT_ATT)) {
-                    result = wipe_section_of_attribute(
-                        result, PHILIPS_SLOT_ATT); // ToDo: check if pseudonym can be used here instead of blanks
-                    rewrite = true;
-                }
+                // rest of metadata that is replacable with arbitrary value
+                static char *METADATA_ATTRIBUTES[] = {PHILIPS_SERIAL_ATT, PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT,
+                                                      PHILIPS_SOURCE_FILE_ATT};
 
-                // wipes complete section of given attribute
-                if (contains(result, PHILIPS_RACK_ATT)) {
-                    result = wipe_section_of_attribute(
-                        result, PHILIPS_RACK_ATT); // ToDo: check if pseudonym can be used here instead of blanks
-                    rewrite = true;
-                }
-
-                // replace with arbitrary value
-                if (contains(result, PHILIPS_OPERID_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_OPERID_ATT, pseudonym);
-                    rewrite = true;
-                }
-
-                // replace with arbitrary value
-                if (contains(result, PHILIPS_BARCODE_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_BARCODE_ATT, pseudonym);
-                    rewrite = true;
-                }
-
-                // replace with arbitrary value
-                if (contains(result, PHILIPS_SOURCE_FILE_ATT)) {
-                    result = anonymize_value_of_attribute(result, PHILIPS_SOURCE_FILE_ATT, pseudonym);
-                    rewrite = true;
+                // anonymize rest of metadata
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                    if (contains(result, METADATA_ATTRIBUTES[i])) {
+                        char *new_result = anonymize_value_of_attribute(result, METADATA_ATTRIBUTES[i]);
+                        strcpy(result, new_result);
+                        rewrite = true;
+                    }
                 }
 
                 // alters image description
@@ -334,16 +291,16 @@ int32_t anonymize_philips_metadata(file_t *fp, struct tiff_file *file, const cha
 }
 
 // anonymize Philips' TIFF
-int32_t handle_philips_tiff(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                            struct anon_configuration *configuration) {
+int32_t handle_philips_tiff(const char **filename, const char *new_label_name, bool keep_macro_image,
+                            bool disable_unlinking, bool do_inplace) {
 
-    fprintf(stdout, "Anonymizing Philips' TIFF WSI...\n");
+    fprintf(stdout, "Anonymize Philips TIFF WSI...\n");
 
-    if (!configuration->do_inplace) {
-        *filename = duplicate_file(*filename, new_filename, DOT_TIFF);
+    if (!do_inplace) {
+        *filename = duplicate_file(*filename, new_label_name, DOT_TIFF);
     }
 
-    file_t *fp;
+    file_handle *fp;
     fp = file_open(*filename, "rb+");
 
     // philips tiff files can be stored as single-tiff TIFF or BigTIFF format
@@ -365,7 +322,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_filename, con
     }
 
     // remove LABELIMAGE in ImageDescription XML
-    result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE);
+    result = wipe_philips_image_data(fp, file, PHILIPS_LABELIMAGE); // TODO: terminates here under windows
 
     if (result == -1) {
         fprintf(stderr, "Error: Could not wipe LABELIMAGE in ImageDescription XML from file.\n");
@@ -391,7 +348,7 @@ int32_t handle_philips_tiff(const char **filename, const char *new_filename, con
 
     int32_t macro_dir = -1;
 
-    if (!configuration->keep_macro_image) {
+    if (!keep_macro_image) {
         // remove MACROIMAGE in ImageDescription XML
         result = wipe_philips_image_data(fp, file, PHILIPS_MACROIMAGE);
 
@@ -419,17 +376,19 @@ int32_t handle_philips_tiff(const char **filename, const char *new_filename, con
     }
 
     // unlinking
-    if (!configuration->disable_unlinking) {
-        fprintf(stderr, "Error: Unlinking in Philips' TIFF file currently not supported.\n");
+    if (!disable_unlinking) {
+        fprintf(stderr, "Error: Unlinking in Philips TIFF file currently not supported.\n");
         // ToDo: find out why unlinking of macro directory does not properly work
         // unlink_directory(fp, file, macro_dir, false);
         // unlink_directory(fp, file, label_dir, false);
     }
 
     // remove metadata
-    anonymize_philips_metadata(fp, file, pseudonym_metadata);
+    anonymize_philips_metadata(fp, file);
 
     // clean up
+    free((void *)(*filename));
+    free_tiff_file(file);
     file_close(fp);
     return result;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@empaia/wsi-anon",
-  "version": "0.5.0",
+  "version": "0.4.11",
   "description": "WebAssembly binding of C library anonymizing WSIs by label image removal",
   "main": "bin/wsi-anon.js",
   "files": [

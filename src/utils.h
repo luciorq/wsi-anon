@@ -24,7 +24,7 @@ void replace_str_inplace(char *original_str, const char *replace_str, const char
 
 bool starts_with(const char *str, const char *pre);
 
-const char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);
+char *get_string_between_delimiters(const char *buffer, const char *delimiter1, const char *delimiter2);
 
 void remove_leading_spaces(char *str);
 
@@ -46,19 +46,22 @@ const char *add_equals_sign(const char *str1, const char *str2);
 
 bool contains(const char *str1, const char *str2);
 
-size_t get_size_to_substring(file_t *fp, char *substring);
+size_t get_size_to_substring(file_handle *fp, char *substring);
 
-int32_t file_contains_value(file_t *fp, char *value);
+int32_t file_contains_value(file_handle *fp, char *value);
 
 const char *concat_wildcard_string_int32(const char *str, int32_t integer);
 
 const char *concat_wildcard_string_m_int32(const char *str, int32_t integer1, int32_t integer2);
 
-int32_t *read_int32(file_t *fp);
+int32_t *read_int32(file_handle *fp);
 
-bool assert_value(file_t *fp, int32_t value);
+bool assert_value(file_handle *fp, int32_t value);
 
 const char *slice_str(const char *value, size_t start, size_t end);
+
+struct metadata_attribute *get_attribute(char *buffer, const char *delimiter1, const char *delimiter2,
+                                         int32_t remove_chars);
 
 // file operations
 const char *duplicate_file(const char *filename, const char *new_file_name, const char *file_extension);

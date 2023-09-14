@@ -1,8 +1,10 @@
 # Changelog
 
-## 0.5.0
+## 0.4.11
 
-* add full pseudonomyization supports
+* replace check_file_header by get_wsi_data function
+* extend testcases by new files
+* remove all memory leaks (except for MIRAX)
 
 ## 0.4.10
 

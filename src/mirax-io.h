@@ -6,12 +6,20 @@
 #include "tiff-based-io.h"
 
 // main functions
-int32_t is_mirax(const char *filename);
+struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
+                                               const char *metadata_key);
 
-int32_t handle_mirax(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                     struct anon_configuration *configuration);
+struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file, const char **data_filenames,
+                                    int32_t num_of_datafiles);
+
+struct wsi_data *get_wsi_data_mirax(const char *filename);
+
+int32_t handle_mirax(const char **filename, const char *new_label_name, bool keep_macro_image, bool disable_unlinking,
+                     bool do_inplace);
 
 // additional functions
+void free_slidedata_ini_file(struct ini_file *ini);
+
 struct mirax_file *get_mirax_file_structure(struct ini_file *ini, int32_t l_count);
 
 struct mirax_level *get_level_by_name(struct mirax_layer **layers, const char *layer_name, const char *level_name);
@@ -26,7 +34,7 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
 
 int32_t delete_record_from_index_file(const char *filename, int32_t record, int32_t all_records);
 
-const char *duplicate_mirax_filedata(const char *filename, const char *new_filename, const char *file_extension);
+const char *duplicate_mirax_filedata(const char *filename, const char *new_label_name, const char *file_extension);
 
 struct mirax_layer *delete_level_by_id(struct mirax_layer *layer, int32_t level_id);
 
@@ -39,16 +47,6 @@ int32_t replace_slide_id_in_indexdat(const char *path, const char *filename, con
 
 int32_t replace_slide_id_in_datfiles(const char *path, const char **data_files, int32_t length, const char *value,
                                      const char *replacement, int32_t size);
-
-struct wsi_data *get_wsi_data_mirax(const char *filename);
-
-struct metadata_attribute *get_attribute_mirax(struct ini_file *ini_file, const char *group_name,
-                                               const char *metadata_key);
-
-struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file, const char **data_filenames,
-                                    int32_t num_of_datafiles);
-
-struct wsi_data *get_wsi_data_mirax(const char *filename);
 
 void remove_metadata_in_data_dat(const char *path, const char **data_files, int32_t length);
 

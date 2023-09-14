@@ -7,8 +7,13 @@ import pytest
 import openslide
 import tiffslide
 
+<<<<<<< HEAD
 # replace check_file_format with get_wsi_data function in wsi-anonymizer.c
 from ..wsianon import check_file_format, anonymize_wsi, Vendor
+=======
+from ..wsianon import get_wsi_data, anonymize_wsi
+from ..model.model import Vendor
+>>>>>>> master
 
 lock = threading.Lock()
 
@@ -46,21 +51,32 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         max_wait_in_sec -= 1
     return False
 
-
+# TODO: rename Philips iSyntax and Philips TIFF folders into Philips after placing Philips TIFF and iSyntax into it
 @pytest.mark.parametrize(
     "wsi_filename, vendor",
     [
-        ("/data/Aperio/CMU-1.svs", Vendor.Aperio),
-        ("/data/Hamamatsu/OS-1.ndpi", Vendor.Hamamatsu),
-        ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.Mirax),
-        ("/data/Ventana/OS-2.bif", Vendor.Ventana),
+        ("/data/Aperio/CMU-1.svs", Vendor.APERIO),
+        ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
+        #("/data/Hamamatsu/test.ndpi", Vendor.HAMAMATSU), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
+        ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
+        ("/data/Ventana/OS-2.bif", Vendor.VENTANA),
+        ("/data/Philips iSyntax/4399.isyntax", Vendor.PHILIPS_ISYNTAX),
+        #("/data/Philips TIFF/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
+        #("/data/Unknown/existing_file.txt", Vendor.UNKNOWN), # TODO: remove comments when Unknown folder was created and 'existing_file.txt' file was added
+        ("/non_existing_file.txt", Vendor.INVALID),
     ],
 )
+<<<<<<< HEAD
 def test_check_fileformat(wsi_filename, vendor):
     # replace check_file_format with get_wsi_data function in wsi-anonymizer.c
     file_format = check_file_format(wsi_filename)
     assert file_format == vendor
 
+=======
+def test_format_get_wsi_data(wsi_filename, vendor):
+    wsi_data = get_wsi_data(wsi_filename)
+    assert Vendor(wsi_data.format) == vendor
+>>>>>>> master
 
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
@@ -85,12 +101,39 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
         assert "label" not in associated_images
         
         if "Aperio" in wsi_filepath:
-            for property in ["Filename", "User", "Date"]:
+            for property in ["Filename", "User", "Date", "Time"]:
                 assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
         slide.close()
     except tiffslide.TiffFileError as e:
         assert False
     
+    cleanup(str(result_filename.absolute()))
+
+# TODO: handle seg faults due to stack overflow when testing anonymization of large files 
+@pytest.mark.parametrize(
+    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+    [
+        #("/data/Hamamatsu/", "test", "anon-hamamatsu", "ndpi"), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
+    ],
+)
+def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+    if result_filename.exists():
+        remove_file(str(result_filename.absolute()))
+
+    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+    assert result != -1
+    
+    assert wait_until_exists(str(result_filename), 5)
+
+    with openslide.OpenSlide(str(result_filename)) as slide:
+        assert "label" not in slide.associated_images
+
+        if "Hamamatsu" in wsi_filepath:
+            for property in ["DateTime"]:
+                assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
+
     cleanup(str(result_filename.absolute()))
 
 
@@ -180,26 +223,52 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 
     cleanup(str(result_filename.absolute()))
 
+# TODO: remove comments when Philips folder was created and 'test.tiff' file was added
+# @pytest.mark.parametrize(
+#     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+#     [
+#         ("/data/Philips/", "test", "anon-philips", "tiff"),
+#     ],
+# )
+# def test_anonymize_file_only_metadata(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+#     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+#     if result_filename.exists():
+#         remove_file(str(result_filename.absolute()))
 
-# Actually both are not working at the moment
-@pytest.mark.parametrize(
-    "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
-    [
-        #("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
-        #("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"), 
-    ],
-)
-def test_anonymize_file_format_basic(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
-    result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
-    if result_filename.exists():
-        remove_file(str(result_filename.absolute()))
-
-    wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
-    result = anonymize_wsi(wsi_filename, new_anonyimized_name)
-    assert result != -1
-
-    assert wait_until_exists(str(result_filename), 5)
-
-    # TODO: add some ordinary checks here?
+#     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+#     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+#     assert result != -1
     
-    cleanup(str(result_filename.absolute()))
+#     assert wait_until_exists(str(result_filename), 5)
+
+#     with openslide.OpenSlide(str(result_filename)) as slide:
+#         if "Philips_TIFF" in wsi_filepath:
+#             for property in ["DICOM_DEVICE_SERIAL_NUMBER", "PIM_DP_UFS_BARCODE", "PIM_DP_SOURCE_FILE"]:
+#                 assert all(c == "X" for c in slide.properties[f"philips.{property}"])
+#             assert "19000101000000.000000" in slide.properties["philips.DICOM_ACQUISITION_DATETIME"]
+    
+#     cleanup(str(result_filename.absolute()))
+
+# # TODO: both tests are not working at the moment
+# # TODO: rename Philips iSyntax into Philips after placing Philips TIFF and iSyntax into Philips folder
+# @pytest.mark.parametrize(
+#     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
+#     [
+#         ("/data/Philips iSyntax/", "4399", "anon-philips", "isyntax"),
+#         ("/data/MIRAX/", "Mirax2.2-1", "anon-mirax2", "mrxs"),
+#     ],
+# )
+# def test_anonymize_file_format_basic(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+#     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
+#     if result_filename.exists():
+#         remove_file(str(result_filename.absolute()))
+
+#     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
+#     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
+#     assert result != -1
+
+#     assert wait_until_exists(str(result_filename), 5)
+
+#     # TODO: add some ordinary checks here?
+    
+#     cleanup(str(result_filename.absolute()))

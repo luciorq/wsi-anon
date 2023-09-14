@@ -1,68 +1,9 @@
 #include "hamamatsu-io.h"
 
-// TODO: delete this (obsolete)
-// checks if the file is hamamatsu
-int32_t is_hamamatsu(const char *filename) {
-    int32_t result = 0;
-    const char *ext = get_filename_ext(filename);
-
-    // check for valid file extension
-    if (strcmp(ext, NDPI) != 0) {
-        return result;
-    }
-
-    // check if ndpi tiff tags are present
-    file_t *fp = file_open(filename, "rb+");
-    bool big_tiff = false;
-    bool big_endian = false;
-    result = check_file_header(fp, &big_endian, &big_tiff);
-
-    file_close(fp);
-    return (result == 0);
-}
-
-// retrieve the macro directory in order to wipe label image from the tiff file structure
-int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_t *fp, bool big_endian) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        struct tiff_directory temp_dir = file->directories[i];
-
-        for (uint64_t j = 0; j < temp_dir.count; j++) {
-            struct tiff_entry temp_entry = temp_dir.entries[j];
-
-            if (temp_entry.tag == NDPI_SOURCELENS) {
-                int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
-
-                if (entry_size && temp_entry.type == TIFF_FLOAT) {
-                    float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
-
-                    // we need to step 8 bytes from start pointer
-                    // to get the expected value
-                    uint64_t new_start = temp_entry.start + 8;
-                    if (file_seek(fp, new_start, SEEK_SET)) {
-                        fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
-                        return -1;
-                    }
-                    if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
-                        fprintf(stderr, "Error: Failed to read entry value.\n");
-                        return -1;
-                    }
-                    fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
-
-                    // SourceLens equals -1 if macro directory containing the label image was found
-                    if (*v_buffer == -1) {
-                        return i;
-                    }
-                }
-            }
-        }
-    }
-    return -1;
-}
-
-struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
+struct metadata *get_metadata_hamamatsu(file_handle *fp, struct tiff_file *file) {
     // initialize metadata_attribute struct
     // TODO: find better value to determine size for malloc of metadata
-    struct metadata_attribute **attributes = malloc(sizeof(**attributes) * 15);
+    struct metadata_attribute **attributes = malloc(sizeof(**attributes));
     int8_t metadata_id = 0;
 
     // iterate over directories in tiff file
@@ -85,10 +26,12 @@ struct metadata *get_metadata_hamamatsu(file_t *fp, struct tiff_file *file) {
 
                 // add metadata
                 struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-                single_attribute->key = "Datetime";
+                single_attribute->key = strdup("Datetime");
                 single_attribute->value = strdup(buffer);
                 if (single_attribute != NULL) {
-                    attributes[metadata_id++] = single_attribute;
+                    attributes =
+                        (struct metadata_attribute **)realloc(attributes, sizeof(**attributes) * (++metadata_id));
+                    attributes[metadata_id - 1] = single_attribute;
                 }
             }
         }
@@ -112,7 +55,7 @@ struct wsi_data *get_wsi_data_hamamatsu(const char *filename) {
     }
 
     // opens file
-    file_t *fp = file_open(filename, "rb+");
+    file_handle *fp = file_open(filename, "rb+");
 
     // checks if file was successfully opened
     if (fp == NULL) {
@@ -145,20 +88,62 @@ struct wsi_data *get_wsi_data_hamamatsu(const char *filename) {
     struct metadata *metadata_attributes = get_metadata_hamamatsu(fp, file);
 
     // is Hamamatsu
-    // TODO: replace format value and handle more efficiently
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
-    wsi_data->format = 1;
+    wsi_data->format = HAMAMATSU;
     wsi_data->filename = filename;
     wsi_data->metadata_attributes = metadata_attributes;
 
     // cleanup
+    free_tiff_file(file);
     file_close(fp);
     return wsi_data;
 }
 
-// TODO: make use of get_metadata_hamamatsu function
+// retrieve the macro directory in order to wipe label image from the tiff file structure
+int32_t get_hamamatsu_macro_dir(struct tiff_file *file, file_handle *fp, bool big_endian) {
+    for (uint64_t i = 0; i < file->used; i++) {
+        struct tiff_directory temp_dir = file->directories[i];
+
+        for (uint64_t j = 0; j < temp_dir.count; j++) {
+            struct tiff_entry temp_entry = temp_dir.entries[j];
+
+            if (temp_entry.tag == NDPI_SOURCELENS) {
+                int32_t entry_size = get_size_of_value(temp_entry.type, &temp_entry.count);
+
+                if (entry_size && temp_entry.type == FLOAT) {
+                    float *v_buffer = (float *)malloc(entry_size * temp_entry.count);
+
+                    // we need to step 8 bytes from start pointer
+                    // to get the expected value
+                    uint64_t new_start = temp_entry.start + 8;
+                    if (file_seek(fp, new_start, SEEK_SET)) {
+                        fprintf(stderr, "Error: Failed to seek to offset %" PRIu64 ".\n", new_start);
+                        free(v_buffer);
+                        return -1;
+                    }
+                    if (file_read(v_buffer, entry_size, temp_entry.count, fp) != 1) {
+                        fprintf(stderr, "Error: Failed to read entry value.\n");
+                        free(v_buffer);
+                        return -1;
+                    }
+                    fix_byte_order(v_buffer, sizeof(float), 1, big_endian);
+
+                    // SourceLens equals -1 if macro directory containing the label image was found
+                    if (*v_buffer == -1) {
+                        free(v_buffer);
+                        return i;
+                    }
+                    free(v_buffer);
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+// TODO: make use of wsi_data struct
 // removes all metadata
-int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file, const char *pseudonym) {
+int32_t remove_metadata_in_hamamatsu(file_handle *fp, struct tiff_file *file) {
     for (uint32_t i = 0; i < file->used; i++) {
         struct tiff_directory dir = file->directories[i];
         for (uint32_t j = 0; j < dir.count; j++) {
@@ -173,14 +158,16 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file, const c
                     return -1;
                 }
 
-                char *replacement = create_replacement_string(*pseudonym, strlen(buffer));
+                char *replacement = create_replacement_string('X', strlen(buffer));
 
                 file_seek(fp, entry.offset, SEEK_SET);
 
                 if (file_write(replacement, entry.count, entry_size, fp) != 1) {
                     fprintf(stderr, "Error: Could not overwrite metadata in file.\n");
+                    free(replacement);
                     return -1;
                 }
+                free(replacement);
                 return 0;
             }
         }
@@ -189,20 +176,20 @@ int32_t remove_metadata_in_hamamatsu(file_t *fp, struct tiff_file *file, const c
 }
 
 // anonymizes hamamatsu file
-int32_t handle_hamamatsu(const char **filename, const char *new_filename, const char *pseudonym_metadata,
-                         struct anon_configuration *configuration) {
+int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool keep_macro_image,
+                         bool disable_unlinking, bool do_inplace) {
 
-    if (configuration->keep_macro_image) {
+    if (keep_macro_image) {
         fprintf(stderr, "Error: Macro image will be wiped if found.\n");
     }
 
-    fprintf(stdout, "Anonymizing Hamamatsu WSI...\n");
+    fprintf(stdout, "Anonymize Hamamatsu WSI...\n");
 
-    if (!configuration->do_inplace) {
-        *filename = duplicate_file(*filename, new_filename, DOT_NDPI);
+    if (!do_inplace) {
+        *filename = duplicate_file(*filename, new_label_name, DOT_NDPI);
     }
 
-    file_t *fp;
+    file_handle *fp;
     fp = file_open(*filename, "rb+");
 
     bool big_tiff = false;
@@ -226,7 +213,7 @@ int32_t handle_hamamatsu(const char **filename, const char *new_filename, const 
     }
 
     // remove metadata
-    result = remove_metadata_in_hamamatsu(fp, file, pseudonym_metadata);
+    result = remove_metadata_in_hamamatsu(fp, file);
     if (result != 0) {
         free_tiff_file(file);
         file_close(fp);
@@ -254,13 +241,14 @@ int32_t handle_hamamatsu(const char **filename, const char *new_filename, const 
         return result;
     }
 
-    if (!configuration->disable_unlinking) {
+    if (!disable_unlinking) {
         // unlink the empty macro directory from file structure
         result = unlink_directory(fp, file, dir_count, true);
     }
 
+    // clean up
+    free((void *)(*filename));
     free_tiff_file(file);
     file_close(fp);
-
     return result;
 }
