@@ -2,12 +2,14 @@ import ctypes
 import os
 import threading
 
-from .model.model import *
-
 lock = threading.Lock()
 
-libname = os.path.abspath(os.path.join("bin", "libwsianon.so"))
-_wsi_anonymizer = ctypes.cdll.LoadLibrary(libname)
+try: 
+    from model.model import *
+    _wsi_anonymizer = ctypes.cdll.LoadLibrary(os.path.abspath(os.path.join("..", "..", "bin", "libwsianon.so")))
+except: 
+    from .model.model import *
+    _wsi_anonymizer = ctypes.cdll.LoadLibrary(os.path.abspath(os.path.join("bin", "libwsianon.so")))
 
 def get_wsi_data(filename):
     global _wsi_anonymizer
