@@ -153,7 +153,7 @@ int32_t file_printf(file_handle *stream, const char *format, const char *value) 
     return buffer_size;
 }
 
-int64_t file_tell(file_handle *stream) { return stream->offset; }
+uint64_t file_tell(file_handle *stream) { return stream->offset; }
 
 int32_t file_close(file_handle *stream) {
     free(stream->mode);
