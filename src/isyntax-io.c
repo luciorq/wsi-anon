@@ -19,7 +19,7 @@ struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) 
     return NULL;
 }
 
-struct metadata *get_metadata_isyntax(file_handle *fp, int32_t header_size) {
+struct metadata *get_metadata_isyntax(file_handle *fp, uint64_t header_size) {
     // all metadata
     static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT, PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
                                           PHILIPS_RACK_ATT,     PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
@@ -85,7 +85,7 @@ struct wsi_data *get_wsi_data_isyntax(const char *filename) {
     }
 
     // get header size
-    size_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
+    uint64_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
 
     // gets all metadata
     struct metadata *metadata_attributes = get_metadata_isyntax(fp, header_size);
@@ -272,7 +272,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         return -1;
     }
 
-    size_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
+    uint64_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
 
     // remove label image
     int32_t result = wipe_isyntax_image_data(fp, header_size, PHILIPS_LABELIMAGE);

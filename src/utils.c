@@ -474,10 +474,10 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
 }
 
 // find size up to substring in file
-size_t get_size_to_substring(file_handle *fp, char *substring) {
+uint64_t get_size_to_substring(file_handle *fp, char *substring) {
 
     file_seek(fp, 0, SEEK_END);
-    long file_length = file_tell(fp);
+    uint64_t file_length = file_tell(fp);
     char *buffer = (char *)malloc(file_length);
     file_seek(fp, 0, SEEK_SET);
 
@@ -489,7 +489,7 @@ size_t get_size_to_substring(file_handle *fp, char *substring) {
 
     // finds size
     char *ret = strstr(buffer, substring);
-    size_t size = ret - buffer;
+    uint64_t size = ret - buffer;
 
     file_seek(fp, 0, SEEK_SET);
     free(buffer);
@@ -501,7 +501,7 @@ size_t get_size_to_substring(file_handle *fp, char *substring) {
 int32_t file_contains_value(file_handle *fp, char *value) {
 
     file_seek(fp, 0, SEEK_END);
-    long size = file_tell(fp);
+    uint64_t size = file_tell(fp);
     char *buffer = (char *)malloc(size);
     file_seek(fp, 0, SEEK_SET);
 

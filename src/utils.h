@@ -46,7 +46,7 @@ const char *add_equals_sign(const char *str1, const char *str2);
 
 bool contains(const char *str1, const char *str2);
 
-size_t get_size_to_substring(file_handle *fp, char *substring);
+uint64_t get_size_to_substring(file_handle *fp, char *substring);
 
 int32_t file_contains_value(file_handle *fp, char *value);
 

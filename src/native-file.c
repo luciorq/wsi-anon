@@ -50,7 +50,7 @@ int32_t file_printf(file_handle *stream, const char *format, const char *value) 
     return fprintf(stream->fp, format, value);
 }
 
-int64_t file_tell(file_handle *stream) {
+uint64_t file_tell(file_handle *stream) {
 #ifdef __linux__
     return ftello(stream->fp);
 #elif _WIN32
