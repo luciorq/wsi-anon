@@ -10,6 +10,10 @@ SHARED_LIBRARY_TARGET = libwsianon.so
 SO_NAME = libwsianon
 TEST_TARGET = utests
 
+ifeq ($(PREFIX),)
+	PREFIX := /usr
+endif
+
 CC       = gcc
 CFLAGS   = -Wall -I. -O2 -Wextra
 CFLAGS_DEBUG = -g -ggdb -O0 -Wall
@@ -81,6 +85,11 @@ makedirs:
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(OBJDIR)/debug
 	@mkdir -p $(BINDIR)
+
+install: $(BINDIR)/$(SHARED_LIBRARY_TARGET)
+	@install -d $(DESTDIR)$(PREFIX)/lib/
+	@install -m 777 $(BINDIR)/$(SHARED_LIBRARY_TARGET) $(DESTDIR)$(PREFIX)/lib/
+	@echo "Installed shared library in usr/lib"
 
 .PHONY: clean
 clean:

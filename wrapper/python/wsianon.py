@@ -9,27 +9,7 @@ except:
     
 lock = threading.Lock()
 
-def search_shared_lib():
-    '''
-    recursively searches through all directories in case shared lib is not in root directory
-    IMPORTANT: libwsianon.so needs to be created prior
-    '''
-    while(True):
-        for root, dirs, files in os.walk("."):
-            if('bin' in dirs):
-                for root, _, files in os.walk(os.path.join(".", "bin")):
-                    if 'libwsianon.so' in files:
-                        return os.path.join(os.path.abspath(root), "libwsianon.so")
-            if('bin' in root):
-                for file in files:
-                        if(file == 'libwsianon.so'):
-                            return os.path.join(os.path.abspath(root), "libwsianon.so")
-        os.chdir('..')
-
-try:
-    _wsi_anonymizer = ctypes.cdll.LoadLibrary(os.path.abspath(os.path.join("bin", "libwsianon.so")))
-except:
-    _wsi_anonymizer = ctypes.cdll.LoadLibrary(search_shared_lib()) 
+_wsi_anonymizer = ctypes.cdll.LoadLibrary("libwsianon.so")
 
 def get_wsi_data(filename):
     '''
