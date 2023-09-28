@@ -35,7 +35,6 @@ def _load_library():
             )
 
 _wsi_anonymizer = _load_library()
-print(_wsi_anonymizer)
 
 def get_wsi_data(filename):
     '''
