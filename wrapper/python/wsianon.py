@@ -19,10 +19,7 @@ def _load_library():
             return ctypes.cdll.LoadLibrary('libwsianon.so')
         except FileNotFoundError:
             raise ModuleNotFoundError(
-                "Could not locate libwsianon.so. "
-                "Please make sure that the shared "
-                "library is created and placed under "
-                "usr/lib/ by running make install. "
+                "Could not locate libwsianon.so. Please make sure that the shared library is created and placed under usr/lib/ by running make install."
             )
     elif platform.system() == 'Windows':
         try:
@@ -30,15 +27,11 @@ def _load_library():
             return ctypes.WinDLL("libwsianon.dll")
         except FileNotFoundError:
             raise ModuleNotFoundError(
-                "Could not locate libwsianon.dll.  "
-                "Please make sure that the DLL "
-                "is created and placed under "
-                "C:\Windows\Systems32. "
+                "Could not locate libwsianon.dll. Please make sure that the DLL is created and placed under C:\\Windows\\Systems32."
             )
     else:
         raise ModuleNotFoundError(
-                "Could not locate shared library or DLL.  "
-                "Please make sure you are running under Linux or Windows.  "
+                "Could not locate shared library or DLL. Please make sure you are running under Linux or Windows."
             )
 
 _wsi_anonymizer = _load_library()
