@@ -127,7 +127,7 @@ Anonymization is not done during creation of the instance, because there are WSI
 
 ### Python Wrapper Usage (EXPERIMENTAL)
 
-**This is currently only implemented and tested under Linux (Ubuntu 20.04).**
+#### Under Ubuntu
 
 The Python Wrapper makes use of the shared library `libwsianon.so` that needs to be created prior to running the script. This is simply done by building the Native Target under Linux as described above. In order to locate and load the library (indendepent of the current working directory), the file needs to be copied to "/usr/lib/". This can simply be done by running the following command:
 
@@ -136,6 +136,12 @@ make install
 ```
 
 If permission is denied run this command again with `sudo` at the beginning.
+
+#### Under Windows
+
+Analogous to Ubuntu, Windows will need the corresponding `libwsianon.dll`. This needs to be placed in the `C:\Windows\System32` folder, that is automatically done when building the Native Target under Windows. 
+
+If permission is denied run the command again after opening the command prompt/PowerShell as an administrator.
 
 ## Development
 

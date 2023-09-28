@@ -1,6 +1,7 @@
 import ctypes
 import os
 import threading
+import platform
 
 try: 
     from model.model import *
@@ -9,7 +10,39 @@ except:
     
 lock = threading.Lock()
 
-_wsi_anonymizer = ctypes.cdll.LoadLibrary("libwsianon.so")
+def _load_library():
+    '''
+    loads library depending on operating system. This is currently only implemented only Windows and Linux
+    '''
+    if platform.system() == 'Linux':
+        try:
+            return ctypes.cdll.LoadLibrary('libwsianon.so')
+        except FileNotFoundError:
+            raise ModuleNotFoundError(
+                "Could not locate libwsianon.so. "
+                "Please make sure that the shared "
+                "library is created and placed under "
+                "usr/lib/ by running make install. "
+            )
+    elif platform.system() == 'Windows':
+        try:
+            print("ENTERS AND USES THIS")
+            return ctypes.WinDLL("libwsianon.dll")
+        except FileNotFoundError:
+            raise ModuleNotFoundError(
+                "Could not locate libwsianon.dll.  "
+                "Please make sure that the DLL "
+                "is created and placed under "
+                "C:\Windows\Systems32. "
+            )
+    else:
+        raise ModuleNotFoundError(
+                "Could not locate shared library or DLL.  "
+                "Please make sure you are running under Linux or Windows.  "
+            )
+
+_wsi_anonymizer = _load_library()
+print(_wsi_anonymizer)
 
 def get_wsi_data(filename):
     '''
