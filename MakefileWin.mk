@@ -9,9 +9,12 @@ EXE_DIR = exe
 
 # final target
 CONSOLE_TARGET := wsi-anon
+SHARED_LIBRARY_TARGET = libwsianon.dll
+SO_NAME = libwsianon
 
 # list files
 SOURCEFILES = $(filter-out $(SRC_DIR)/js-file.c $(SRC_DIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRC_DIR)/*.c))
+SOURCES_LIB = $(filter-out $(SRC_DIR)/console-app.c $(SRC_DIR)/js-file.c $(SRC_DIR)/wsi-anonymizer-wasm.c, $(wildcard $(SRC_DIR)/*.c))
 OBJECTFILES := $(SOURCEFILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 # flags
@@ -23,6 +26,13 @@ R_FLAG = -r
 L_FLAGS   = -Wall -I.
 RM_DIR = rd /s /q
 RM = rm
+
+default: shared-lib console-app install
+
+shared-lib: makedirs $(EXE_DIR)/$(SHARED_LIBRARY_TARGET)
+
+$(EXE_DIR)/$(SHARED_LIBRARY_TARGET): 
+	@$(GCC) -shared -Wl,-soname,$(SO_NAME) -o $(EXE_DIR)/$(SHARED_LIBRARY_TARGET) -fPIC $(SOURCES_LIB)
 
 console-app: $(EXE_DIR)/$(CONSOLE_TARGET)
 
@@ -39,6 +49,10 @@ makedirs:
 	@if exist $(EXE_DIR) $(RM_DIR) $(EXE_DIR)
 	@mkdir $(OBJ_DIR)
 	@mkdir $(EXE_DIR)
+
+install:
+	@xcopy $(EXE_DIR)\$(SHARED_LIBRARY_TARGET) C:\Windows\System32 /Y
+	@echo Copied DLL to C:\Windows\System32
 
 .PHONY: clean
 

@@ -125,6 +125,23 @@ try {
 
 Anonymization is not done during creation of the instance, because there are WSI formats that consist of multiple files. For all of them, an `AnonymizedStream` instance must be created first. After `anonymize` has been called and successfully awaited, all stream instances belonging to the given WSI can be uploaded, e.g., using the tus.Upload client. The anonymized file can afterwards also be downloaded. For file formats that consist of multiple files, e.g. MIRAX, the files need be saved invidually.
 
+### Python Wrapper Usage (EXPERIMENTAL)
+
+#### Under Ubuntu
+
+The Python Wrapper makes use of the shared library `libwsianon.so` that needs to be created prior to running the script. This is simply done by building the Native Target under Linux as described above. In order to locate and load the library (indendepent of the current working directory), the file needs to be copied to "/usr/lib/". This can simply be done by running the following command:
+
+```bash
+make install
+```
+
+If permission is denied run this command again with `sudo` at the beginning.
+
+#### Under Windows
+
+Analogous to Ubuntu, Windows will need the corresponding `libwsianon.dll`. This needs to be placed in the `C:\Windows\System32` folder, that is automatically done when building the Native Target under Windows. 
+
+If permission is denied run the command again after opening the command prompt/PowerShell as an administrator.
 
 ## Development
 
