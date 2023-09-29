@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.12
+
+* allow import of shared library in python wrapper independent of current directory
+
 ## 0.4.11
 
 * replace check_file_header by get_wsi_data function
