@@ -1,8 +1,13 @@
 # Changelog
 
+## 0.4.13
+
+* handle iSyntax Files bigger than 2GB in WASM
+
 ## 0.4.12
 
 * allow import of shared library in python wrapper independent of current directory
+* create DLL in MakefileWin for python wrapper
 
 ## 0.4.11
 

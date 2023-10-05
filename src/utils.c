@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <inttypes.h>
 
 // split a string by a given delimiter
 char **str_split(char *a_str, const char a_delim) {
@@ -473,52 +474,36 @@ int32_t bytes_to_int(unsigned char *buffer, int32_t size) {
     return ret;
 }
 
-// find size up to substring in file
-size_t get_size_to_substring(file_handle *fp, char *substring) {
+// iteratively searches file for value and returns size of file where value was found
+uint64_t iteratively_get_size_of_value(file_handle *fp, char *value, uint64_t step) {
 
     file_seek(fp, 0, SEEK_END);
-    long file_length = file_tell(fp);
-    char *buffer = (char *)malloc(file_length);
-    file_seek(fp, 0, SEEK_SET);
+    uint64_t file_length = file_tell(fp);
 
-    if (file_read(buffer, file_length, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read file.\n");
-        return -1;
+    while (step < file_length) {
+        char *buffer = malloc(sizeof(char) * step);
+        file_seek(fp, 0, SEEK_SET);
+
+        if (file_read(buffer, step, 1, fp) != 1) {
+            free(buffer);
+            fprintf(stderr, "Error: Could not read file.\n");
+            return 0;
+        }
+
+        // found value
+        if (contains(buffer, value)) {
+            // calculates size
+            char *ret = strstr(buffer, value);
+            uint64_t size = ret - buffer;
+            file_seek(fp, 0, SEEK_SET);
+            free(buffer);
+            return size;
+        } else {
+            free(buffer);
+            step += step;
+        }
     }
-
-    // finds size
-    char *ret = strstr(buffer, substring);
-    size_t size = ret - buffer;
-
-    file_seek(fp, 0, SEEK_SET);
-    free(buffer);
-
-    return size;
-}
-
-// check if file contains specific value
-int32_t file_contains_value(file_handle *fp, char *value) {
-
-    file_seek(fp, 0, SEEK_END);
-    long size = file_tell(fp);
-    char *buffer = (char *)malloc(size);
-    file_seek(fp, 0, SEEK_SET);
-
-    if (file_read(buffer, size, 1, fp) != 1) {
-        free(buffer);
-        fprintf(stderr, "Error: Could not read file.\n");
-        return -1;
-    }
-
-    // searches for value
-    if (contains(buffer, value)) {
-        free(buffer);
-        return 1;
-    }
-
-    free(buffer);
-    return -1;
+    return 0;
 }
 
 const char *concat_wildcard_string_int32(const char *str, int32_t integer) {

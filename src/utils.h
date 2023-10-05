@@ -46,9 +46,7 @@ const char *add_equals_sign(const char *str1, const char *str2);
 
 bool contains(const char *str1, const char *str2);
 
-size_t get_size_to_substring(file_handle *fp, char *substring);
-
-int32_t file_contains_value(file_handle *fp, char *value);
+uint64_t iteratively_get_size_of_value(file_handle *fp, char *value, uint64_t step);
 
 const char *concat_wildcard_string_int32(const char *str, int32_t integer);
 

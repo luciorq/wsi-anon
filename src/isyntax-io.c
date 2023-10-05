@@ -1,4 +1,5 @@
 #include "isyntax-io.h"
+#include <inttypes.h>
 
 struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) {
     char *value = get_value_from_attribute(buffer, attribute);
@@ -19,7 +20,7 @@ struct metadata_attribute *get_attribute_isyntax(char *buffer, char *attribute) 
     return NULL;
 }
 
-struct metadata *get_metadata_isyntax(file_handle *fp, int32_t header_size) {
+struct metadata *get_metadata_isyntax(file_handle *fp, uint64_t header_size) {
     // all metadata
     static char *METADATA_ATTRIBUTES[] = {PHILIPS_DATETIME_ATT, PHILIPS_SERIAL_ATT, PHILIPS_SLOT_ATT,
                                           PHILIPS_RACK_ATT,     PHILIPS_OPERID_ATT, PHILIPS_BARCODE_ATT};
@@ -58,7 +59,7 @@ struct metadata *get_metadata_isyntax(file_handle *fp, int32_t header_size) {
 
 struct wsi_data *get_wsi_data_isyntax(const char *filename) {
     // gets file extension
-    int32_t result = 0;
+    uint64_t result = 0;
     const char *ext = get_filename_ext(filename);
 
     // check for valid file extension
@@ -75,17 +76,23 @@ struct wsi_data *get_wsi_data_isyntax(const char *filename) {
         return NULL;
     }
 
-    // checks root node in order to determine if file is actually iSyntax
-    result = file_contains_value(fp, ISYNTAX_ROOTNODE);
+    // checks for ISYNTAX_ROOTNODE in order to determine if file is actually iSyntax
+    result = iteratively_get_size_of_value(fp, ISYNTAX_ROOTNODE, ISYNTAX_APPROX_HEADER_SIZE);
 
     // checks result
-    if (result == -1) {
+    if (result == 0) {
         fprintf(stderr, "Error: Could not find root node in iSyntax file.\n");
         return NULL;
     }
 
     // get header size
-    size_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
+    uint64_t header_size = iteratively_get_size_of_value(fp, ISYNTAX_EOT, ISYNTAX_APPROX_EOT_SIZE);
+
+    // checks result
+    if (header_size == 0) {
+        fprintf(stderr, "Error: Unable to determine XML header size.\n");
+        return NULL;
+    }
 
     // gets all metadata
     struct metadata *metadata_attributes = get_metadata_isyntax(fp, header_size);
@@ -182,11 +189,9 @@ int32_t wipe_isyntax_image_data(file_handle *fp, size_t header_size, char *image
     }
 
     // handle bigger overhead when using malloc in WASM
-    /*
     if (strlen(buffer) > header_size) {
-        buffer[header_size] = '\0';
+        buffer[header_size - 1] = '\0';
     }
-    */
 
     char *result = buffer;
     bool rewrite = false;
@@ -272,7 +277,7 @@ int32_t handle_isyntax(const char **filename, const char *new_label_name, bool k
         return -1;
     }
 
-    size_t header_size = get_size_to_substring(fp, ISYNTAX_EOT);
+    uint64_t header_size = iteratively_get_size_of_value(fp, ISYNTAX_EOT, ISYNTAX_APPROX_EOT_SIZE);
 
     // remove label image
     int32_t result = wipe_isyntax_image_data(fp, header_size, PHILIPS_LABELIMAGE);

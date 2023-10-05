@@ -86,6 +86,8 @@
 #define ISYNTAX_ROOTNODE "DPUfsImport"
 #define ISYNTAX_EOT "\r\n\004"
 #define ISYNTAX_DATA "</Data"
+#define ISYNTAX_APPROX_HEADER_SIZE 80
+#define ISYNTAX_APPROX_EOT_SIZE 5000000
 
 // hamamatsu
 #define NDPI_FORMAT_FLAG 65420

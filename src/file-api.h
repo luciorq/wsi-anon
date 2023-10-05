@@ -22,7 +22,7 @@ int32_t file_putc(int32_t character, file_handle *stream);
 
 int32_t file_printf(file_handle *stream, const char *format, const char *value);
 
-int64_t file_tell(file_handle *stream);
+uint64_t file_tell(file_handle *stream);
 
 int32_t file_close(file_handle *stream);
 
