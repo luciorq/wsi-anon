@@ -1,7 +1,7 @@
 #include "file-api.h"
 
 #include <emscripten.h>
-#include <inttypes.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -68,9 +68,14 @@ file_handle *file_open(const char *filename, const char *mode) {
 }
 
 size_t file_read(void *buffer, size_t element_size, size_t element_count, file_handle *stream) {
-    uint32_t bytes_read = get_chunk(buffer, element_size * element_count, stream->filename, stream->offset);
-    stream->offset += bytes_read * element_count;
-    return element_count;
+    // check if size that is read at once does not exceed limit for array
+    size_t size = element_size * element_count;
+    if (size < INT_MAX) {
+        uint32_t bytes_read = get_chunk(buffer, size, stream->filename, stream->offset);
+        stream->offset += bytes_read * element_count;
+        return element_count;
+    }
+    return 0;
 }
 
 char *file_gets(char *buffer, int32_t max_count, file_handle *stream) {

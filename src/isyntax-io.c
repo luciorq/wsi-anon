@@ -188,9 +188,9 @@ int32_t wipe_isyntax_image_data(file_handle *fp, size_t header_size, char *image
         return -1;
     }
 
-    // IMPORTANT TODO: handle bigger overhead when using malloc in WASM
+    // handle bigger overhead when using malloc in WASM
     if (strlen(buffer) > header_size) {
-        buffer[header_size] = '\0';
+        buffer[header_size - 1] = '\0';
     }
 
     char *result = buffer;

@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <inttypes.h>
 
 // split a string by a given delimiter
 char **str_split(char *a_str, const char a_delim) {
@@ -480,7 +481,7 @@ uint64_t iteratively_get_size_of_value(file_handle *fp, char *value, uint64_t st
     uint64_t file_length = file_tell(fp);
 
     while (step < file_length) {
-        char *buffer = (char *)malloc(step);
+        char *buffer = malloc(sizeof(char) * step);
         file_seek(fp, 0, SEEK_SET);
 
         if (file_read(buffer, step, 1, fp) != 1) {
