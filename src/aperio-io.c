@@ -1,13 +1,13 @@
 #include "aperio-io.h"
 
-struct metadata_attribute *get_attribute_aperio(char *buffer, const char *delimiter1, const char *delimiter2) {
-    const char *prefixed_delimiter = concat_str(delimiter2, delimiter1);
-    char *value = get_string_between_delimiters(buffer, prefixed_delimiter, delimiter2);
+struct metadata_attribute *get_attribute_aperio(char *buffer, const char *attribute_name) {
+    const char *prefixed_delimiter = concat_str("|", attribute_name);
+    char *value = get_string_between_delimiters(buffer, prefixed_delimiter, "|");
     // check if tag is not an empty string
     if (value[0] != '\0') {
         // removes '=' from key and saves it with value in struct
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-        single_attribute->key = strdup(delimiter1);
+        single_attribute->key = strdup(attribute_name);
         single_attribute->key[strlen(single_attribute->key) - 3] = '\0';
         single_attribute->value = strdup(value);
         free(value);
@@ -51,7 +51,7 @@ struct metadata *get_metadata_aperio(file_handle *fp, struct tiff_file *file) {
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(buffer, METADATA_ATTRIBUTES[i])) {
                         struct metadata_attribute *single_attribute =
-                            get_attribute_aperio(buffer, METADATA_ATTRIBUTES[i], "|");
+                            get_attribute_aperio(buffer, METADATA_ATTRIBUTES[i]);
                         if (single_attribute != NULL) {
                             attributes[metadata_id++] = single_attribute;
                         }
