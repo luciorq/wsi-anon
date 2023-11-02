@@ -1,5 +1,24 @@
 #include "aperio-io.h"
 
+struct metadata_attribute *get_attribute_aperio(char *buffer, const char *delimiter1, const char *delimiter2) {
+    const char *prefixed_delimiter = concat_str(delimiter2, delimiter1);
+    char *value = get_string_between_delimiters(buffer, prefixed_delimiter, delimiter2);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = strdup(delimiter1);
+        single_attribute->key[strlen(single_attribute->key) - 3] = '\0';
+        single_attribute->value = strdup(value);
+        free(value);
+        free((void *)prefixed_delimiter);
+        return single_attribute;
+    }
+    free((void *)prefixed_delimiter);
+    free(value);
+    return NULL;
+}
+
 struct metadata *get_metadata_aperio(file_handle *fp, struct tiff_file *file) {
     // all metadata
     static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG,  APERIO_TIME_TAG,
@@ -32,7 +51,7 @@ struct metadata *get_metadata_aperio(file_handle *fp, struct tiff_file *file) {
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(buffer, METADATA_ATTRIBUTES[i])) {
                         struct metadata_attribute *single_attribute =
-                            get_attribute(buffer, METADATA_ATTRIBUTES[i], "|", 3);
+                            get_attribute_aperio(buffer, METADATA_ATTRIBUTES[i], "|");
                         if (single_attribute != NULL) {
                             attributes[metadata_id++] = single_attribute;
                         }
@@ -114,14 +133,20 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
 
 // searches for tags in image description Data and replaces its values with equal amount of X's
 char *override_image_description(char *result, char *delimiter) {
-    const char *value = get_string_between_delimiters(result, delimiter, "|");
+    const char *prefixed_delimiter = concat_str("|", delimiter);
+    const char *value = get_string_between_delimiters(result, prefixed_delimiter, "|");
     // check if tag is not an empty string
     if (value[0] != '\0') {
         char *replacement = create_replacement_string('X', strlen(value));
-        result = replace_str(result, value, replacement);
-        free((void *)(value));
+        const char *to_be_replaced = concat_str(prefixed_delimiter, value);
+        const char *full_replacement = concat_str(prefixed_delimiter, replacement);
+        result = replace_str(result, to_be_replaced, full_replacement);
+        free((void *)(to_be_replaced));
+        free((void *)(full_replacement));
         free(replacement);
     }
+    free((void *)(value));
+    free((void *)(prefixed_delimiter));
     return result;
 }
 

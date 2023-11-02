@@ -1,5 +1,21 @@
 #include "ventana-io.h"
 
+struct metadata_attribute *get_attribute_ventana(char *buffer, const char *delimiter1, const char *delimiter2) {
+    char *value = get_string_between_delimiters(buffer, delimiter1, delimiter2);
+    // check if tag is not an empty string
+    if (value[0] != '\0') {
+        // removes '=' from key and saves it with value in struct
+        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+        single_attribute->key = strdup(delimiter1);
+        single_attribute->key[strlen(single_attribute->key) - 2] = '\0';
+        single_attribute->value = strdup(value);
+        free(value);
+        return single_attribute;
+    }
+    free(value);
+    return NULL;
+}
+
 struct metadata *get_metadata_ventana(file_handle *fp, struct tiff_file *file) {
     // all metadata with double quotes
     static const char *METADATA_ATTRIBUTES[] = {VENTANA_BASENAME_ATT, VENTANA_FILENAME_ATT,  VENTANA_UNITNUMBER_ATT,
@@ -40,7 +56,7 @@ struct metadata *get_metadata_ventana(file_handle *fp, struct tiff_file *file) {
                 for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); k++) {
                     if (contains(buffer, METADATA_ATTRIBUTES[k])) {
                         struct metadata_attribute *single_attribute =
-                            get_attribute(buffer, METADATA_ATTRIBUTES[k], "\"", 2);
+                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES[k], "\"");
                         if (single_attribute != NULL) {
                             attributes[metadata_id++] = single_attribute;
                         }
@@ -51,7 +67,7 @@ struct metadata *get_metadata_ventana(file_handle *fp, struct tiff_file *file) {
                 for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES_2) / sizeof(METADATA_ATTRIBUTES_2[0]); k++) {
                     if (contains(buffer, METADATA_ATTRIBUTES_2[k])) {
                         struct metadata_attribute *single_attribute =
-                            get_attribute(buffer, METADATA_ATTRIBUTES_2[k], "\'", 2);
+                            get_attribute_ventana(buffer, METADATA_ATTRIBUTES_2[k], "\'");
                         if (single_attribute != NULL) {
                             attributes[metadata_id++] = single_attribute;
                         }
