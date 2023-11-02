@@ -23,7 +23,6 @@ def _load_library():
             )
     elif platform.system() == 'Windows':
         try:
-            print("ENTERS AND USES THIS")
             return ctypes.WinDLL("libwsianon.dll")
         except FileNotFoundError:
             raise ModuleNotFoundError(
