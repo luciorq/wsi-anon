@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.15
+
+* fix double free or corrupted for Aperio GT450 format
+
 ## 0.4.14
 
 * correctly overwrite image description in Aperio
