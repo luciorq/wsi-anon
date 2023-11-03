@@ -24,9 +24,6 @@ void insert_dir_into_tiff_file(struct tiff_file *file, struct tiff_directory *di
 
 // free tiff_file with all directories and entries
 void free_tiff_file(struct tiff_file *file) {
-    for (uint64_t i = 0; i < file->used; i++) {
-        free((&file->directories[i])->entries);
-    }
     free(file->directories);
     free(file);
 }
