@@ -148,14 +148,14 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
     // read number of entries in directory
     uint64_t entry_count = read_uint(fp, big_tiff ? 8 : 2, big_endian);
 
-    struct tiff_directory *tiff_dir = malloc(sizeof(*tiff_dir));
+    struct tiff_directory *tiff_dir = (struct tiff_directory *)malloc(sizeof(struct tiff_directory));
     tiff_dir->count = entry_count;
     tiff_dir->in_pointer_offset = *in_pointer_offset;
 
-    struct tiff_entry *entries = malloc(entry_count * sizeof(*entries));
+    struct tiff_entry *entries = (struct tiff_entry *)malloc(entry_count * sizeof(struct tiff_entry));
 
     for (uint64_t i = 0; i < entry_count; i++) {
-        struct tiff_entry *entry = malloc(sizeof(*entry));
+        struct tiff_entry *entry = (struct tiff_entry *)malloc(sizeof(struct tiff_entry));
 
         if (entry == NULL) {
             fprintf(stderr, "Error: could not allocate memory for entry.\n");
@@ -289,7 +289,7 @@ struct tiff_file *read_tiff_file(file_handle *fp, bool big_tiff, bool ndpi, bool
         return NULL;
     }
 
-    struct tiff_file *file = (struct tiff_file *)malloc(sizeof(*file));
+    struct tiff_file *file = (struct tiff_file *)malloc(sizeof(struct tiff_file));
     // initialize tiff file and add first directory
     init_tiff_file(file, 1);
     insert_dir_into_tiff_file(file, dir);
