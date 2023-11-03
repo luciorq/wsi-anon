@@ -7,6 +7,8 @@ static const char DOT_SVS[] = ".svs";
 static const char SVS[] = "svs";
 
 // main functions
+struct metadata_attribute *get_attribute_aperio(char *buffer, const char *attribute_name);
+
 struct metadata *get_metadata_aperio(file_handle *fp, struct tiff_file *file);
 
 struct wsi_data *get_wsi_data_aperio(const char *filename);

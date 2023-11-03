@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.14
+
+* correctly overwrite image description in Aperio
+
 ## 0.4.13
 
 * handle iSyntax Files bigger than 2GB in WASM

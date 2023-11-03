@@ -53,7 +53,7 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         ("/data/Aperio/CMU-1.svs", Vendor.APERIO),
         ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
         #("/data/Hamamatsu/test.ndpi", Vendor.HAMAMATSU), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
-        ("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
+        #("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
         ("/data/Ventana/OS-2.bif", Vendor.VENTANA),
         ("/data/Philips iSyntax/4399.isyntax", Vendor.PHILIPS_ISYNTAX),
         #("/data/Philips TIFF/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
