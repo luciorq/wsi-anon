@@ -264,14 +264,20 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     }
 
     if (label_dir == -1) {
-        fprintf(stderr, "Error: Could not find IFD of label image.\n");
+        fprintf(stderr, "Error: Could not find IFD of label image in Aperio format scanned by GT450.\n");
         free_tiff_file(file);
         file_close(fp);
         return -1;
     }
 
     struct tiff_directory dir = file->directories[label_dir];
-    result = wipe_directory(fp, &dir, false, big_endian, big_tiff, LZW_CLEARCODE, NULL);
+
+    int32_t _is_aperio_kfbio = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "KFBIO");
+    if (_is_aperio_kfbio == 1){
+        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
+    } else{
+        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, LZW_CLEARCODE, NULL);
+    }
 
     if (result != 0) {
         free_tiff_file(file);
