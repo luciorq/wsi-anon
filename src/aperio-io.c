@@ -135,7 +135,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
 char *override_image_description(char *result, char *delimiter) {
     const char *prefixed_delimiter = concat_str("|", delimiter);
     const char *value = get_string_between_delimiters(result, prefixed_delimiter, "|");
-    // check if tag is not an empty string
+    // check if value is not an empty string
     if (value[0] != '\0') {
         char *replacement = create_replacement_string('X', strlen(value));
         const char *to_be_replaced = concat_str(prefixed_delimiter, value);
@@ -144,10 +144,13 @@ char *override_image_description(char *result, char *delimiter) {
         free((void *)(to_be_replaced));
         free((void *)(full_replacement));
         free(replacement);
+        free((void *)(value));
+        free((void *)(prefixed_delimiter));
+        return result;
     }
     free((void *)(value));
     free((void *)(prefixed_delimiter));
-    return result;
+    return NULL;
 }
 
 // TODO: make use of get_metadata_aperio function
@@ -177,9 +180,12 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(result, METADATA_ATTRIBUTES[i])) {
                         char *new_result = override_image_description(result, METADATA_ATTRIBUTES[i]);
-                        strcpy(result, new_result);
-                        free(new_result);
-                        rewrite = true;
+                        // in case the metadata exists but no value was found
+                        if(new_result != NULL){
+                            strcpy(result, new_result);
+                            free(new_result);
+                            rewrite = true;
+                        }
                     }
                 }
 

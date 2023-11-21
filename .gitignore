@@ -19,6 +19,7 @@ Makefile.in
 .vs/
 bin/
 obj/
+exe/
 
 # python
 __pycache__/
