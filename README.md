@@ -8,7 +8,9 @@ Currently supported formats:
 
 | Vendor | Scanner types (tested) | File extension | Comment |
 |---|---|---|---|
-| Leica Aperio | AT20, GT450, KF-PRO-400, Motic Pro6 | `*.svs` `*.tif` | - |
+| Leica Aperio | AT20, GT450 | `*.svs` `*.tif` | - |
+| KFBIO | KF-PRO-400 | `*.svs` | - |
+| Motic | Pro6 | `*.svs` | - | 
 | Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
 | 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
 | Roche Ventana | VS200, iScan Coreo, DP 600 | `*.bif` `*.tif`| - |

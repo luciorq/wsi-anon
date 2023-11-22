@@ -1,4 +1,4 @@
-#include "aperio-io.h"
+#include "aperio-flavor-io.h"
 
 struct metadata_attribute *get_attribute_aperio(char *buffer, const char *attribute_name) {
     const char *prefixed_delimiter = concat_str("|", attribute_name);
@@ -124,7 +124,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
     wsi_data->format = APERIO;
     wsi_data->metadata_attributes = metadata_attributes;
-
+        
     // cleanup
     free_tiff_file(file);
     file_close(fp);
@@ -229,36 +229,45 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
                       bool do_inplace) {
     fprintf(stdout, "Anonymize Aperio WSI...\n");
 
+    // gets file extension
     const char *ext = get_filename_ext(*filename);
 
+    // checks for valid file extension
     bool is_svs = strcmp(ext, SVS) == 0;
 
+    // duplicate file
     if (!do_inplace) {
         // check if filename is svs or tif here
         *filename = duplicate_file(*filename, new_label_name, is_svs ? DOT_SVS : DOT_TIF);
     }
 
+    // open file
     file_handle *fp;
     fp = file_open(*filename, "rb+");
 
+    // checks file details
     bool big_tiff = false;
     bool big_endian = false;
     int32_t result = check_file_header(fp, &big_endian, &big_tiff);
 
+    // check result
     if (result != 0) {
         file_close(fp);
         return result;
     }
 
+    // creates tiff file structure
     struct tiff_file *file;
     file = read_tiff_file(fp, big_tiff, false, big_endian);
 
+    // check result
     if (file == NULL) {
         fprintf(stderr, "Error: Could not read tiff file.\n");
         file_close(fp);
         return -1;
     }
 
+    // if the slide at hand is produced by a GT450, the compression needs to be converted
     int32_t _is_aperio_gt450 = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "GT450");
 
     // delete label image
@@ -269,6 +278,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         label_dir = get_directory_by_tag_and_value(fp, file, TIFFTAG_IMAGEDESCRIPTION, LABEL);
     }
 
+    // check if label directory could be retrieved
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find IFD of label image in Aperio format scanned by GT450.\n");
         free_tiff_file(file);
@@ -276,8 +286,10 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         return -1;
     }
 
+    // get directoriy
     struct tiff_directory dir = file->directories[label_dir];
 
+    // check for KFBIO value in image description, since the compression type for KFBIO produced Aperio formats differs
     int32_t _is_aperio_kfbio = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "KFBIO");
     if (_is_aperio_kfbio == 1) {
         result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
@@ -285,6 +297,7 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         result = wipe_directory(fp, &dir, false, big_endian, big_tiff, LZW_CLEARCODE, NULL);
     }
 
+    // check for successful wipe of directory
     if (result != 0) {
         free_tiff_file(file);
         file_close(fp);
@@ -321,8 +334,10 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
         }
     }
 
+    // remove all metadata
     remove_metadata_in_aperio(fp, file);
 
+    // unlink directories
     if (!disable_unlinking) {
         unlink_directory(fp, file, label_dir, false);
         unlink_directory(fp, file, macro_dir, false);
