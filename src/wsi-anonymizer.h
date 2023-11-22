@@ -1,7 +1,7 @@
 #ifndef HEADER_WSI_ANONYMIZER_H
 #define HEADER_WSI_ANONYMIZER_H
 
-#include "aperio-io.h"
+#include "aperio-flavor-io.h"
 #include "defines.h"
 #include "hamamatsu-io.h"
 #include "isyntax-io.h"

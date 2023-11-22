@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.16
+
+* support anonymization for Aperio format scanned by KFBIO KF-PRO-400 and Motic Pro6
+
 ## 0.4.15
 
 * fix double free or corrupted for Aperio GT450 format
