@@ -10,7 +10,7 @@
 #include "plugin.h"
 #include "ventana-io.h"
 
-static const char *VENDOR_AND_FORMAT_STRINGS[] = {"Aperio", "Hamamatsu",    "3DHistech (Mirax)", "Ventana",
+static const char *VENDOR_AND_FORMAT_STRINGS[] = {"Aperio",          "Hamamatsu",    "3DHistech (Mirax)", "Ventana",
                                                   "Philips iSyntax", "Philips TIFF", "Unknown",           "Invalid"};
 
 extern struct wsi_data *get_wsi_data(const char *filename);

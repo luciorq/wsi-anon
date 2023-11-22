@@ -124,7 +124,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     struct wsi_data *wsi_data = malloc(sizeof(*wsi_data));
     wsi_data->format = APERIO;
     wsi_data->metadata_attributes = metadata_attributes;
-        
+
     // cleanup
     free_tiff_file(file);
     file_close(fp);
