@@ -529,8 +529,8 @@ uint64_t *read_pointer64_by_tag(file_handle *fp, struct tiff_directory *dir, int
 }
 
 int32_t unlink_directory(file_handle *fp, struct tiff_file *file, int32_t current_dir, bool is_ndpi) {
-    
-    if(current_dir == -1){
+
+    if (current_dir == -1) {
         return -1;
     }
 

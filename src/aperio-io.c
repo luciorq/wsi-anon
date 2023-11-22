@@ -181,7 +181,7 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                     if (contains(result, METADATA_ATTRIBUTES[i])) {
                         char *new_result = override_image_description(result, METADATA_ATTRIBUTES[i]);
                         // in case the metadata exists but no value was found
-                        if(new_result != NULL){
+                        if (new_result != NULL) {
                             strcpy(result, new_result);
                             free(new_result);
                             rewrite = true;
@@ -279,9 +279,9 @@ int32_t handle_aperio(const char **filename, const char *new_label_name, bool ke
     struct tiff_directory dir = file->directories[label_dir];
 
     int32_t _is_aperio_kfbio = tag_value_contains(fp, file, TIFFTAG_IMAGEDESCRIPTION, "KFBIO");
-    if (_is_aperio_kfbio == 1){
+    if (_is_aperio_kfbio == 1) {
         result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
-    } else{
+    } else {
         result = wipe_directory(fp, &dir, false, big_endian, big_tiff, LZW_CLEARCODE, NULL);
     }
 
