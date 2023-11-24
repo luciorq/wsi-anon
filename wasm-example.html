@@ -48,15 +48,15 @@ async function downloadWSI(){
   let files = document.getElementById("file-input").files;
   const dirFiles = document.getElementById("dir-input").files;
   if (typeof files[0] !== 'undefined'){
-    const stream = AnonymizedStream.retrieve(files[0].name)
+    const stream = AnonymizedStream.retrieve(files[0].name);
     await writeFile(stream, "_anonymized_wsi." + files[0].name.split('.')[files[0].name.split('.').length-1]);
     console.log("Download done!");
   }
   else if (typeof dirFiles[0] !== 'undefined'){
-    const stream = AnonymizedStream.retrieve(dirFiles[0].webkitRelativePath)
-    await writeFile(stream, "_anonymized_wsi." + dirFiles[0].name.split('.')[1]);
+    const stream = AnonymizedStream.retrieve(dirFiles[0].webkitRelativePath);
+    await writeFile(stream, "_anonymized_wsi." + dirFiles[0].name.split('.')[dirFiles[0].name.split('.').length - 1]);
     for(let i = 1; i < dirFiles.length; i++){
-      const stream = AnonymizedStream.retrieve(dirFiles[i].webkitRelativePath)
+      const stream = AnonymizedStream.retrieve(dirFiles[i].webkitRelativePath);
       await writeFile(stream, dirFiles[i].name);
     }
     console.log("Download done!");
