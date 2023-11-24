@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.17
+
+* fix MIRAX bug when anonymizing with WASM by checking result of wiped levels
+* correctly extract file extension in WASM when working with MIRAX
+
 ## 0.4.16
 
 * support anonymization for Aperio format scanned by KFBIO KF-PRO-400 and Motic Pro6

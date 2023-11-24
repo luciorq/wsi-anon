@@ -376,8 +376,9 @@ int32_t delete_level(const char *path, const char *index_file, const char **data
     struct mirax_level *level_to_delete = get_level_by_name(layers, layer_name, level_name);
 
     if (level_to_delete == NULL) {
-        fprintf(stderr, "Warning: Could not find expected level.\n");
-        return -1;
+        fprintf(stderr, "Warning: Could not find expected level with name %s. Unable to delete non-existing level.\n",
+                level_name);
+        return 0;
     }
 
     const char *index_file_path = concat_path_filename(path, index_file);
@@ -756,14 +757,32 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     int32_t result =
         delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER, SLIDE_BARCODE);
 
+    // check for result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not wipe slide label.\n");
+        return -1;
+    }
+
     // delete macro image
     if (!keep_macro_image) {
         result =
             delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER, SLIDE_THUMBNAIL);
+
+        // check for result
+        if (result == -1) {
+            fprintf(stderr, "Error: Could not wipe macro image.\n");
+            return -1;
+        }
     }
 
     // delete whole slide image
     result = delete_level(path, index_filename, data_filenames, mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
+
+    // check for result
+    if (result == -1) {
+        fprintf(stderr, "Error: Could not wipe whole slide image.\n");
+        return -1;
+    }
 
     // unlink directory
     if (!disable_unlinking) {
