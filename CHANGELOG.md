@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.19
+
+* update README
+
 ## 0.4.18
 
 * remove values for refernce and scanner serial number tags for NDPI format
