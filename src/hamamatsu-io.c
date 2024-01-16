@@ -12,26 +12,36 @@ struct metadata *get_metadata_hamamatsu(file_handle *fp, struct tiff_file *file)
         for (uint32_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
 
-            // entry with Datetime tag contains metadata
-            if (entry.tag == TIFFTAG_DATETIME) {
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+            // all metadata
+            static uint16_t METADATA_ATTRIBUTES[] = {TIFFTAG_DATETIME, NDPI_REFERENCE, NDPI_SCANNER_SERIAL_NUMBER};
 
-                // read content of Datetime into buffer
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read tag DateTime.\n");
-                    return NULL;
-                }
+            // iterate through every metadata attribute
+            for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                if (entry.tag == METADATA_ATTRIBUTES[i]) {
+                    file_seek(fp, entry.offset, SEEK_SET);
+                    int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                // add metadata
-                struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
-                single_attribute->key = strdup("Datetime");
-                single_attribute->value = strdup(buffer);
-                if (single_attribute != NULL) {
-                    attributes =
-                        (struct metadata_attribute **)realloc(attributes, sizeof(**attributes) * (++metadata_id));
-                    attributes[metadata_id - 1] = single_attribute;
+                    // read value for tag
+                    char buffer[entry_size * entry.count];
+                    if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                        fprintf(stderr, "Error: Could not read tag %" PRIu16 ".\n", METADATA_ATTRIBUTES[i]);
+                        return NULL;
+                    }
+
+                    // if the length of the buffer is 0, no value was found for this tag
+                    if (strlen(buffer) != 0) {
+                        struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
+                        char temp_key[strlen(buffer)];
+                        sprintf(temp_key, "%" PRIu16, METADATA_ATTRIBUTES[i]);
+                        single_attribute->key = strdup(temp_key);
+                        single_attribute->value = strdup(buffer);
+                        if (single_attribute != NULL) {
+                            attributes = (struct metadata_attribute **)realloc(attributes,
+                                                                               sizeof(**attributes) * (++metadata_id));
+                            attributes[metadata_id - 1] = single_attribute;
+                        }
+                    }
+                    break;
                 }
             }
         }
@@ -148,27 +158,39 @@ int32_t remove_metadata_in_hamamatsu(file_handle *fp, struct tiff_file *file) {
         struct tiff_directory dir = file->directories[i];
         for (uint32_t j = 0; j < dir.count; j++) {
             struct tiff_entry entry = dir.entries[j];
-            if (entry.tag == TIFFTAG_DATETIME) {
-                file_seek(fp, entry.offset, SEEK_SET);
-                int32_t entry_size = get_size_of_value(entry.type, &entry.count);
 
-                char buffer[entry_size * entry.count];
-                if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not read tag DateTime.\n");
-                    return -1;
+            // list of all metadata that is overwritten in ndpi format
+            static uint16_t METADATA_ATTRIBUTES[] = {TIFFTAG_DATETIME, NDPI_REFERENCE, NDPI_SCANNER_SERIAL_NUMBER};
+
+            // overwrite value for each metadata attribute
+            for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
+                if (entry.tag == METADATA_ATTRIBUTES[i]) {
+                    file_seek(fp, entry.offset, SEEK_SET);
+                    int32_t entry_size = get_size_of_value(entry.type, &entry.count);
+
+                    // read value for tag
+                    char buffer[entry_size * entry.count];
+                    if (file_read(&buffer, entry.count, entry_size, fp) != 1) {
+                        fprintf(stderr, "Error: Could not read tag %" PRIu16 ".\n", METADATA_ATTRIBUTES[i]);
+                        return -1;
+                    }
+
+                    // create replacememt for value
+                    char *replacement = create_replacement_string('X', strlen(buffer));
+
+                    // if the replacement for the value is NULL, no value was found for this tag
+                    if (replacement != NULL) {
+                        file_seek(fp, entry.offset, SEEK_SET);
+                        if (file_write(replacement, entry.count, entry_size, fp) != 1) {
+                            fprintf(stderr, "Error: Could not overwrite value for tag %" PRIu16 ".\n",
+                                    METADATA_ATTRIBUTES[i]);
+                            free(replacement);
+                            return -1;
+                        }
+                        free(replacement);
+                        break;
+                    }
                 }
-
-                char *replacement = create_replacement_string('X', strlen(buffer));
-
-                file_seek(fp, entry.offset, SEEK_SET);
-
-                if (file_write(replacement, entry.count, entry_size, fp) != 1) {
-                    fprintf(stderr, "Error: Could not overwrite metadata in file.\n");
-                    free(replacement);
-                    return -1;
-                }
-                free(replacement);
-                return 0;
             }
         }
     }
