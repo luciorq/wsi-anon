@@ -10,8 +10,8 @@ Currently supported formats:
 |---|---|---|---|
 | Leica Aperio | AT20, GT450 | `*.svs` `*.tif` | - |
 | KFBIO | KF-PRO-400 | `*.svs` | - |
-| Motic | Pro6 | `*.svs` | - | 
-| Hamamatsu | NanoZoomer XR, XT2, S360 | `*.ndpi` | - |
+| Motic | Pro6 | `*.svs` | - |
+| Hamamatsu | NanoZoomer XR, XT2, S210, S360 | `*.ndpi` | - |
 | 3DHistech Mirax | Pannoramic P150, P250, P1000 | `*.mrxs` | - |
 | Roche Ventana | VS200, iScan Coreo, DP 600 | `*.bif` `*.tif`| - |
 | Philips | IntelliSite Ultra Fast Scanner | `*.isyntax` `*.tiff`  | - |
@@ -20,7 +20,7 @@ Currently supported formats:
 
 ## Publications
 
-The design and implementation is described in a technical note (currently as a preprint): [Anonymization of Whole Slide Images in Histopathology for Research and Education](https://arxiv.org/abs/2211.06103)
+The design and implementation is also described in a technical note in [Anonymization of Whole Slide Images in Histopathology for Research and Education](https://journals.sagepub.com/doi/10.1177/20552076231171475)
 
 ## Requirements
 
@@ -75,9 +75,9 @@ and run with `exe\wsi-anon.exe \path\to\wsi.svs` afterwards.
 
 ### Web Assembly Target
 
-The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications, run the following command:  
+The library also has a Web Assembly (WASM) target in order to enable client-side anonymization of supported file formats from the browser. In this case the file I/O system calls are redirected to JavaScript and evaluated there for chunk reading and writing. To produce the ES6 module `./bin/wsi-anon.js` with embedded, base64 encoded WASM binary that facilitates usage in arbitrary web applications, run the following command:
 
-#### Under Linux 
+#### Under Linux
 
 ```bash
 make wasm
@@ -107,7 +107,7 @@ Type `-h` or `--help` for help. Further CLI parameters are:
 
 ### Web Assembly Usage
 
-In order to test the WASM build, you can use the [wasm-example.html](./wasm-example.html) page which contains a very basic integration of the generated ES6 module. Open the page (e.g. with a Live Server) under Google Chrome or Microsoft Edge. This API - provided by a corresponding NPM package - can then also be imported from the given package: 
+In order to test the WASM build, you can use the [wasm-example.html](./wasm-example.html) page which contains a very basic integration of the generated ES6 module. Open the page (e.g. with a Live Server) under Google Chrome or Microsoft Edge. This API - provided by a corresponding NPM package - can then also be imported from the given package:
 
 ```javascript
 import AnonymizedStream from 'wsi-anon'
@@ -141,7 +141,7 @@ If permission is denied run this command again with `sudo` at the beginning.
 
 #### Under Windows
 
-Analogous to Ubuntu, Windows will need the corresponding `libwsianon.dll`. This needs to be placed in the `C:\Windows\System32` folder, that is automatically done when building the Native Target under Windows. 
+Analogous to Ubuntu, Windows will need the corresponding `libwsianon.dll`. This needs to be placed in the `C:\Windows\System32` folder, that is automatically done when building the Native Target under Windows.
 
 If permission is denied run the command again after opening the command prompt/PowerShell as an administrator.
 
@@ -161,7 +161,7 @@ find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs
 
 ### Unit Tests
 
-To run unit tests install `libcunit1-dev` and build test projects with 
+To run unit tests install `libcunit1-dev` and build test projects with
 
 ```bash
 make tests
