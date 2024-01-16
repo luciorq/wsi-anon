@@ -174,6 +174,7 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                 bool rewrite = false;
                 char *result = buffer;
 
+                // all metadata
                 static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG,  APERIO_TIME_TAG,
                                                       APERIO_DATE_TAG,     APERIO_SLIDE_TAG, APERIO_BARCODE_TAG};
 

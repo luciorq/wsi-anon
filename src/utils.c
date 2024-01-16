@@ -126,7 +126,7 @@ char *create_random_string(uint64_t length) {
 
 char *create_replacement_string(const char x, uint64_t length) {
     if (length < 1) {
-        fprintf(stderr, "Error: Length smaller 1.\n");
+        fprintf(stderr, "Warning: Length smaller 1. Empty value cannot be replaced.\n");
         return NULL;
     }
 

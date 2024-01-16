@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.18
+
+* remove values for refernce and scanner serial number tags for NDPI format
+
 ## 0.4.17
 
 * fix MIRAX bug when anonymizing with WASM by checking result of wiped levels
@@ -116,7 +120,7 @@
 
 - implement windows support for all data formats
 
-## 0.3.8 
+## 0.3.8
 
 - full isyntax support
 
