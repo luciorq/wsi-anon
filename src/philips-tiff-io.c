@@ -205,7 +205,7 @@ int32_t wipe_philips_image_data(file_handle *fp, struct tiff_file *file, char *i
                     strcpy(buffer, result);
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(buffer, entry.count, entry_size, fp)) {
-                        fprintf(stderr, "Error: changing image description failed.\n");
+                        fprintf(stderr, "Error: Changing image description failed.\n");
                         free(buffer);
                         return -1;
                     }

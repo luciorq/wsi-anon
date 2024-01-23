@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.20
+
+* fix NDPI bug for files >5GB
+
 ## 0.4.19
 
 * update README
