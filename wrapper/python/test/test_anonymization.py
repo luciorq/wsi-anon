@@ -46,18 +46,17 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         max_wait_in_sec -= 1
     return False
 
-# TODO: rename Philips iSyntax and Philips TIFF folders into Philips after placing Philips TIFF and iSyntax into it
 @pytest.mark.parametrize(
     "wsi_filename, vendor",
     [
         ("/data/Aperio/CMU-1.svs", Vendor.APERIO),
+        ("/data/Aperio/aperio_gt450_v1.0.1.svs", Vendor.APERIO),
+        ("/data/Aperio/aperio_at2_v12.0.11.svs", Vendor.APERIO),
+        ("/data/Aperio/aperio_at2_v12.0.0.svs", Vendor.APERIO),
         ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
-        #("/data/Hamamatsu/test.ndpi", Vendor.HAMAMATSU), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
-        #("/data/MIRAX/Mirax2.2-1.mrxs", Vendor.MIRAX),
+        ("/data/Hamamatsu/Hamamatsu_greater_4gb.ndpi", Vendor.HAMAMATSU),
         ("/data/Ventana/OS-2.bif", Vendor.VENTANA),
         ("/data/Philips iSyntax/4399.isyntax", Vendor.PHILIPS_ISYNTAX),
-        #("/data/Philips TIFF/test.tiff", Vendor.PHILIPS_TIFF), # TODO: remove comments when Philips folder was created and 'test.tiff' file was added
-        #("/data/Unknown/existing_file.txt", Vendor.UNKNOWN), # TODO: remove comments when Unknown folder was created and 'existing_file.txt' file was added
         ("/non_existing_file.txt", Vendor.INVALID),
     ],
 )
@@ -71,7 +70,7 @@ def test_format_get_wsi_data(wsi_filename, vendor):
         ("/data/Aperio/", "CMU-1", "anon-aperio", "svs"),
     ],
 )
-def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+def test_anonymize_aperio_format_tiffslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
     if result_filename.exists():
         remove_file(str(result_filename.absolute()))
@@ -79,28 +78,27 @@ def test_anonymize_file_format_tiffslide(cleanup, wsi_filepath, original_filenam
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
     assert result != -1
-    
+
     assert wait_until_exists(str(result_filename), 5)
 
     try:
         slide = tiffslide.TiffSlide(result_filename)
         associated_images = slide.associated_images
         assert "label" not in associated_images
-        
+
         if "Aperio" in wsi_filepath:
             for property in ["Filename", "User", "Date", "Time"]:
                 assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
         slide.close()
     except tiffslide.TiffFileError as e:
         assert False
-    
+
     cleanup(str(result_filename.absolute()))
 
-# TODO: handle seg faults due to stack overflow when testing anonymization of large files 
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        #("/data/Hamamatsu/", "test", "anon-hamamatsu", "ndpi"), # TODO: remove comments when 'test.ndpi' file was added to Hamamatsu folder
+        ("/data/Hamamatsu/", "Hamamatsu_greater_4gb", "anon-hamamatsu", "ndpi"),
     ],
 )
 def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -111,7 +109,7 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
     assert result != -1
-    
+
     assert wait_until_exists(str(result_filename), 5)
 
     with openslide.OpenSlide(str(result_filename)) as slide:
@@ -127,9 +125,8 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu", "ndpi"),
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
         ("/data/Ventana/", "OS-2", "anon-ventana", "bif"),
-        #("/data/MIRAX/", "Mirax2.2-1.mrxs", "anon-mirax1", "mrxs"), # TODO: OpenSlide occasionally throws error while initializing
     ],
 )
 def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
@@ -140,7 +137,7 @@ def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filenam
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
     assert result != -1
-    
+
     assert wait_until_exists(str(result_filename), 5)
 
     with openslide.OpenSlide(str(result_filename)) as slide:
@@ -166,18 +163,21 @@ def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filenam
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Aperio/", "CMU-1", "anon-aperio2", "svs"),
+        ("/data/Aperio/", "CMU-1", "anon-aperio5", "svs"),
+        ("/data/Aperio/", "aperio_gt450_v1.0.1" , "anon-aperio6", "svs"),
+        ("/data/Aperio/", "aperio_at2_v12.0.11", "anon-aperio7", "svs"),
+        ("/data/Aperio/", "aperio_at2_v12.0.0", "anon-aperio8", "svs"),
     ],
 )
 def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
     if result_filename.exists():
         remove_file(str(result_filename.absolute()))
-    
+
     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
     result = anonymize_wsi(filename=wsi_filename, new_label_name=new_anonyimized_name, keep_macro_image=True, disable_unlinking=False, do_inplace=False)
     assert result != -1
-    
+
     assert wait_until_exists(str(result_filename), 5)
 
     with openslide.OpenSlide(str(result_filename)) as slide:
@@ -190,10 +190,11 @@ def test_anonymize_file_format_only_label(cleanup, wsi_filepath, original_filena
 @pytest.mark.parametrize(
     "wsi_filepath, original_filename, new_anonyimized_name, file_extension",
     [
-        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
+        ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu3", "ndpi"),
+        ("/data/Hamamatsu/", "Hamamatsu_greater_4gb", "anon-hamamatsu4", "ndpi"),
     ],
 )
-def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
+def test_anonymize_file_format_hamamatsu(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
     result_filename = pathlib.Path(wsi_filepath).joinpath(f"{new_anonyimized_name}.{file_extension}")
     if result_filename.exists():
         remove_file(str(result_filename.absolute()))
@@ -225,7 +226,7 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 #     wsi_filename = str(pathlib.Path(wsi_filepath).joinpath(f"{original_filename}.{file_extension}").absolute())
 #     result = anonymize_wsi(wsi_filename, new_anonyimized_name)
 #     assert result != -1
-    
+
 #     assert wait_until_exists(str(result_filename), 5)
 
 #     with openslide.OpenSlide(str(result_filename)) as slide:
@@ -233,7 +234,7 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 #             for property in ["DICOM_DEVICE_SERIAL_NUMBER", "PIM_DP_UFS_BARCODE", "PIM_DP_SOURCE_FILE"]:
 #                 assert all(c == "X" for c in slide.properties[f"philips.{property}"])
 #             assert "19000101000000.000000" in slide.properties["philips.DICOM_ACQUISITION_DATETIME"]
-    
+
 #     cleanup(str(result_filename.absolute()))
 
 # # TODO: both tests are not working at the moment
@@ -257,5 +258,5 @@ def test_anonymize_file_format_only_label_hamamatsu(cleanup, wsi_filepath, origi
 #     assert wait_until_exists(str(result_filename), 5)
 
 #     # TODO: add some ordinary checks here?
-    
+
 #     cleanup(str(result_filename.absolute()))
