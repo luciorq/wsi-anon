@@ -422,7 +422,7 @@ int32_t wipe_directory(file_handle *fp, struct tiff_directory *dir, bool ndpi, b
                     free(strip_lengths);
                     return -1;
                 }
-                file_seek(fp, strip_offsets[i], SEEK_SET);
+                file_seek(fp, new_offset, SEEK_SET);
             }
 
             // fill strip with zeros
