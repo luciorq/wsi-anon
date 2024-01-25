@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.20
+
+* fix NDPI bug for files >5GB
+* extend testcases
+
 ## 0.4.19
 
 * update README

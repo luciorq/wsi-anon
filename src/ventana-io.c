@@ -337,7 +337,7 @@ int32_t remove_metadata_in_ventana(file_handle *fp, struct tiff_file *file) {
                 if (rewrite) {
                     file_seek(fp, entry.offset, SEEK_SET);
                     if (!file_write(result, entry_size, entry.count, fp)) {
-                        fprintf(stderr, "Error: changing XML Data in XMP Tag failed.\n");
+                        fprintf(stderr, "Error: Changing XML Data in XMP Tag failed.\n");
                         free(buffer);
                         return -1;
                     }
@@ -361,7 +361,7 @@ int32_t remove_metadata_in_ventana(file_handle *fp, struct tiff_file *file) {
                 char *new_buffer = replace_str(buffer, buffer, replacement);
                 file_seek(fp, entry.offset, SEEK_SET);
                 if (!file_write(new_buffer, entry_size, entry.count, fp)) {
-                    fprintf(stderr, "Error: changing data in DATE_TIME Tag failed.\n");
+                    fprintf(stderr, "Error: Changing data in DATE_TIME Tag failed.\n");
                     free(replacement);
                     free(buffer);
                     free(new_buffer);

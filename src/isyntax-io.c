@@ -165,7 +165,7 @@ int32_t anonymize_isyntax_metadata(file_handle *fp, int32_t header_size) {
         strcpy(buffer, result);
         file_seek(fp, 0, SEEK_SET);
         if (!file_write(buffer, header_size, 1, fp)) {
-            fprintf(stderr, "Error: changing XML Header failed.\n");
+            fprintf(stderr, "Error: Changing XML Header failed.\n");
             free(buffer);
             return -1;
         }

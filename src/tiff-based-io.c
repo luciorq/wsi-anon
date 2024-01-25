@@ -141,7 +141,7 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
 
     // seek to directory offset
     if (file_seek(fp, offset, SEEK_SET) != 0) {
-        fprintf(stderr, "Error: seeking to offset failed.\n");
+        fprintf(stderr, "Error: Seeking to offset failed.\n");
         return NULL;
     }
 
@@ -158,7 +158,7 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
         struct tiff_entry *entry = (struct tiff_entry *)malloc(sizeof(struct tiff_entry));
 
         if (entry == NULL) {
-            fprintf(stderr, "Error: could not allocate memory for entry.\n");
+            fprintf(stderr, "Error: Could not allocate memory for entry.\n");
             free_tiff_dir_and_entries(tiff_dir, entries, entry);
             return NULL;
         }
@@ -175,7 +175,7 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
         // calculate the size of the entry value
         uint32_t value_size = get_size_of_value(entry->type, &entry->count);
         if (!value_size || count > (SIZE_MAX / value_size)) {
-            fprintf(stderr, "Error: failed to determine valid parameters to read value from file.\n");
+            fprintf(stderr, "Error: Failed to determine valid parameters to read value from file.\n");
             free_tiff_dir_and_entries(tiff_dir, entries, entry);
             return NULL;
         }
@@ -184,7 +184,7 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
         uint8_t value[(big_tiff || ndpi) ? 8 : 4];
         uint8_t read_size = big_tiff ? 8 : 4;
         if (file_read(value, read_size, 1, fp) != 1) {
-            fprintf(stderr, "Error: reading value to array failed.\n");
+            fprintf(stderr, "Error: Reading value to array failed.\n");
             free_tiff_dir_and_entries(tiff_dir, entries, entry);
             return NULL;
         }
@@ -195,12 +195,12 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
                           offset + (NDPI_ENTRY_EXTENSION * entry_count) + (NDPI_BIT_EXTENSION * i) +
                               (NDPI_ENTRY_EXTENSION / 2),
                           SEEK_SET) != 0) {
-                fprintf(stderr, "Error: cannot seek to offset extension.\n");
+                fprintf(stderr, "Error: Cannot seek to offset extension.\n");
                 free_tiff_dir_and_entries(tiff_dir, entries, entry);
                 return NULL;
             }
             if (file_read(value + NDPI_BIT_EXTENSION, NDPI_BIT_EXTENSION, 1, fp) != 1) {
-                fprintf(stderr, "Error: cannot read offset extension.\n");
+                fprintf(stderr, "Error: Cannot read offset extension.\n");
                 free_tiff_dir_and_entries(tiff_dir, entries, entry);
                 return NULL;
             }
@@ -211,7 +211,7 @@ struct tiff_directory *read_tiff_directory(file_handle *fp, uint64_t *dir_offset
             }
             uint64_t dir_start = (NDPI_ENTRY_EXTENSION * (i + 1)) + (NDPI_BIT_EXTENSION / 2);
             if (file_seek(fp, offset + dir_start, SEEK_SET) != 0) {
-                fprintf(stderr, "Error: cannot seek to IFD start.\n");
+                fprintf(stderr, "Error: Cannot seek to IFD start.\n");
                 free_tiff_dir_and_entries(tiff_dir, entries, entry);
                 return NULL;
             }
@@ -280,7 +280,7 @@ struct tiff_file *read_tiff_file(file_handle *fp, bool big_tiff, bool ndpi, bool
     // get directory offset; file stream pointer must be located just
     // before the directory offset
     uint64_t in_pointer_offset = file_tell(fp);
-    uint64_t diroff = read_uint(fp, big_tiff ? 8 : 4, big_endian);
+    uint64_t diroff = read_uint(fp, (big_tiff || ndpi) ? 8 : 4, big_endian);
     // reading the initial directory
     struct tiff_directory *dir = read_tiff_directory(fp, &diroff, &in_pointer_offset, big_tiff, ndpi, big_endian);
 
@@ -422,7 +422,7 @@ int32_t wipe_directory(file_handle *fp, struct tiff_directory *dir, bool ndpi, b
                     free(strip_lengths);
                     return -1;
                 }
-                file_seek(fp, strip_offsets[i], SEEK_SET);
+                file_seek(fp, new_offset, SEEK_SET);
             }
 
             // fill strip with zeros
