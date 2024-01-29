@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.21
+
+* fix segmentation faults and double frees for BIF/TIF format scanned by DP600
+* extend testcases by DP 600 scanned file
+
 ## 0.4.20
 
 * fix NDPI bug for files >5GB

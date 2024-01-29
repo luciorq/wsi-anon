@@ -56,6 +56,7 @@ def wait_until_exists(filename: str, max_wait_in_sec: int):
         ("/data/Hamamatsu/OS-1.ndpi", Vendor.HAMAMATSU),
         ("/data/Hamamatsu/Hamamatsu_greater_4gb.ndpi", Vendor.HAMAMATSU),
         ("/data/Ventana/OS-2.bif", Vendor.VENTANA),
+        ("/data/Ventana/dp600.tif", Vendor.VENTANA),
         ("/data/Philips iSyntax/4399.isyntax", Vendor.PHILIPS_ISYNTAX),
         ("/non_existing_file.txt", Vendor.INVALID),
     ],
@@ -127,6 +128,7 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
     [
         ("/data/Hamamatsu/", "OS-1", "anon-hamamatsu2", "ndpi"),
         ("/data/Ventana/", "OS-2", "anon-ventana", "bif"),
+        ("/data/Ventana/", "dp600", "anon-ventana2", "tif"),
     ],
 )
 def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filename, new_anonyimized_name, file_extension):
