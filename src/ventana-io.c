@@ -243,10 +243,10 @@ int32_t wipe_label_ventana(file_handle *fp, struct tiff_directory *dir, bool big
             free(strip);
             return -1;
         }
-        free(strip_offsets);
-        free(strip_lengths);
         free(strip);
     }
+    free(strip_offsets);
+    free(strip_lengths);
     return 0;
 }
 
@@ -280,7 +280,7 @@ char *anonymize_xmp_attribute_if_exists(char *buffer, const char *attr, const ch
         free(value);
         return result;
     }
-    return buffer;
+    return NULL;
 }
 
 // TODO: make use of wsi_data struct
@@ -313,9 +313,11 @@ int32_t remove_metadata_in_ventana(file_handle *fp, struct tiff_file *file) {
                 for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); k++) {
                     if (contains(result, METADATA_ATTRIBUTES[k])) {
                         char *new_result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES[k], "\"");
-                        strcpy(result, new_result);
-                        free(new_result);
-                        rewrite = true;
+                        if (new_result != NULL) {
+                            strcpy(result, new_result);
+                            free(new_result);
+                            rewrite = true;
+                        }
                     }
                 }
 
@@ -327,9 +329,11 @@ int32_t remove_metadata_in_ventana(file_handle *fp, struct tiff_file *file) {
                 for (size_t k = 0; k < sizeof(METADATA_ATTRIBUTES_2) / sizeof(METADATA_ATTRIBUTES_2[0]); k++) {
                     if (contains(result, METADATA_ATTRIBUTES_2[k])) {
                         char *new_result = anonymize_xmp_attribute_if_exists(result, METADATA_ATTRIBUTES_2[k], "\'");
-                        strcpy(result, new_result);
-                        free(new_result);
-                        rewrite = true;
+                        if (new_result != NULL) {
+                            strcpy(result, new_result);
+                            free(new_result);
+                            rewrite = true;
+                        }
                     }
                 }
 
