@@ -333,17 +333,16 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
 
     if (label_dir == -1) {
         fprintf(stderr, "Error: Could not find IFD of label image.\n");
-        return -1;
-    }
+    } else {
+        struct tiff_directory dir = file->directories[label_dir];
+        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
 
-    struct tiff_directory dir = file->directories[label_dir];
-    result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
-
-    // if removal did not work
-    if (result != 0) {
-        free_tiff_file(file);
-        file_close(fp);
-        return result;
+        // if removal did not work
+        if (result != 0) {
+            free_tiff_file(file);
+            file_close(fp);
+            return result;
+        }
     }
 
     int32_t macro_dir = -1;
@@ -361,17 +360,16 @@ int32_t handle_philips_tiff(const char **filename, const char *new_label_name, b
 
         if (macro_dir == -1) {
             fprintf(stderr, "Error: Could not find IFD of macro image.\n");
-            return -1;
-        }
+        } else {
+            struct tiff_directory dir = file->directories[macro_dir];
+            result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
 
-        struct tiff_directory dir = file->directories[macro_dir];
-        result = wipe_directory(fp, &dir, false, big_endian, big_tiff, NULL, NULL);
-
-        // if removal did not work
-        if (result != 0) {
-            free_tiff_file(file);
-            file_close(fp);
-            return result;
+            // if removal did not work
+            if (result != 0) {
+                free_tiff_file(file);
+                file_close(fp);
+                return result;
+            }
         }
     }
 

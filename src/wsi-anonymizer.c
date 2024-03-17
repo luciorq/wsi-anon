@@ -66,12 +66,14 @@ int32_t anonymize_wsi(const char *filename, const char *new_label_name, bool kee
 }
 
 void free_wsi_data(struct wsi_data *wsi_data) {
-    for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
-        free(wsi_data->metadata_attributes->attributes[metadata_id]->value);
-        free(wsi_data->metadata_attributes->attributes[metadata_id]->key);
-        free(wsi_data->metadata_attributes->attributes[metadata_id]);
+    if (wsi_data->metadata_attributes != NULL) {
+        for (size_t metadata_id = 0; metadata_id < wsi_data->metadata_attributes->length; metadata_id++) {
+            free(wsi_data->metadata_attributes->attributes[metadata_id]->value);
+            free(wsi_data->metadata_attributes->attributes[metadata_id]->key);
+            free(wsi_data->metadata_attributes->attributes[metadata_id]);
+        }
+        free(wsi_data->metadata_attributes->attributes);
     }
-    free(wsi_data->metadata_attributes->attributes);
     free(wsi_data->metadata_attributes);
     free(wsi_data);
 }
