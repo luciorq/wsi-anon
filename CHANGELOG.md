@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.22
+
+* fix free of null and philips tiff short circuit
+* remove obsolete templates
+
 ## 0.4.21
 
 * fix segmentation faults and double frees for BIF/TIF format scanned by DP600
