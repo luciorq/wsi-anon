@@ -73,7 +73,7 @@ void free_wsi_data(struct wsi_data *wsi_data) {
             free(wsi_data->metadata_attributes->attributes[metadata_id]);
         }
         free(wsi_data->metadata_attributes->attributes);
+        free(wsi_data->metadata_attributes);
     }
-    free(wsi_data->metadata_attributes);
     free(wsi_data);
 }

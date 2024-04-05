@@ -99,7 +99,7 @@ int32_t main(int32_t argc, char *argv[]) {
             }
             // handles invalid or unsupported file formats
             else {
-                fprintf(stderr, "Error: %s format\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
+                fprintf(stderr, "Error in %s format\n", VENDOR_AND_FORMAT_STRINGS[wsi_data->format]);
                 exit(EXIT_FAILURE);
             }
             free_wsi_data(wsi_data);
