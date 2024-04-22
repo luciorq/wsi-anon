@@ -45,6 +45,11 @@
 #define APERIO_DATE_TAG "Date = "
 #define APERIO_SLIDE_TAG "Slide = "
 #define APERIO_BARCODE_TAG "Barcode = "
+#define APERIO_RACK_TAG "Rack = "
+#define APERIO_SCANSCOPEID_TAG "ScanScope ID = "
+#define APERIO_MIN_DATE "01/01/1900"
+#define APERIO_MIN_TIME "00:00:00"
+#define APERIO_MIN_POS "0"
 
 // ventana
 #define VENTANA_FILENAME_ATT "JP2FileName=\""

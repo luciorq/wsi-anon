@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.23
+
+* remove ScanScope ID and Rack Tags metadata in Aperio format
+* replace value of metadata Date, Time and Slide Tag with corresponding datatype instead of X's in Aperio format
+
 ## 0.4.22
 
 * fix free of null and philips tiff short circuit

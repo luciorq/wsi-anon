@@ -88,8 +88,18 @@ def test_anonymize_aperio_format_tiffslide(cleanup, wsi_filepath, original_filen
         assert "label" not in associated_images
 
         if "Aperio" in wsi_filepath:
-            for property in ["Filename", "User", "Date", "Time"]:
-                assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
+            for property in ["Filename", "User", "Time", "Date", "Slide", "Barcode", "Rack", "ScanScope ID"]:
+                if property == "Time":
+                    assert("00:00:00" == slide.properties[f"aperio.{property}"])
+                elif property == "Date":
+                    assert("01/01/1900" == slide.properties[f"aperio.{property}"])
+                elif f"aperio.{property}" in slide.properties.keys():
+                    if property == "Slide" or property == "Rack":
+                        assert("0" == slide.properties[f"aperio.{property}"])
+                    else:
+                        assert all(c=='X' for c in slide.properties[f"aperio.{property}"])
+                else:
+                    pass
         slide.close()
     except tiffslide.TiffFileError as e:
         assert False
