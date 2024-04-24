@@ -176,12 +176,10 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                 char *result = buffer;
 
                 // all metadata that is replaced with default values
-                static char *METADATA_ATTRIBUTES_DEFAULT[] = {APERIO_DATE_TAG, APERIO_TIME_TAG, APERIO_SLIDE_TAG,
-                                                              APERIO_RACK_TAG};
+                static char *METADATA_ATTRIBUTES_DEFAULT[] = {APERIO_DATE_TAG, APERIO_TIME_TAG, APERIO_SLIDE_TAG};
 
                 // default values
-                static char *METADATA_DEFAULT_VALUES[] = {APERIO_MIN_DATE, APERIO_MIN_TIME, APERIO_MIN_POS,
-                                                          APERIO_MIN_POS};
+                static char *METADATA_DEFAULT_VALUES[] = {APERIO_MIN_DATE, APERIO_MIN_TIME, APERIO_MIN_POS};
 
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES_DEFAULT) / sizeof(METADATA_ATTRIBUTES_DEFAULT[0]);
                      i++) {
@@ -201,7 +199,7 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
 
                 // all metadata that can be replaced with X's
                 static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_BARCODE_TAG,
-                                                      APERIO_SCANSCOPEID_TAG};
+                                                      APERIO_SCANSCOPEID_TAG, APERIO_RACK_TAG};
 
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(result, METADATA_ATTRIBUTES[i])) {

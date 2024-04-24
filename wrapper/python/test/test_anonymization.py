@@ -94,7 +94,7 @@ def test_anonymize_aperio_format_tiffslide(cleanup, wsi_filepath, original_filen
                 elif property == "Date":
                     assert("01/01/1900" == slide.properties[f"aperio.{property}"])
                 elif f"aperio.{property}" in slide.properties.keys():
-                    if property == "Slide" or property == "Rack":
+                    if property == "Slide":
                         assert("0" == slide.properties[f"aperio.{property}"])
                     else:
                         assert all(c=='X' for c in slide.properties[f"aperio.{property}"])
