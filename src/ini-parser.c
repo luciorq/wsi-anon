@@ -231,6 +231,23 @@ const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const c
     return NULL;
 }
 
+const char *anonymize_value_for_group_and_key_with_given_string(struct ini_file *ini_file, const char *group_name,
+                                                                const char *key, const char *value) {
+    for (int32_t i = 0; i < ini_file->group_count; i++) {
+        struct ini_group *group = &ini_file->groups[i];
+        if (strcmp(group->group_identifier, group_name) == 0) {
+            for (int32_t j = 0; j < group->entry_count; j++) {
+                struct ini_entry *entry = &group->entries[j];
+                if (strcmp(entry->key, key) == 0 && strlen((*entry).value) == strlen(value)) {
+                    (*entry).value = strdup(value);
+                    return value;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
 const char *create_random_slide_id(struct ini_file *ini_file, const char *group_name, const char *key) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];

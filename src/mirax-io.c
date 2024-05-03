@@ -824,10 +824,13 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
     printf("Removing metadata in Slidedat.ini...\n");
     anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_NAME, 'X');
     anonymize_value_for_group_and_key(ini, GENERAL, PROJECT_NAME, 'X');
-    anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_CREATIONDATETIME, 'X');
     anonymize_value_for_group_and_key(ini, GENERAL, SLIDE_UTC_CREATIONDATETIME, 'X');
     anonymize_value_for_group_and_key(ini, NONHIERLAYER_0_SECTION, SCANNER_HARDWARE_ID, 'X');
     anonymize_value_for_group_and_key(ini, NONHIERLAYER_1_SECTION, SCANNER_HARDWARE_ID, 'X');
+
+    // set predefined value for SLIDE_CREATIONDATETIME
+    anonymize_value_for_group_and_key_with_given_string(ini, GENERAL, SLIDE_CREATIONDATETIME,
+                                                        concat_str(concat_str(MIN_DATE, " "), MIN_TIME));
 
     // remove metadata in data dat files
     remove_metadata_in_data_dat(path, data_filenames, f_count);

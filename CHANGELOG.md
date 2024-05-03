@@ -4,6 +4,8 @@
 
 * remove ScanScope ID and Rack Tags metadata in Aperio format
 * replace value of metadata Date, Time and Slide Tag with corresponding datatype instead of X's in Aperio format
+* replace value of metadata DATETIME and Serial number with corresponding datatype instead of X's in Hamamatsu format
+* replace value of metadata SLIDE_CREATIONDATETIME with corresponding datatype instead of x's in MIRAX format
 
 ## 0.4.22
 

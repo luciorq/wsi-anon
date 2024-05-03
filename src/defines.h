@@ -35,8 +35,11 @@
 #define TIFFTAG_TILEBYTECOUNTS 325
 #define TIFFTAG_XMP 700
 
-// compression type
+// other
 #define COMPRESSION_LZW 5
+#define MIN_POS "0"
+#define MIN_DATE "01/01/1900"
+#define MIN_TIME "00:00:00"
 
 // aperio
 #define APERIO_FILENAME_TAG "Filename = "
@@ -47,9 +50,6 @@
 #define APERIO_BARCODE_TAG "Barcode = "
 #define APERIO_RACK_TAG "Rack = "
 #define APERIO_SCANSCOPEID_TAG "ScanScope ID = "
-#define APERIO_MIN_DATE "01/01/1900"
-#define APERIO_MIN_TIME "00:00:00"
-#define APERIO_MIN_POS "0"
 
 // ventana
 #define VENTANA_FILENAME_ATT "JP2FileName=\""
@@ -101,6 +101,7 @@
 #define NDPI_SCANNER_SERIAL_NUMBER 65442
 #define NDPI_BIT_EXTENSION 4
 #define NDPI_ENTRY_EXTENSION 12
+#define NDPI_MIN_DATETIME "1900:00:00 00:00:00"
 
 typedef enum {
     TIFF_NOTYPE = 0,
