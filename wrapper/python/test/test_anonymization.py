@@ -128,7 +128,7 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
 
         if "Hamamatsu" in wsi_filepath:
             for property in ["DateTime"]:
-                assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
+                assert("1900:00:00 00:00:00" == slide.properties[f"tiff.{property}"])
 
     cleanup(str(result_filename.absolute()))
 
