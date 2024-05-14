@@ -238,7 +238,7 @@ const char *anonymize_value_for_group_and_key_with_given_string(struct ini_file 
         if (strcmp(group->group_identifier, group_name) == 0) {
             for (int32_t j = 0; j < group->entry_count; j++) {
                 struct ini_entry *entry = &group->entries[j];
-                if (strcmp(entry->key, key) == 0 && strlen((*entry).value) == strlen(value)) {
+                if (strcmp(entry->key, key) == 0) {
                     (*entry).value = strdup(value);
                     return value;
                 }

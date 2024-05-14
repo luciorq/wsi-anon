@@ -135,7 +135,6 @@ void free_slidedata_ini_file(struct ini_file *ini) {
     for (int32_t i = 0; i < ini->group_count; i++) {
         free((void *)(&ini->groups[i])->group_identifier);
     }
-    free(ini->groups);
     free(ini);
 }
 
@@ -795,13 +794,11 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
         int32_t barcode_group_index = -1;
         if (barcode_layer != NULL) {
             barcode_group_index = get_group_index_of_ini_file(ini, barcode_layer->section);
-            // fprintf(stdout, "Barcode group index: %i\n", barcode_group_index);
         }
         struct mirax_level *wsi_layer = get_level_by_name(mirax_file->layers, SCAN_DATA_LAYER, SLIDE_WSI);
         int32_t wsi_group_index = -1;
         if (wsi_layer != NULL) {
             wsi_group_index = get_group_index_of_ini_file(ini, wsi_layer->section);
-            // fprintf(stdout, "Wholeslide group index: %i\n", wsi_group_index);
         }
 
         if (barcode_group_index != -1 || wsi_group_index != -1) {

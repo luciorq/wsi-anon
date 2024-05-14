@@ -179,7 +179,7 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                 static char *METADATA_ATTRIBUTES_DEFAULT[] = {APERIO_DATE_TAG, APERIO_TIME_TAG, APERIO_SLIDE_TAG};
 
                 // default values
-                static char *METADATA_DEFAULT_VALUES[] = {MIN_DATE, MIN_TIME, MIN_POS};
+                static char *METADATA_DEFAULT_VALUES[] = {APERIO_MIN_DATE, MIN_TIME, MIN_POS};
 
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES_DEFAULT) / sizeof(METADATA_ATTRIBUTES_DEFAULT[0]);
                      i++) {

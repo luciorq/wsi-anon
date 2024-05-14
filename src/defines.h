@@ -50,6 +50,7 @@
 #define APERIO_BARCODE_TAG "Barcode = "
 #define APERIO_RACK_TAG "Rack = "
 #define APERIO_SCANSCOPEID_TAG "ScanScope ID = "
+#define APERIO_MIN_DATE "01/01/00"
 
 // ventana
 #define VENTANA_FILENAME_ATT "JP2FileName=\""
@@ -101,7 +102,7 @@
 #define NDPI_SCANNER_SERIAL_NUMBER 65442
 #define NDPI_BIT_EXTENSION 4
 #define NDPI_ENTRY_EXTENSION 12
-#define NDPI_MIN_DATETIME "1900:00:00 00:00:00"
+#define NDPI_MIN_DATETIME "1900:01:01 00:00:00"
 
 typedef enum {
     TIFF_NOTYPE = 0,
