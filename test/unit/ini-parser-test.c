@@ -6,7 +6,7 @@
 
 struct ini_file *read_slidedat_ini_file(const char *path, const char *ini_filename);
 
-const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group, const char *entry_key);
+const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group_name, const char *key);
 
 int32_t delete_group_form_ini_file(struct ini_file *ini_file, const char *group_name);
 
