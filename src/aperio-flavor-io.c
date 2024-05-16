@@ -21,8 +21,9 @@ struct metadata_attribute *get_attribute_aperio(char *buffer, const char *attrib
 
 struct metadata *get_metadata_aperio(file_handle *fp, struct tiff_file *file) {
     // all metadata
-    static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG,  APERIO_TIME_TAG,
-                                                APERIO_DATE_TAG,     APERIO_SLIDE_TAG, APERIO_BARCODE_TAG};
+    static const char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG,       APERIO_TIME_TAG,
+                                                APERIO_DATE_TAG,     APERIO_SLIDE_TAG,      APERIO_BARCODE_TAG,
+                                                APERIO_RACK_TAG,     APERIO_SCANSCOPEID_TAG};
 
     // initialize metadata_attribute struct
     struct metadata_attribute **attributes =
@@ -131,7 +132,7 @@ struct wsi_data *get_wsi_data_aperio(const char *filename) {
     return wsi_data;
 }
 
-// searches for tags in image description Data and replaces its values with equal amount of X's
+// searches for tags in image description data and replaces its values with equal amount of X's
 char *override_image_description(char *result, char *delimiter) {
     const char *prefixed_delimiter = concat_str("|", delimiter);
     const char *value = get_string_between_delimiters(result, prefixed_delimiter, "|");
@@ -174,9 +175,30 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                 bool rewrite = false;
                 char *result = buffer;
 
-                // all metadata
-                static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG,  APERIO_TIME_TAG,
-                                                      APERIO_DATE_TAG,     APERIO_SLIDE_TAG, APERIO_BARCODE_TAG};
+                // all metadata that is replaced with default values
+                static char *METADATA_ATTRIBUTE_KEYS[] = {APERIO_DATE_TAG, APERIO_TIME_TAG, APERIO_SLIDE_TAG};
+
+                // default replacement values
+                static char *METADATA_REPLACEMENT_VALUES[] = {APERIO_MIN_DATE, MIN_TIME, MIN_POS};
+
+                for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTE_KEYS) / sizeof(METADATA_ATTRIBUTE_KEYS[0]); i++) {
+                    if (contains(result, METADATA_ATTRIBUTE_KEYS[i])) {
+                        const char *prefixed_delimiter = concat_str("|", METADATA_ATTRIBUTE_KEYS[i]);
+                        const char *value = get_string_between_delimiters(result, prefixed_delimiter, "|");
+                        if (value[0] != '\0') {
+                            char *new_result = replace_str(result, value, METADATA_REPLACEMENT_VALUES[i]);
+                            strcpy(result, new_result);
+                            free(new_result);
+                            rewrite = true;
+                        }
+                        free((void *)(value));
+                        free((void *)(prefixed_delimiter));
+                    }
+                }
+
+                // all metadata that can be replaced with X's
+                static char *METADATA_ATTRIBUTES[] = {APERIO_FILENAME_TAG, APERIO_USER_TAG, APERIO_BARCODE_TAG,
+                                                      APERIO_SCANSCOPEID_TAG, APERIO_RACK_TAG};
 
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES) / sizeof(METADATA_ATTRIBUTES[0]); i++) {
                     if (contains(result, METADATA_ATTRIBUTES[i])) {

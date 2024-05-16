@@ -88,8 +88,18 @@ def test_anonymize_aperio_format_tiffslide(cleanup, wsi_filepath, original_filen
         assert "label" not in associated_images
 
         if "Aperio" in wsi_filepath:
-            for property in ["Filename", "User", "Date", "Time"]:
-                assert all(c == "X" for c in slide.properties[f"aperio.{property}"])
+            for property in ["Filename", "User", "Time", "Date", "Slide", "Barcode", "Rack", "ScanScope ID"]:
+                if property == "Time":
+                    assert("00:00:00" == slide.properties[f"aperio.{property}"])
+                elif property == "Date":
+                    assert("01/01/00" == slide.properties[f"aperio.{property}"])
+                elif f"aperio.{property}" in slide.properties.keys():
+                    if property == "Slide":
+                        assert("0" == slide.properties[f"aperio.{property}"])
+                    else:
+                        assert all(c=='X' for c in slide.properties[f"aperio.{property}"])
+                else:
+                    pass
         slide.close()
     except tiffslide.TiffFileError as e:
         assert False
@@ -118,7 +128,7 @@ def test_anonymize_large_files_openslide(cleanup, wsi_filepath, original_filenam
 
         if "Hamamatsu" in wsi_filepath:
             for property in ["DateTime"]:
-                assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
+                assert("1900:01:01 00:00:00" == slide.properties[f"tiff.{property}"])
 
     cleanup(str(result_filename.absolute()))
 
@@ -148,7 +158,10 @@ def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filenam
         if "MIRAX" in wsi_filepath:
             assert "macro" not in slide.associated_images
             for property in ["SLIDE_NAME", "PROJECT_NAME", "SLIDE_CREATIONDATETIME"]:
-                assert all(c == "X" for c in slide.properties[f"mirax.GENERAL.{property}"])
+                if property != "SLIDE_CREATIONDATETIME":
+                    assert all(c == "X" for c in slide.properties[f"mirax.GENERAL.{property}"])
+                else:
+                    assert("01/01/00 00:00:00" == slide.properties[f"mirax.GENERAL.{property}"])
             assert all(c == "0" for c in slide.properties[f"mirax.GENERAL.SLIDE_ID"])
 
         if "Ventana" in wsi_filepath:
@@ -157,7 +170,7 @@ def test_anonymize_file_format_openslide(cleanup, wsi_filepath, original_filenam
 
         if "Hamamatsu" in wsi_filepath:
             for property in ["DateTime"]:
-                assert all(c == "X" for c in slide.properties[f"tiff.{property}"])
+                assert("1900:01:01 00:00:00" == slide.properties[f"tiff.{property}"])
 
     cleanup(str(result_filename.absolute()))
 

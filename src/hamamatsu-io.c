@@ -175,20 +175,34 @@ int32_t remove_metadata_in_hamamatsu(file_handle *fp, struct tiff_file *file) {
                         return -1;
                     }
 
-                    // create replacememt for value
-                    char *replacement = create_replacement_string('X', strlen(buffer));
-
-                    // if the replacement for the value is NULL, no value was found for this tag
-                    if (replacement != NULL) {
+                    // set predefined value for DATETIME
+                    if (entry.tag == TIFFTAG_DATETIME && strlen(buffer) == strlen(NDPI_MIN_DATETIME)) {
                         file_seek(fp, entry.offset, SEEK_SET);
-                        if (file_write(replacement, entry.count, entry_size, fp) != 1) {
+                        if (file_write(NDPI_MIN_DATETIME, entry.count, entry_size, fp) != 1) {
                             fprintf(stderr, "Error: Could not overwrite value for tag %" PRIu16 ".\n",
                                     METADATA_ATTRIBUTES[i]);
-                            free(replacement);
                             return -1;
                         }
-                        free(replacement);
                         break;
+                    }
+                    // other metadata
+                    else {
+                        // create replacement with equal amount of 0's or X's depending on the datatype
+                        const char replacement_char = (entry.tag == NDPI_SCANNER_SERIAL_NUMBER) ? '0' : 'X';
+                        char *replacement = create_replacement_string(replacement_char, strlen(buffer));
+
+                        // if the replacement for the value is NULL, no value was found for this tag
+                        if (replacement != NULL) {
+                            file_seek(fp, entry.offset, SEEK_SET);
+                            if (file_write(replacement, entry.count, entry_size, fp) != 1) {
+                                fprintf(stderr, "Error: Could not overwrite value for tag %" PRIu16 ".\n",
+                                        METADATA_ATTRIBUTES[i]);
+                                free(replacement);
+                                return -1;
+                            }
+                            free(replacement);
+                            break;
+                        }
                     }
                 }
             }
@@ -251,20 +265,22 @@ int32_t handle_hamamatsu(const char **filename, const char *new_label_name, bool
         return -1;
     }
 
+    // get macro dir
     struct tiff_directory dir = file->directories[dir_count];
 
     // wipe macro data from directory
     // check for JPEG SOI header in macro dir
     result = wipe_directory(fp, &dir, true, big_endian, big_tiff, JPEG_SOI, NULL);
 
+    // check result
     if (result != 0) {
         free_tiff_file(file);
         file_close(fp);
         return result;
     }
 
+    // unlink the empty macro directory from file structure
     if (!disable_unlinking) {
-        // unlink the empty macro directory from file structure
         result = unlink_directory(fp, file, dir_count, true);
     }
 

@@ -1,17 +1,13 @@
 #include "ini-parser.h"
 
-// retrive an entry value from the ini file by
+// retrieve an entry value from the ini file by
 // given group and entry key
-const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group, const char *entry_key) {
-    for (int32_t i = 0; i < ini_file->group_count; i++) {
-        struct ini_group ini_group = ini_file->groups[i];
-        if (strcmp(ini_group.group_identifier, group) == 0) {
-            for (int32_t j = 0; j < ini_group.entry_count; j++) {
-                struct ini_entry ini_entry = ini_group.entries[j];
-                if (strcmp(ini_entry.key, entry_key) == 0) {
-                    return ini_entry.value;
-                }
-            }
+const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group_name, const char *key) {
+    struct ini_group *ini_group = find_group(ini_file, group_name);
+    if (ini_group != NULL) {
+        struct ini_entry *entry = find_entry(ini_group, key);
+        if (entry != NULL) {
+            return entry->value;
         }
     }
     return NULL;
@@ -180,69 +176,92 @@ int32_t get_group_index_of_ini_file(struct ini_file *ini_file, const char *group
 }
 
 // modify structure of levels in mirax_file
-void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer, int32_t layer_id,
+void restructure_levels_in_file(struct ini_file *ini_file, int32_t level_pos_in_layer, int32_t layer_id,
                                 struct mirax_file *mirax_file) {
     for (int32_t i = level_pos_in_layer; i < mirax_file->layers[layer_id]->level_count - 1; i++) {
-        restructure_groups_in_file(ini, mirax_file->layers[layer_id]->levels[i],
+        restructure_groups_in_file(ini_file, mirax_file->layers[layer_id]->levels[i],
                                    mirax_file->layers[layer_id]->levels[i + 1]);
         mirax_file->layers[layer_id]->levels[i]->name = mirax_file->layers[layer_id]->levels[i + 1]->name;
     }
 }
 
 // modify structure of groups in ini_file
-void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *current_level,
+void restructure_groups_in_file(struct ini_file *ini_file, struct mirax_level *current_level,
                                 struct mirax_level *next_level) {
-    for (int32_t i = 0; i < ini->group_count; i++) {
-        struct ini_group *group = &ini->groups[i];
-        if (strcmp(group->group_identifier, "HIERARCHICAL") == 0) {
-            for (int32_t j = 0; j < group->entry_count; j++) {
+    struct ini_group *group = find_group(ini_file, "HIERARCHICAL");
+    if (group != NULL) {
+        for (int32_t j = 0; j < group->entry_count; j++) {
 
-                struct ini_entry *entry = &group->entries[j];
+            struct ini_entry *entry = &group->entries[j];
 
-                if (entry != NULL) {
+            if (entry != NULL) {
 
-                    if (strcmp(entry->value, current_level->name) == 0 &&
-                        strcmp(group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET].value, next_level->name) == 0) {
-                        group->entries[j].value = group->entries[j + 4].value; // change level name
-                        group->entries[j + 1].value =
-                            group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET + 1].value; // change section
-                    }
+                if (strcmp(entry->value, current_level->name) == 0 &&
+                    strcmp(group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET].value, next_level->name) == 0) {
+                    group->entries[j].value = group->entries[j + 4].value; // change level name
+                    group->entries[j + 1].value =
+                        group->entries[j + MRXS_SLIDE_DAT_NONHIER_GROUP_OFFSET + 1].value; // change section
                 }
             }
         }
     }
 }
 
-const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
-                                              const char c) {
+struct ini_group *find_group(struct ini_file *ini_file, const char *group_name) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int32_t j = 0; j < group->entry_count; j++) {
-                struct ini_entry *entry = &group->entries[j];
-                if (strcmp(entry->key, key) == 0) {
-                    const char *value = create_replacement_string(c, strlen((*entry).value));
-                    (*entry).value = strdup(value);
-                    return value;
-                }
-            }
+            return group;
+        }
+    }
+    return NULL;
+}
+
+struct ini_entry *find_entry(struct ini_group *group, const char *key) {
+    for (int32_t j = 0; j < group->entry_count; j++) {
+        struct ini_entry *entry = &group->entries[j];
+        if (strcmp(entry->key, key) == 0) {
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
+                                              const char c) {
+    struct ini_group *group = find_group(ini_file, group_name);
+    if (group != NULL) {
+        struct ini_entry *entry = find_entry(group, key);
+        if (entry != NULL) {
+            const char *value = create_replacement_string(c, strlen((*entry).value));
+            (*entry).value = strdup(value);
+            return value;
+        }
+    }
+    return NULL;
+}
+
+const char *anonymize_value_for_group_and_key_with_given_string(struct ini_file *ini_file, const char *group_name,
+                                                                const char *key, const char *value) {
+    struct ini_group *group = find_group(ini_file, group_name);
+    if (group != NULL) {
+        struct ini_entry *entry = find_entry(group, key);
+        if (entry != NULL) {
+            (*entry).value = strdup(value);
+            return value;
         }
     }
     return NULL;
 }
 
 const char *create_random_slide_id(struct ini_file *ini_file, const char *group_name, const char *key) {
-    for (int32_t i = 0; i < ini_file->group_count; i++) {
-        struct ini_group *group = &ini_file->groups[i];
-        if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int32_t j = 0; j < group->entry_count; j++) {
-                struct ini_entry *entry = &group->entries[j];
-                if (strcmp(entry->key, key) == 0) {
-                    const char *value = create_random_string(strlen((*entry).value));
-                    (*entry).value = strdup(value);
-                    return value;
-                }
-            }
+    struct ini_group *group = find_group(ini_file, group_name);
+    if (group != NULL) {
+        struct ini_entry *entry = find_entry(group, key);
+        if (entry != NULL) {
+            const char *value = create_random_string(strlen((*entry).value));
+            (*entry).value = strdup(value);
+            return value;
         }
     }
     return NULL;
@@ -295,19 +314,17 @@ void remove_entry_for_group_and_key(struct ini_file *ini_file, const char *group
 
 // decrement a count value as entry value by a given group and entry key
 void decrement_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key) {
-    for (int32_t i = 0; i < ini_file->group_count; i++) {
-        struct ini_group *group = &ini_file->groups[i];
-        if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int32_t j = 0; j < group->entry_count; j++) {
-                struct ini_entry *entry = &group->entries[j];
-                if (strcmp(entry->key, key) == 0) {
-                    int32_t new_count;
-                    sscanf(entry->value, "%d", &new_count);
-                    new_count--;
-                    const char *out_value = int32_to_str(new_count);
-                    (*entry).value = out_value;
-                    break;
-                }
+    struct ini_group *group = find_group(ini_file, group_name);
+    if (group != NULL) {
+        for (int32_t j = 0; j < group->entry_count; j++) {
+            struct ini_entry *entry = &group->entries[j];
+            if (strcmp(entry->key, key) == 0) {
+                int32_t new_count;
+                sscanf(entry->value, "%d", &new_count);
+                new_count--;
+                const char *out_value = int32_to_str(new_count);
+                (*entry).value = out_value;
+                break;
             }
         }
     }
