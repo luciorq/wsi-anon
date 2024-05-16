@@ -1,6 +1,6 @@
 #include "ini-parser.h"
 
-// retrive an entry value from the ini file by
+// retrieve an entry value from the ini file by
 // given group and entry key
 const char *get_value_from_ini_file(struct ini_file *ini_file, const char *group, const char *entry_key) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
@@ -213,19 +213,35 @@ void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *curren
     }
 }
 
-const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
-                                              const char c) {
+struct ini_group *find_group(struct ini_file *ini_file, const char *group_name) {
     for (int32_t i = 0; i < ini_file->group_count; i++) {
         struct ini_group *group = &ini_file->groups[i];
         if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int32_t j = 0; j < group->entry_count; j++) {
-                struct ini_entry *entry = &group->entries[j];
-                if (strcmp(entry->key, key) == 0) {
-                    const char *value = create_replacement_string(c, strlen((*entry).value));
-                    (*entry).value = strdup(value);
-                    return value;
-                }
-            }
+            return group;
+        }
+    }
+    return NULL;
+}
+
+struct ini_entry *find_entry(struct ini_group *group, const char *key) {
+    for (int32_t j = 0; j < group->entry_count; j++) {
+        struct ini_entry *entry = &group->entries[j];
+        if (strcmp(entry->key, key) == 0) {
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
+                                              const char c) {
+    struct ini_group *group = find_group(ini_file, group_name);
+    if (group != NULL) {
+        struct ini_entry *entry = find_entry(group, key);
+        if (entry != NULL) {
+            const char *value = create_replacement_string(c, strlen((*entry).value));
+            (*entry).value = strdup(value);
+            return value;
         }
     }
     return NULL;
@@ -233,16 +249,12 @@ const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const c
 
 const char *anonymize_value_for_group_and_key_with_given_string(struct ini_file *ini_file, const char *group_name,
                                                                 const char *key, const char *value) {
-    for (int32_t i = 0; i < ini_file->group_count; i++) {
-        struct ini_group *group = &ini_file->groups[i];
-        if (strcmp(group->group_identifier, group_name) == 0) {
-            for (int32_t j = 0; j < group->entry_count; j++) {
-                struct ini_entry *entry = &group->entries[j];
-                if (strcmp(entry->key, key) == 0) {
-                    (*entry).value = strdup(value);
-                    return value;
-                }
-            }
+    struct ini_group *group = find_group(ini_file, group_name);
+    if (group != NULL) {
+        struct ini_entry *entry = find_entry(group, key);
+        if (entry != NULL) {
+            (*entry).value = strdup(value);
+            return value;
         }
     }
     return NULL;

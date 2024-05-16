@@ -178,8 +178,8 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                 // all metadata that is replaced with default values
                 static char *METADATA_ATTRIBUTES_DEFAULT[] = {APERIO_DATE_TAG, APERIO_TIME_TAG, APERIO_SLIDE_TAG};
 
-                // default values
-                static char *METADATA_DEFAULT_VALUES[] = {APERIO_MIN_DATE, MIN_TIME, MIN_POS};
+                // default replacement values
+                static char *METADATA_REPLACEMENT_VALUES[] = {APERIO_MIN_DATE, MIN_TIME, MIN_POS};
 
                 for (size_t i = 0; i < sizeof(METADATA_ATTRIBUTES_DEFAULT) / sizeof(METADATA_ATTRIBUTES_DEFAULT[0]);
                      i++) {
@@ -187,7 +187,7 @@ int32_t remove_metadata_in_aperio(file_handle *fp, struct tiff_file *file) {
                         const char *prefixed_delimiter = concat_str("|", METADATA_ATTRIBUTES_DEFAULT[i]);
                         const char *value = get_string_between_delimiters(result, prefixed_delimiter, "|");
                         if (value[0] != '\0') {
-                            char *new_result = replace_str(result, value, METADATA_DEFAULT_VALUES[i]);
+                            char *new_result = replace_str(result, value, METADATA_REPLACEMENT_VALUES[i]);
                             strcpy(result, new_result);
                             free(new_result);
                             rewrite = true;

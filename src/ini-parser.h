@@ -18,6 +18,10 @@ void restructure_levels_in_file(struct ini_file *ini, int32_t level_pos_in_layer
 void restructure_groups_in_file(struct ini_file *ini, struct mirax_level *current_level,
                                 struct mirax_level *next_level);
 
+struct ini_group *find_group(struct ini_file *ini_file, const char *group_name);
+
+struct ini_entry *find_entry(struct ini_group *group, const char *key);
+
 const char *anonymize_value_for_group_and_key(struct ini_file *ini_file, const char *group_name, const char *key,
                                               const char c);
 

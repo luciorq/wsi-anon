@@ -188,12 +188,8 @@ int32_t remove_metadata_in_hamamatsu(file_handle *fp, struct tiff_file *file) {
                     // other metadata
                     else {
                         // create replacement with equal amount of 0's or X's depending on the datatype
-                        char *replacement;
-                        if (entry.tag == NDPI_SCANNER_SERIAL_NUMBER) {
-                            replacement = create_replacement_string('0', strlen(buffer));
-                        } else {
-                            replacement = create_replacement_string('X', strlen(buffer));
-                        }
+                        const char replacement_char = (entry.tag == NDPI_SCANNER_SERIAL_NUMBER) ? '0' : 'X';
+                        char *replacement = create_replacement_string(replacement_char, strlen(buffer));
 
                         // if the replacement for the value is NULL, no value was found for this tag
                         if (replacement != NULL) {
