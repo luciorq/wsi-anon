@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.24
+
+* fixed previously introduced double free/mem corruption bug
+
 ## 0.4.23
 
 * remove ScanScope ID and Rack Tags metadata in Aperio format
