@@ -3,18 +3,17 @@
 struct metadata_attribute *get_attribute_aperio(char *buffer, const char *attribute_name) {
     const char *prefixed_delimiter = concat_str("|", attribute_name);
     char *value = get_string_between_delimiters(buffer, prefixed_delimiter, "|");
+    free((void *)prefixed_delimiter);
+
     // check if tag is not an empty string
     if (value[0] != '\0') {
         // removes '=' from key and saves it with value in struct
         struct metadata_attribute *single_attribute = malloc(sizeof(*single_attribute));
         single_attribute->key = strdup(attribute_name);
         single_attribute->key[strlen(single_attribute->key) - 3] = '\0';
-        single_attribute->value = strdup(value);
-        free(value);
-        free((void *)prefixed_delimiter);
+        single_attribute->value = value;
         return single_attribute;
     }
-    free((void *)prefixed_delimiter);
     free(value);
     return NULL;
 }

@@ -103,6 +103,7 @@ int32_t main(int32_t argc, char *argv[]) {
                 exit(EXIT_FAILURE);
             }
             free_wsi_data(wsi_data);
+            exit(EXIT_SUCCESS);
         } else {
             fprintf(stderr, "No filename to check for vendor selected.\n");
             exit(EXIT_FAILURE);
@@ -116,6 +117,7 @@ int32_t main(int32_t argc, char *argv[]) {
                 anonymize_wsi(filename, "_anonymized_wsi", keep_macro_image, disable_unlinking, do_inplace);
             }
             fprintf(stdout, "Done.\n");
+            exit(EXIT_SUCCESS);
         } else {
             fprintf(stderr, "No file for anonymization selected.\n");
             exit(EXIT_FAILURE);
