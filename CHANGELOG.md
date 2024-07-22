@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.25
+
+* Add support for MacOS
+
 ## 0.4.24
 
 * fixed previously introduced double free/mem corruption bug
