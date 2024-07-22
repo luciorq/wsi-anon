@@ -17,11 +17,13 @@ STATIC_LIBRARY_TARGET = libwsianon.a
 # Define extension for MacOS
 ifeq ($(detected_OS),Darwin)
 	SHARED_LIBRARY_TARGET = libwsianon.dylib
+	SO_ARG = -install_name
 else
 	SHARED_LIBRARY_TARGET = libwsianon.so
+	SO_ARG = -soname
 endif
 
-SO_NAME = libwsianon
+
 TEST_TARGET = utests
 
 ifeq ($(PREFIX),)
@@ -58,7 +60,7 @@ default: static-lib shared-lib console-app
 shared-lib: makedirs $(BINDIR)/$(SHARED_LIBRARY_TARGET)
 
 $(BINDIR)/$(SHARED_LIBRARY_TARGET): 
-	@$(CC) -shared -Wl,-soname,$(SO_NAME) -o $(BINDIR)/$(SHARED_LIBRARY_TARGET) -fPIC $(SOURCES_LIB)
+	@$(CC) -shared -Wl,$(SO_ARG),$(SO_NAME) -o $(BINDIR)/$(SHARED_LIBRARY_TARGET) -fPIC $(SOURCES_LIB)
 
 static-lib: makedirs $(BINDIR)/$(STATIC_LIBRARY_TARGET)
 
