@@ -31,6 +31,8 @@ int32_t file_getc(file_handle *stream) { return fgetc(stream->fp); }
 int64_t file_seek(file_handle *stream, int64_t offset, int32_t origin) {
 #ifdef __linux__
     return fseeko(stream->fp, offset, origin);
+#elif defined(__APPLE__) && defined(__MACH__)
+    return fseeko(stream->fp, offset, origin);
 #elif _WIN32
     return _fseeki64(stream->fp, offset, origin);
 #elif _WIN64
@@ -52,6 +54,8 @@ int32_t file_printf(file_handle *stream, const char *format, const char *value) 
 
 uint64_t file_tell(file_handle *stream) {
 #ifdef __linux__
+    return ftello(stream->fp);
+#elif defined(__APPLE__) && defined(__MACH__)
     return ftello(stream->fp);
 #elif _WIN32
     return _ftelli64(stream->fp);

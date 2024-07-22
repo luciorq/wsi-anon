@@ -376,6 +376,10 @@ int32_t copy_file_v2(const char *src, const char *dest) {
     // we create the copy command for linux
     snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
+#elif defined(__APPLE__) && defined(__MACH__)
+    // we create the copy command for MacOS
+    snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
 #elif _WIN32
     // we create the copy command for win32
     snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
@@ -394,6 +398,10 @@ int32_t copy_directory(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 15];
 #ifdef __linux__
     // we create the copy command for linux
+    snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
+    return system(command);
+#elif defined(__APPLE__) && defined(__MACH__)
+    // we create the copy command for MacOS
     snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
     return system(command);
 #elif _WIN32

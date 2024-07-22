@@ -3,6 +3,8 @@
 char *get_app_name() {
 #ifdef __linux__
     return "bin/wsi-anon.out";
+#elif defined(__APPLE__) && defined(__MACH__)
+    return "bin/wsi-anon.out";
 #else
     return "exe\\wsi-anon.exe";
 #endif
