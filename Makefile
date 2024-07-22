@@ -23,7 +23,7 @@ else
 	SO_ARG = -soname
 endif
 
-
+SO_NAME = libwsianon
 TEST_TARGET = utests
 
 ifeq ($(PREFIX),)
