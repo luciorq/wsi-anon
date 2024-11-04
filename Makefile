@@ -2,11 +2,27 @@
 # Default Makefile
 #
 
+# Detect the OS
+ifeq ($(OS),Windows_NT)
+	detected_OS := Windows
+else
+	detected_OS := $(shell uname -s)
+endif
+
 CONSOLE_TARGET   = wsi-anon.out
 WASM_TARGET = wsi-anon.js
 CONSOLE_DBG_TARGET = wsi-anon-dbg.out
 STATIC_LIBRARY_TARGET = libwsianon.a
-SHARED_LIBRARY_TARGET = libwsianon.so
+
+# Define extension for MacOS
+ifeq ($(detected_OS),Darwin)
+	SHARED_LIBRARY_TARGET = libwsianon.dylib
+	SO_ARG = -install_name
+else
+	SHARED_LIBRARY_TARGET = libwsianon.so
+	SO_ARG = -soname
+endif
+
 SO_NAME = libwsianon
 TEST_TARGET = utests
 
@@ -44,7 +60,7 @@ default: static-lib shared-lib console-app
 shared-lib: makedirs $(BINDIR)/$(SHARED_LIBRARY_TARGET)
 
 $(BINDIR)/$(SHARED_LIBRARY_TARGET): 
-	@$(CC) -shared -Wl,-soname,$(SO_NAME) -o $(BINDIR)/$(SHARED_LIBRARY_TARGET) -fPIC $(SOURCES_LIB)
+	@$(CC) -shared -Wl,$(SO_ARG),$(SO_NAME) -o $(BINDIR)/$(SHARED_LIBRARY_TARGET) -fPIC $(SOURCES_LIB)
 
 static-lib: makedirs $(BINDIR)/$(STATIC_LIBRARY_TARGET)
 
@@ -96,3 +112,4 @@ clean:
 	@rm -f $(OBJECTS) $(BINDIR)/*.a $(BINDIR)/*.out || true
 	@rm -r $(OBJDIR) $(BINDIR) || true
 	@echo "Cleanup complete!"
+

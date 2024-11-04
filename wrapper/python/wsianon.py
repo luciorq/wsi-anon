@@ -21,6 +21,13 @@ def _load_library():
             raise ModuleNotFoundError(
                 "Could not locate libwsianon.so. Please make sure that the shared library is created and placed under usr/lib/ by running make install."
             )
+    elif platform.system() == 'Darwin':
+        try:
+            return ctypes.cdll.LoadLibrary('libwsianon.dylib')
+        except FileNotFoundError:
+            raise ModuleNotFoundError(
+                "Could not locate libwsianon.so. Please make sure that the shared library is created and placed under usr/lib/ by running make install."
+            )
     elif platform.system() == 'Windows':
         try:
             return ctypes.WinDLL("libwsianon.dll")
@@ -69,5 +76,5 @@ def anonymize_wsi(filename, new_label_name, keep_macro_image=False, disable_unli
             disable_unlinking, 
             do_inplace
         )
-    
+
     return result

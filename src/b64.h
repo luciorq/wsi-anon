@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#ifndef B64_H
+// #ifndef B64_H
 #define B64_H 1
 
 /**

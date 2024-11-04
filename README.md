@@ -18,6 +18,9 @@ Currently supported formats:
 
 **The library is implemented and tested under Linux (Ubuntu 20.04) and currently only experimental under Windows.**
 
+> **As of version 0.4.25: experimental support for MacOS has been added.**
+Test on MacOS Sonoma 14.1.
+
 ## Publications
 
 The design and implementation is also described in a technical note in [Anonymization of Whole Slide Images in Histopathology for Research and Education](https://journals.sagepub.com/doi/10.1177/20552076231171475)
@@ -58,6 +61,19 @@ make console-app-debug
 ```
 
 and run with `gdb -args bin/wsi-anon-dbg.out /path/to/wsi.svs` afterwards.
+
+#### Under MacOS
+
+On MacOS, the same instructions for Linux can ne followed, just make sure you have a working C toolchain. E.g. gcc, clang, etc.
+This can be achieved by installing the Apple Command Line Tools with `xcode-select --install`.
+
+To build the shared library with command line interface simply run.
+
+```bash
+make
+```
+
+And run with `bin/wsi-anon.out /path/to/wsi.svs` afterwards.
 
 #### Under Windows
 
