@@ -196,5 +196,5 @@ docker-compose -f docker-compose.test.yml up -d --build
 and run tests with
 
 ```bash
-docker exec wsi-anon_wsi-anon_1 pytest wrapper/python/test
+docker exec wsi-anon-wsi-anon-1 pytest wrapper/python/test
 ```
