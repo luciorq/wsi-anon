@@ -133,6 +133,7 @@ struct metadata *get_metadata_mirax(const char *path, struct ini_file *ini_file,
 // free slidedat_ini with all groups and its entries
 void free_slidedata_ini_file(struct ini_file *ini) {
     for (int32_t i = 0; i < ini->group_count; i++) {
+        // TODO: this leads to a seg fault error undewr windows
         free((void *)(&ini->groups[i])->group_identifier);
     }
     free(ini);

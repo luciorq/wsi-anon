@@ -372,48 +372,42 @@ const char *duplicate_file(const char *filename, const char *new_file_name, cons
 
 int32_t copy_file_v2(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 15];
+
 #ifdef __linux__
-    // we create the copy command for linux
-    snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
+    // create the copy command for Linux
+    snprintf(command, sizeof command, "cp \"%s\" \"%s\"", src, dest);
     return system(command);
 #elif defined(__APPLE__) && defined(__MACH__)
-    // we create the copy command for MacOS
-    snprintf(command, sizeof command, "cp \"%s\" \"%s\"%c", src, dest, '\0');
+    // create the copy command for macOS
+    snprintf(command, sizeof command, "cp \"%s\" \"%s\"", src, dest);
     return system(command);
-#elif _WIN32
-    // we create the copy command for win32
-    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
-    return system(command);
-#elif _WIN64
-    // we create the copy command for win64
-    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"%c", src, dest, '\0');
+#elif defined(_WIN32)  // this covers both 32-bit and 64-bit Windows
+    // create the copy command for Windows
+    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"", src, dest);
     return system(command);
 #else
-    // todo: implement for mac
+    // unsupported OS
     return -1;
 #endif
 }
 
 int32_t copy_directory(const char *src, const char *dest) {
-    char command[strlen(src) + strlen(dest) + 15];
+    char command[strlen(src) + strlen(dest) + 50];
+
 #ifdef __linux__
-    // we create the copy command for linux
-    snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
+    // copy directory for Linux
+    snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"", src, dest);
     return system(command);
 #elif defined(__APPLE__) && defined(__MACH__)
-    // we create the copy command for MacOS
-    snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"%c", src, dest, '\0');
+    // copy directory for macOS
+    snprintf(command, sizeof command, "cp -r \"%s\" \"%s\"", src, dest);
     return system(command);
-#elif _WIN32
-    // we create the copy command for win32
-    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\" /s /e%c", src, dest, '\0');
-    return system(command);
-#elif _WIN64
-    // we create the copy command for win64
-    snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\" /s /e%c", src, dest, '\0');
+#elif defined(_WIN32)
+    // ensure destination exists before copying
+    snprintf(command, sizeof command, "robocopy \"%s\" \"%s\" /E /NFL /NDL /NJH /NJS /NC /NS /NP > nul", src, dest);
     return system(command);
 #else
-    // todo: implement for mac
+    // unsupported OS
     return -1;
 #endif
 }

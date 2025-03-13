@@ -77,7 +77,7 @@ And run with `bin/wsi-anon.out /path/to/wsi.svs` afterwards.
 
 #### Under Windows
 
-To build an executable file under windows make sure `MinGW-w64` is installed and run
+To build an executable file under windows make sure `MinGW-w64` is installed and run (execute in shell as Admin to install binaries to `system32`):
 
 ```bash
 # if not yet done, set path for mingw after installation, e.g.:
