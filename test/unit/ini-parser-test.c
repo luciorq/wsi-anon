@@ -33,16 +33,16 @@ struct ini_file *mock_ini_file() {
     struct ini_entry *entry2 = (struct ini_entry *)malloc(sizeof(struct ini_entry));
     struct ini_entry *entry3 = (struct ini_entry *)malloc(sizeof(struct ini_entry));
 
-    entry1->key = "TestKey1";
-    entry1->value = "TestValue1";
-    entry2->key = "TestKey2";
-    entry2->value = "TestValue2";
-    entry3->key = "TestKey3";
-    entry3->value = "1000";
+    entry1->key = strdup("TestKey1");
+    entry1->value = strdup("TestValue1");
+    entry2->key = strdup("TestKey2");
+    entry2->value = strdup("TestValue2");
+    entry3->key = strdup("TestKey3");
+    entry3->value = strdup("1000");
     entries[0] = *entry1;
     entries[1] = *entry2;
     entries[2] = *entry3;
-    group->group_identifier = "Identifier";
+    group->group_identifier = strdup("Identifier");
     group->entry_count = 3;
     group->start_line = 0;
     group->entries = entries;

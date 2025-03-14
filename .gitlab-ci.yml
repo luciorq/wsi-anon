@@ -1,9 +1,9 @@
 codecheck:
-  image: ubuntu:20.04
+  image: ubuntu:24.04
   tags:
     - empaia-parallel
   before_script:
-    - apt-get update -q && apt-get install -y -qq clang-format-10 git
+    - apt-get update -q && apt-get install -y -qq clang-format-18 git
   script:
     - ./clang-format.sh
 
@@ -37,12 +37,12 @@ test-integration:
     - testdata
   before_script:
     - cp sample.env .env
-    - docker-compose -f docker-compose.test.yml down -v --remove-orphans
-    - docker-compose -f docker-compose.test.yml up -d --build
+    - docker compose -f docker-compose.test.yml down -v --remove-orphans
+    - docker compose -f docker-compose.test.yml up -d --build
   script:
     - docker exec wsi-anon-wsi-anon-1 pytest wrapper/python/test -vv
   after_script:
-    - docker-compose -f docker-compose.test.yml down
+    - docker compose -f docker-compose.test.yml down
 
 publish-wsi-anon-package:
   only:

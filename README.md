@@ -34,7 +34,7 @@ WebAssembly:
 * install `emscripten`, e.g. from [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) (at least v. 1.39.15, only required for Web Assembly target)
 
 Development (Testing and code checks):
-* install `clang-format-10`
+* install `clang-format-18`
 * install `libcunit1-dev`
 * install `docker` and `docker-compose`
 
@@ -77,7 +77,7 @@ And run with `bin/wsi-anon.out /path/to/wsi.svs` afterwards.
 
 #### Under Windows
 
-To build an executable file under windows make sure `MinGW-w64` is installed and run
+To build an executable file under windows make sure `MinGW-w64` is installed and run (execute in shell as Admin to install binaries to `system32`):
 
 ```bash
 # if not yet done, set path for mingw after installation, e.g.:
@@ -169,10 +169,10 @@ In order to extend this library by another format, please check the `plugin.h` h
 
 ### Code Formatting
 
-Format the code before committing. Install `clang-format-10` and run
+Format the code before committing. Install `clang-format-18` and run
 
 ```
-find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format-10 --Werror -i --verbose
+find . \( \( -name \*.c -o -name \*.h \) -a ! -iname \*soap\* \) -print0 | xargs -0 -n 1 clang-format-18 --Werror -i --verbose
 ```
 
 ### Unit Tests
