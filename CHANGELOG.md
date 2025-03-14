@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.26
+
+* bugfix for incorrect memory freeing in mirax plugin
+
 ## 0.4.25
 
 * Add support for MacOS

@@ -864,7 +864,6 @@ int32_t handle_mirax(const char **filename, const char *new_label_name, bool kee
 
     free(data_filenames);
     free(mirax_file);
-    //free(ini);
     free_slidedata_ini_file(ini);
 
     if (!do_inplace) {
