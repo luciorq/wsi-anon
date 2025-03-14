@@ -1,5 +1,5 @@
 codecheck:
-  image: ubuntu:20.04
+  image: ubuntu:24.04
   tags:
     - empaia-parallel
   before_script:
