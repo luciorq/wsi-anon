@@ -381,7 +381,7 @@ int32_t copy_file_v2(const char *src, const char *dest) {
     // create the copy command for macOS
     snprintf(command, sizeof command, "cp \"%s\" \"%s\"", src, dest);
     return system(command);
-#elif defined(_WIN32)  // this covers both 32-bit and 64-bit Windows
+#elif defined(_WIN32) // this covers both 32-bit and 64-bit Windows
     // create the copy command for Windows
     snprintf(command, sizeof command, "xcopy /Y \"%s\" \"%s\"", src, dest);
     return system(command);
