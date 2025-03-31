@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.27
+
+* filename sanitization
+
 ## 0.4.26
 
 * bugfix for incorrect memory freeing in mirax plugin

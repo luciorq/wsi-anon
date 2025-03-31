@@ -370,8 +370,48 @@ const char *duplicate_file(const char *filename, const char *new_file_name, cons
     }
 }
 
+// function sanitizes a filename string that is used in a syscall
+int32_t is_safe_filename(const char *filename) {
+    while (*filename) {
+        unsigned char c = (unsigned char)*filename;
+
+        // 0-32 are control characters (e.g. backspace, escape etc.) and DEL (127)
+        if (c < 32 || c == 127)
+            return -1;
+
+        // here we escape the most dangerous shell-related characters
+        // this should cover at least the most common attack scenarios
+        switch (c) {
+        case '`':
+        case '$':
+        case '&':
+        case ';':
+        case '|':
+        case '>':
+        case '<':
+        case '*':
+        case '?':
+        case '!':
+        case '"':
+        case '\'':
+        case '\n':
+        case '\r':
+            return -1;
+        }
+
+        // all others: allowed (includes /, \, (), _, -, space, etc.)
+        filename++;
+    }
+    return 1;
+}
+
 int32_t copy_file_v2(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 15];
+
+    if (!is_safe_filename(src) || !is_safe_filename(dest)) {
+        fprintf(stderr, "Error: Possible malicous filename detected. Consider renaming file or output filename.\n");
+        return -1;
+    }
 
 #ifdef __linux__
     // create the copy command for Linux
@@ -393,6 +433,11 @@ int32_t copy_file_v2(const char *src, const char *dest) {
 
 int32_t copy_directory(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 50];
+
+    if (!is_safe_filename(src) || !is_safe_filename(dest)) {
+        fprintf(stderr, "Error: Possible malicous filename(s) detected. Consider renaming file or output filename.\n");
+        return -1;
+    }
 
 #ifdef __linux__
     // copy directory for Linux
