@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.27
+
+* added check for malicious filename
+
 ## 0.4.26
 
 * bugfix for incorrect memory freeing in mirax plugin
