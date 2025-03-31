@@ -435,7 +435,7 @@ int32_t copy_directory(const char *src, const char *dest) {
     char command[strlen(src) + strlen(dest) + 50];
 
     if (!is_safe_filename(src) || !is_safe_filename(dest)) {
-        fprintf(stderr, "Error: Possible malicous filename(s) detected. Consider renaming file or output filename.\n");
+        fprintf(stderr, "Error: Possible malicous filename(s) detected. Consider renaming file(s) or output filename.\n");
         return -1;
     }
 

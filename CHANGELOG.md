@@ -2,7 +2,7 @@
 
 ## 0.4.27
 
-* filename sanitization
+* added check for malicious filename
 
 ## 0.4.26
 
