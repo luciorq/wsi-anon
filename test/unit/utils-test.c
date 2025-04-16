@@ -38,6 +38,8 @@ extern uint32_t _swap_uint32(uint32_t value);
 
 extern uint64_t _swap_uint64(uint64_t value);
 
+extern int32_t is_safe_filename(const char *filename);
+
 // ####################### test cases ####################### //
 
 void test_str_split1() {
@@ -172,6 +174,16 @@ void test_contains2() {
     CU_ASSERT_FALSE(result);
 }
 
+void test_is_safe_filename() {
+    char *input1 = strdup("${rm -rf /}.ndpi");
+    int32_t result1 = is_safe_filename(input1);
+    CU_ASSERT_EQUAL(result1, -1);
+
+    char *input2 = strdup("`rm -rf /`.ndpi");
+    int32_t result2 = is_safe_filename(input2);
+    CU_ASSERT_EQUAL(result2, -1);
+}
+
 void test_swap_uint16() {
     uint16_t input = 1;
     uint16_t swapped = _swap_uint16(input);
@@ -212,6 +224,7 @@ CU_TestInfo testcases1[] = {{"Test [str_split] 1:", test_str_split1},
                             {"Test [add_equals_sign]:", test_add_equals_sign},
                             {"Test [contains] 1:", test_contains1},
                             {"Test [contains] 2:", test_contains2},
+                            {"Test [is_safe_filename]:", test_is_safe_filename},
                             CU_TEST_INFO_NULL};
 
 CU_TestInfo testcases2[] = {{"Test [swap_uint16]:", test_swap_uint16},
