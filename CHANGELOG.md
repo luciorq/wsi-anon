@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.27
+
+* Prevent freeing command line argument in case of inplace anonymization
+
 ## 0.4.26
 
 * bugfix for incorrect memory freeing in mirax plugin
