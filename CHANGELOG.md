@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.28
+
+* prevent freeing command line argument in case of inplace anonymization
+
 ## 0.4.27
 
 * added check for malicious filename
